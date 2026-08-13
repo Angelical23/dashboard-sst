@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Segurança do Trabalho - Dashboard de Compliance</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+  :root{
+    --azul-escuro:#1f4e5f;
+    --azul-header:#2b6777;
+    --verde:#2ecc71;
+    --verde-claro:#eafaf0;
+    --amarelo:#f5a623;
+    --amarelo-claro:#fff8e6;
+    --vermelho:#e74c3c;
+    --vermelho-claro:#fdecea;
+    --cinza-fundo:#eef1f5;
+    --cinza-borda:#e1e6ec;
+    --cinza-texto:#5a6b7b;
+    --texto-escuro:#243447;
+    --branco:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI', Arial, sans-serif;background:var(--cinza-fundo);color:var(--texto-escuro);padding:24px;}
+  .dashboard{max-width:1450px;margin:0 auto;background:var(--branco);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.08);overflow:hidden;}
+
+  .header{background:linear-gradient(90deg, var(--azul-escuro), var(--azul-header));color:var(--branco);padding:18px 28px;display:flex;justify-content:space-between;align-items:center;}
+  .header h1{margin:0;font-size:20px;letter-spacing:0.5px;font-weight:700;}
+  .header-add{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;background:transparent;color:white;}
+  .header-add:hover{background:rgba(255,255,255,0.15);}
+
+  .userbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;border-bottom:1px solid var(--cinza-borda);flex-wrap:wrap;gap:10px;}
+  .user-info{display:flex;align-items:center;gap:12px;}
+  .avatar{width:42px;height:42px;border-radius:50%;background:#c9d6df;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--azul-header);position:relative;}
+  .avatar::after{content:'';position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:var(--verde);border:2px solid white;border-radius:50%;}
+  .user-name{font-weight:700;font-size:15px;}
+  .user-role{font-size:12px;color:var(--cinza-texto);}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn{border:1px solid var(--cinza-borda);background:var(--branco);color:var(--texto-escuro);padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .btn:hover{background:var(--cinza-fundo);}
+  .btn.primary{background:var(--azul-header);color:white;border-color:var(--azul-header);}
+  .btn.primary:hover{background:var(--azul-escuro);}
+  input[type=file]{display:none;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px 28px;}
+  .kpi-card{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;}
+  .kpi-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .kpi-icon.blue{background:#e3edf1;color:var(--azul-header);}
+  .kpi-icon.green{background:var(--verde-claro);color:var(--verde);}
+  .kpi-icon.yellow{background:var(--amarelo-claro);color:var(--amarelo);}
+  .kpi-icon.red{background:var(--vermelho-claro);color:var(--vermelho);}
+  .kpi-label{font-size:13px;color:var(--cinza-texto);margin-bottom:4px;}
+  .kpi-value{font-size:22px;font-weight:700;}
+  .kpi-value.green{color:var(--verde);}
+  .kpi-value.yellow{color:var(--amarelo);}
+  .kpi-value.red{color:var(--vermelho);}
+
+  .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;padding:0 28px 20px 28px;}
+  .panel{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:18px;}
+  .panel h3{margin:0 0 12px 0;font-size:14px;letter-spacing:0.3px;}
+  .chart-wrap{position:relative;height:250px;}
+  .pie-wrap{display:flex;align-items:center;gap:20px;}
+  .pie-canvas-holder{position:relative;height:220px;width:220px;flex-shrink:0;}
+  .legend{display:flex;flex-direction:column;gap:10px;font-size:13px;}
+  .legend-item{display:flex;align-items:center;gap:8px;}
+  .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+  .table-panel{margin:0 28px 28px 28px;background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;overflow:hidden;}
+  .table-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--cinza-borda);flex-wrap:wrap;gap:10px;}
+  .table-header h3{margin:0;font-size:14px;letter-spacing:0.3px;}
+  .table-scroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:1000px;}
+  thead th{background:var(--cinza-fundo);color:var(--cinza-texto);text-align:left;padding:10px 14px;font-weight:600;border-bottom:1px solid var(--cinza-borda);white-space:nowrap;}
+  tbody td{padding:10px 14px;border-bottom:1px solid var(--cinza-borda);white-space:nowrap;}
+  tbody tr:hover{background:#fafbfc;}
+  .colab-avatar{width:28px;height:28px;border-radius:50%;background:#c9d6df;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#2b6777;}
+
+  .status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;}
+  .status-pill.ok{background:var(--verde-claro);color:#1e8e4c;}
+  .status-pill.warn{background:var(--amarelo-claro);color:#b8720a;}
+  .status-pill.bad{background:var(--vermelho-claro);color:#c0392b;}
+  .status-pill.link{cursor:pointer;}
+  .status-pill.nolink{cursor:default;opacity:0.85;}
+
+  .acoes{display:flex;gap:12px;color:var(--cinza-texto);}
+  .acoes span{cursor:pointer;}
+  .acoes span:hover{color:var(--texto-escuro);}
+
+  .loading, .empty{padding:30px;text-align:center;color:var(--cinza-texto);}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:white;border-radius:12px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;}
+  .modal h2{margin-top:0;font-size:17px;}
+  .modal label{display:block;font-size:12px;color:var(--cinza-texto);margin:10px 0 4px;}
+  .modal input{width:100%;padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:6px;font-size:13px;}
+  .modal .grupo{border:1px solid var(--cinza-borda);border-radius:8px;padding:10px 12px;margin-top:14px;}
+  .modal .grupo-titulo{font-weight:700;font-size:13px;margin-bottom:4px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--texto-escuro);color:white;padding:12px 18px;border-radius:8px;font-size:13px;z-index:200;display:none;}
+  .toast.show{display:block;}
+
+  @media (max-width:1100px){.kpi-row{grid-template-columns:repeat(2,1fr);} .charts-row{grid-template-columns:1fr;}}
+  @media (max-width:600px){.kpi-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+
+  <div class="header">
+    <h1>GESTÃO DE SEGURANÇA DO TRABALHO - DASHBOARD DE COMPLIANCE</h1>
+    <button class="header-add" id="btnAbrirNovo" title="Adicionar colaborador">+</button>
+  </div>
+
+  <div class="userbar">
+    <div class="user-info">
+      <div class="avatar">AS</div>
+      <div>
+        <div class="user-name">Ana Silva</div>
+        <div class="user-role">Gestora SST</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="btnExportExcel">⬇ Exportar Excel</button>
+      <button class="btn" id="btnExportPdf">⬇ Exportar PDF</button>
+      <label class="btn" for="inputImport">⬆ Importar Excel (correção em massa)</label>
+      <input type="file" id="inputImport" accept=".xlsx,.xls,.csv">
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon blue">👥</div>
+      <div><div class="kpi-label">Total de Funcionários</div><div class="kpi-value" id="kpiTotal">–</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green">✔</div>
+      <div><div class="kpi-label">Colaboradores em Dia</div><div class="kpi-value green" id="kpiEmDia">–</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon yellow">⚠</div>
+      <div><div class="kpi-label">Documentos Vencendo (30 dias)</div><div class="kpi-value yellow" id="kpiVencendo">–</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon red">⛔</div>
+      <div><div class="kpi-label">Documentos Vencidos</div><div class="kpi-value red" id="kpiVencidos">–</div></div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="panel">
+      <h3>Status de Documentação por Setor</h3>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>Distribuição de Documentos Pendentes</h3>
+      <div class="pie-wrap">
+        <div class="pie-canvas-holder"><canvas id="pieChart"></canvas></div>
+        <div class="legend" id="pieLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-panel">
+    <div class="table-header">
+      <h3>VISÃO GERAL DE DOCUMENTAÇÃO POR COLABORADOR</h3>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Nome Completo</th>
+            <th>CPF</th>
+            <th>Local de Trabalho</th>
+            <th>Ficha de Admissão</th>
+            <th>ASO</th>
+            <th>Ficha de EPI</th>
+            <th>Certificado NR06</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="9" class="loading">Carregando colaboradores...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL NOVO COLABORADOR -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>Novo Colaborador</h2>
+    <form id="formNovo">
+      <label>Nome completo</label>
+      <input type="text" name="nome" required>
+      <label>CPF</label>
+      <input type="text" name="cpf" placeholder="000.000.000-00" required>
+      <label>Local de trabalho</label>
+      <input type="text" name="local" placeholder="Production, Logistics, Admin...">
+
+      <div class="grupo">
+        <div class="grupo-titulo">Ficha de Admissão</div>
+        <label>Data de admissão</label>
+        <input type="date" name="admissao_data">
+        <label>Link do documento</label>
+        <input type="url" name="admissao_link" placeholder="https://...">
+      </div>
+
+      <div class="grupo">
+        <div class="grupo-titulo">ASO</div>
+        <label>Data de vencimento</label>
+        <input type="date" name="aso_data">
+        <label>Link do documento</label>
+        <input type="url" name="aso_link" placeholder="https://...">
+      </div>
+
+      <div class="grupo">
+        <div class="grupo-titulo">Ficha de EPI</div>
+        <label>Data de vencimento</label>
+        <input type="date" name="epi_data">
+        <label>Link do documento</label>
+        <input type="url" name="epi_link" placeholder="https://...">
+      </div>
+
+      <div class="grupo">
+        <div class="grupo-titulo">Certificado NR06</div>
+        <label>Data de vencimento</label>
+        <input type="date" name="nr06_data">
+        <label>Link do documento</label>
+        <input type="url" name="nr06_link" placeholder="https://...">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" id="btnCancelar">Cancelar</button>
+        <button type="submit" class="btn primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÃO DO SUPABASE
+   Troque pelos valores do SEU projeto (Settings > API)
+   ========================================================= */
+const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
+const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON-PUBLICA";
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let colaboradores = [];
+let barChartInstance = null;
+let pieChartInstance = null;
+
+const DOC_FIELDS = [
+  { key: "admissao", label: "Ficha de Admissão", expira: false },
+  { key: "aso",       label: "ASO",               expira: true  },
+  { key: "epi",       label: "Ficha de EPI",       expira: true  },
+  { key: "nr06",      label: "Certificado NR06",   expira: true  }
+];
+
+/* ---------- Utilidades ---------- */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function diffDias(dataStr){
+  if(!dataStr) return null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const alvo = new Date(dataStr); alvo.setHours(0,0,0,0);
+  return Math.round((alvo - hoje) / 86400000);
+}
+
+function statusDocumento(dataStr, link, expira){
+  if(!expira){
+    return dataStr ? { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' }
+                    : { chave:'bad', texto:'Pendente', classe:'bad', icone:'⛔' };
+  }
+  if(!dataStr){
+    return { chave:'bad', texto:'Pendente', classe:'bad', icone:'⛔' };
+  }
+  const dias = diffDias(dataStr);
+  if(dias < 0)  return { chave:'bad',  texto:'Vencido', classe:'bad', icone:'⛔' };
+  if(dias <= 30) return { chave:'warn', texto:`Vence em ${dias} dias`, classe:'warn', icone:'⚠' };
+  return { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' };
+}
+
+function iniciais(nome){
+  return nome.split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase();
+}
+
+function formatCPF(cpf){ return cpf || "-"; }
+
+/* ---------- Carregar dados do Supabase ---------- */
+async function loadColaboradores(){
+  const { data, error } = await supabaseClient
+    .from('colaboradores')
+    .select('*')
+    .order('nome', { ascending: true });
+
+  if(error){
+    document.getElementById('tableBody').innerHTML =
+      `<tr><td colspan="9" class="empty">Erro ao carregar dados: ${error.message}</td></tr>`;
+    console.error(error);
+    return;
+  }
+
+  colaboradores = data || [];
+  renderTudo();
+}
+
+/* ---------- Renderização geral ---------- */
+function renderTudo(){
+  renderTabela();
+  renderKpis();
+  renderGraficos();
+}
+
+function pillHtml(campo, colaborador){
+  const status = statusDocumento(colaborador[`${campo}_data`], colaborador[`${campo}_link`], DOC_FIELDS.find(d=>d.key===campo).expira);
+  const link = colaborador[`${campo}_link`];
+  if(link){
+    return `<a class="status-pill ${status.classe} link" href="${link}" target="_blank" rel="noopener">${status.icone} ${status.texto}</a>`;
+  }
+  return `<span class="status-pill ${status.classe} nolink">${status.icone} ${status.texto}</span>`;
+}
+
+function renderTabela(){
+  const tbody = document.getElementById('tableBody');
+  if(colaboradores.length === 0){
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Nenhum colaborador cadastrado ainda.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = colaboradores.map(c => `
+    <tr>
+      <td><div class="colab-avatar">${iniciais(c.nome)}</div></td>
+      <td>${c.nome}</td>
+      <td>${formatCPF(c.cpf)}</td>
+      <td>${c.local || '-'}</td>
+      <td>${pillHtml('admissao', c)}</td>
+      <td>${pillHtml('aso', c)}</td>
+      <td>${pillHtml('epi', c)}</td>
+      <td>${pillHtml('nr06', c)}</td>
+      <td class="acoes">
+        <span title="Excluir colaborador" onclick="excluirColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">🗑️</span>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderKpis(){
+  const total = colaboradores.length;
+  document.getElementById('kpiTotal').textContent = total;
+
+  if(total === 0){
+    document.getElementById('kpiEmDia').textContent = '0 (0%)';
+    document.getElementById('kpiVencendo').textContent = '0 (0%)';
+    document.getElementById('kpiVencidos').textContent = '0 (0%)';
+    return;
+  }
+
+  let emDia = 0, algumVencendo = 0, algumVencido = 0;
+  colaboradores.forEach(c=>{
+    let temVencido = false, temVencendo = false;
+    DOC_FIELDS.forEach(d=>{
+      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      if(s.chave === 'bad') temVencido = true;
+      if(s.chave === 'warn') temVencendo = true;
+    });
+    if(!temVencido && !temVencendo) emDia++;
+    if(temVencendo) algumVencendo++;
+    if(temVencido) algumVencido++;
+  });
+
+  const pct = (n)=> Math.round((n/total)*100);
+  document.getElementById('kpiEmDia').textContent = `${emDia} (${pct(emDia)}%)`;
+  document.getElementById('kpiVencendo').textContent = `${algumVencendo} (${pct(algumVencendo)}%)`;
+  document.getElementById('kpiVencidos').textContent = `${algumVencido} (${pct(algumVencido)}%)`;
+}
+
+function renderGraficos(){
+  const setoresMap = {};
+  colaboradores.forEach(c=>{
+    const setor = c.local || 'Não informado';
+    if(!setoresMap[setor]) setoresMap[setor] = { regular:0, vencendo:0, vencido:0 };
+    DOC_FIELDS.forEach(d=>{
+      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      if(s.chave === 'ok') setoresMap[setor].regular++;
+      else if(s.chave === 'warn') setoresMap[setor].vencendo++;
+      else setoresMap[setor].vencido++;
+    });
+  });
+  const setores = Object.keys(setoresMap).map(nome => ({ nome, ...setoresMap[nome] }));
+
+  const pendCores = { admissao:'#2b6777', aso:'#2ecc71', epi:'#f5c518', nr06:'#e74c3c' };
+  const pendentes = DOC_FIELDS.map(d=>{
+    let count = 0;
+    colaboradores.forEach(c=>{
+      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      if(s.chave !== 'ok') count++;
+    });
+    return { label: d.label, valor: count, cor: pendCores[d.key] };
+  });
+
+  if(barChartInstance) barChartInstance.destroy();
+  barChartInstance = new Chart(document.getElementById('barChart'), {
+    type:'bar',
+    data:{
+      labels: setores.map(s=>s.nome),
+      datasets:[
+        { label:'Regular', data: setores.map(s=>s.regular), backgroundColor:'#2b6777', borderRadius:3 },
+        { label:'Vence em Breve', data: setores.map(s=>s.vencendo), backgroundColor:'#f5c518', borderRadius:3 },
+        { label:'Vencido', data: setores.map(s=>s.vencido), backgroundColor:'#e74c3c', borderRadius:3 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'circle', font:{size:11} } } },
+      scales:{ y:{ beginAtZero:true, grid:{color:'#eef1f5'} }, x:{ grid:{display:false} } }
+    }
+  });
+
+  if(pieChartInstance) pieChartInstance.destroy();
+  pieChartInstance = new Chart(document.getElementById('pieChart'), {
+    type:'doughnut',
+    data:{ labels: pendentes.map(p=>p.label), datasets:[{ data: pendentes.map(p=>p.valor), backgroundColor: pendentes.map(p=>p.cor), borderWidth:2, borderColor:'#fff' }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, cutout:'55%' }
+  });
+
+  const legendEl = document.getElementById('pieLegend');
+  legendEl.innerHTML = pendentes.map(p=>`<div class="legend-item"><span class="legend-dot" style="background:${p.cor}"></span>${p.label}</div>`).join('');
+}
+
+/* ---------- Excluir colaborador ---------- */
+async function excluirColaborador(id, nome){
+  if(!confirm(`Excluir "${nome}" definitivamente? Essa ação não pode ser desfeita.`)) return;
+  const { error } = await supabaseClient.from('colaboradores').delete().eq('id', id);
+  if(error){ toast('Erro ao excluir: ' + error.message); return; }
+  toast('Colaborador excluído.');
+  loadColaboradores();
+}
+window.excluirColaborador = excluirColaborador;
+
+/* ---------- Modal novo colaborador ---------- */
+const modalOverlay = document.getElementById('modalOverlay');
+document.getElementById('btnAbrirNovo').addEventListener('click', ()=> modalOverlay.classList.add('open'));
+document.getElementById('btnCancelar').addEventListener('click', ()=> modalOverlay.classList.remove('open'));
+
+document.getElementById('formNovo').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const registro = Object.fromEntries(fd.entries());
+  ['admissao_data','aso_data','epi_data','nr06_data'].forEach(k=>{ if(!registro[k]) registro[k] = null; });
+
+  const { error } = await supabaseClient.from('colaboradores').insert([registro]);
+  if(error){ toast('Erro ao salvar: ' + error.message); return; }
+
+  toast('Colaborador adicionado.');
+  e.target.reset();
+  modalOverlay.classList.remove('open');
+  loadColaboradores();
+});
+
+/* ---------- Exportar para Excel ---------- */
+document.getElementById('btnExportExcel').addEventListener('click', ()=>{
+  if(colaboradores.length === 0){ toast('Não há dados para exportar.'); return; }
+
+  const linhas = colaboradores.map(c => ({
+    id: c.id,
+    nome: c.nome,
+    cpf: c.cpf,
+    local: c.local,
+    admissao_data: c.admissao_data,
+    admissao_link: c.admissao_link,
+    aso_data: c.aso_data,
+    aso_link: c.aso_link,
+    epi_data: c.epi_data,
+    epi_link: c.epi_link,
+    nr06_data: c.nr06_data,
+    nr06_link: c.nr06_link
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(linhas);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Colaboradores");
+  XLSX.writeFile(wb, `colaboradores_${new Date().toISOString().slice(0,10)}.xlsx`);
+});
+
+/* ---------- Exportar para PDF ---------- */
+document.getElementById('btnExportPdf').addEventListener('click', ()=>{
+  if(colaboradores.length === 0){ toast('Não há dados para exportar.'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape' });
+
+  doc.setFontSize(14);
+  doc.text('Gestão de Segurança do Trabalho - Visão Geral por Colaborador', 14, 15);
+
+  const linhas = colaboradores.map(c => {
+    const status = (campo, expira) => statusDocumento(c[`${campo}_data`], c[`${campo}_link`], expira).texto;
+    return [
+      c.nome,
+      c.cpf || '-',
+      c.local || '-',
+      status('admissao', false),
+      status('aso', true),
+      status('epi', true),
+      status('nr06', true)
+    ];
+  });
+
+  doc.autoTable({
+    startY: 22,
+    head: [['Nome Completo','CPF','Local','Ficha de Admissão','ASO','Ficha de EPI','Certificado NR06']],
+    body: linhas,
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [43,103,119] }
+  });
+
+  doc.save(`colaboradores_${new Date().toISOString().slice(0,10)}.pdf`);
+});
+
+/* ---------- Importar Excel (correção em massa) ----------
+   Basta exportar, editar as colunas no Excel (datas e links)
+   e subir o mesmo arquivo aqui. A atualização usa o CPF como
+   chave — colaboradores existentes são atualizados de uma vez,
+   sem precisar editar um por um na tela.
+------------------------------------------------------------ */
+document.getElementById('inputImport').addEventListener('change', async (e)=>{
+  const arquivo = e.target.files[0];
+  if(!arquivo) return;
+
+  const dadosArray = await arquivo.arrayBuffer();
+  const wb = XLSX.read(dadosArray);
+  const primeiraAba = wb.Sheets[wb.SheetNames[0]];
+  const linhas = XLSX.utils.sheet_to_json(primeiraAba, { raw:false });
+
+  if(linhas.length === 0){ toast('Planilha vazia ou em formato inválido.'); e.target.value=''; return; }
+
+  const registros = linhas.map(l => {
+    const norm = (v)=> v ? new Date(v).toISOString().slice(0,10) : null;
+    return {
+      nome: l.nome,
+      cpf: l.cpf,
+      local: l.local,
+      admissao_data: norm(l.admissao_data),
+      admissao_link: l.admissao_link || null,
+      aso_data: norm(l.aso_data),
+      aso_link: l.aso_link || null,
+      epi_data: norm(l.epi_data),
+      epi_link: l.epi_link || null,
+      nr06_data: norm(l.nr06_data),
+      nr06_link: l.nr06_link || null
+    };
+  }).filter(r => r.cpf);
+
+  if(registros.length === 0){ toast('Nenhuma linha com CPF válido encontrada.'); e.target.value=''; return; }
+
+  const { error } = await supabaseClient
+    .from('colaboradores')
+    .upsert(registros, { onConflict: 'cpf' });
+
+  e.target.value = '';
+
+  if(error){ toast('Erro ao importar: ' + error.message); console.error(error); return; }
+
+  toast(`${registros.length} colaborador(es) atualizado(s) com sucesso.`);
+  loadColaboradores();
+});
+
+/* ---------- Inicialização ---------- */
+loadColaboradores();
+</script>
+
+</body>
+</html>
