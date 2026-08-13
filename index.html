@@ -109,6 +109,18 @@
   .toast{position:fixed;bottom:24px;right:24px;background:var(--texto-escuro);color:white;padding:12px 18px;border-radius:8px;font-size:13px;z-index:200;display:none;}
   .toast.show{display:block;}
 
+  .docs-layout{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;}
+  .docs-list{flex:0 0 220px;display:flex;flex-direction:column;gap:8px;}
+  .doc-item{border:1px solid var(--cinza-borda);border-radius:8px;padding:10px;cursor:pointer;font-size:13px;}
+  .doc-item:hover{background:var(--cinza-fundo);}
+  .doc-item.active{border-color:var(--azul-header);background:#eaf3f5;}
+  .doc-item .doc-nome{font-weight:600;margin-bottom:4px;}
+  .doc-item .doc-sem-link{font-size:11px;color:var(--cinza-texto);margin-top:4px;}
+  .docs-preview{flex:1;min-width:260px;border:1px solid var(--cinza-borda);border-radius:8px;overflow:hidden;position:relative;background:#fafbfc;}
+  .docs-preview iframe{width:100%;height:360px;border:0;display:block;}
+  .docs-preview-empty{padding:20px;color:var(--cinza-texto);font-size:13px;text-align:center;}
+  .docs-preview-link{display:block;text-align:center;padding:8px;font-size:12px;background:var(--cinza-fundo);border-top:1px solid var(--cinza-borda);}
+
   @media (max-width:1100px){.kpi-row{grid-template-columns:repeat(2,1fr);} .charts-row{grid-template-columns:1fr;}}
   @media (max-width:600px){.kpi-row{grid-template-columns:1fr;}}
 </style>
@@ -253,13 +265,34 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- MODAL VER DOCUMENTOS -->
+<div class="modal-overlay" id="modalDocsOverlay">
+  <div class="modal" style="max-width:760px;">
+    <h2 id="docsModalTitulo">Documentos do Colaborador</h2>
+    <div class="docs-layout">
+      <div class="docs-list" id="docsList"></div>
+      <div class="docs-preview">
+        <iframe id="docsPreviewFrame" src="" title="Pré-visualização do documento" style="display:none;"></iframe>
+        <div id="docsPreviewEmpty" class="docs-preview-empty">Selecione um documento à esquerda para visualizar.</div>
+        <a id="docsPreviewLink" class="docs-preview-link" href="#" target="_blank" rel="noopener" style="display:none;">Abrir em nova aba ↗</a>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="btnFecharDocs">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =========================================================
    CONFIGURAÇÃO DO SUPABASE
-   Troque pelos valores do SEU projeto (Settings > API)
+   ⚠️ TROQUE OS DOIS VALORES ABAIXO PELOS DO SEU PROJETO
+   (Supabase → Settings → API → Project URL / anon public key)
+   Se ficar "SEU-PROJETO" ou "SUA-CHAVE..." aqui, nada vai
+   carregar — é exatamente o erro que você viu agora.
    ========================================================= */
-const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
-const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON-PUBLICA";
+const SUPABASE_URL = "https://nnzqwkhwtphkijlgtwxm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uenF3a2h3dHBoa2lqbGd0d3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTc5NTgsImV4cCI6MjEwMjIzMzk1OH0.nYOD0jnxyyxBTptQRsFrwfQO8haD0-ejMcujQ6IOsQQ";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -362,6 +395,7 @@ function renderTabela(){
       <td>${pillHtml('epi', c)}</td>
       <td>${pillHtml('nr06', c)}</td>
       <td class="acoes">
+        <span title="Ver documentos" onclick="abrirDocumentos('${c.id}')">👁️</span>
         <span title="Editar colaborador" onclick="editarColaborador('${c.id}')">✏️</span>
         <span title="Excluir colaborador" onclick="excluirColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">🗑️</span>
       </td>
@@ -489,6 +523,70 @@ function editarColaborador(id){
   modalOverlay.classList.add('open');
 }
 window.editarColaborador = editarColaborador;
+
+/* ---------- Ver documentos ---------- */
+const modalDocsOverlay = document.getElementById('modalDocsOverlay');
+
+function abrirDocumentos(id){
+  const c = colaboradores.find(x => x.id === id);
+  if(!c){ toast('Colaborador não encontrado.'); return; }
+
+  document.getElementById('docsModalTitulo').textContent = `Documentos — ${c.nome}`;
+
+  const listEl = document.getElementById('docsList');
+  listEl.innerHTML = DOC_FIELDS.map(d=>{
+    const link = c[`${d.key}_link`] || '';
+    const status = statusDocumento(c[`${d.key}_data`], link, d.expira);
+    return `
+      <div class="doc-item" data-link="${link.replace(/"/g,'&quot;')}" onclick="selecionarDocumento(this)">
+        <div class="doc-nome">${d.label}</div>
+        <span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span>
+        ${!link ? '<div class="doc-sem-link">Sem link cadastrado</div>' : ''}
+      </div>`;
+  }).join('');
+
+  // reseta a área de pré-visualização
+  const frame = document.getElementById('docsPreviewFrame');
+  const empty = document.getElementById('docsPreviewEmpty');
+  const linkBtn = document.getElementById('docsPreviewLink');
+  frame.style.display = 'none'; frame.src = '';
+  linkBtn.style.display = 'none';
+  empty.style.display = 'block';
+  empty.textContent = 'Selecione um documento à esquerda para visualizar.';
+
+  modalDocsOverlay.classList.add('open');
+}
+window.abrirDocumentos = abrirDocumentos;
+
+function selecionarDocumento(el){
+  document.querySelectorAll('.doc-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+
+  const link = el.getAttribute('data-link');
+  const frame = document.getElementById('docsPreviewFrame');
+  const empty = document.getElementById('docsPreviewEmpty');
+  const linkBtn = document.getElementById('docsPreviewLink');
+
+  if(!link){
+    frame.style.display = 'none'; frame.src = '';
+    linkBtn.style.display = 'none';
+    empty.style.display = 'block';
+    empty.textContent = 'Nenhum link cadastrado para este documento ainda. Edite o colaborador para adicionar um.';
+    return;
+  }
+
+  empty.style.display = 'none';
+  frame.style.display = 'block';
+  frame.src = link;
+  linkBtn.style.display = 'block';
+  linkBtn.href = link;
+}
+window.selecionarDocumento = selecionarDocumento;
+
+document.getElementById('btnFecharDocs').addEventListener('click', ()=>{
+  modalDocsOverlay.classList.remove('open');
+  document.getElementById('docsPreviewFrame').src = ''; // para de carregar o documento ao fechar
+});
 
 function fecharModal(){
   modalOverlay.classList.remove('open');
