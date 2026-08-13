@@ -202,7 +202,7 @@
 <!-- MODAL NOVO COLABORADOR -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <h2>Novo Colaborador</h2>
+    <h2 id="modalTitulo">Novo Colaborador</h2>
     <form id="formNovo">
       <label>Nome completo</label>
       <input type="text" name="nome" required>
@@ -245,7 +245,7 @@
 
       <div class="modal-actions">
         <button type="button" class="btn" id="btnCancelar">Cancelar</button>
-        <button type="submit" class="btn primary">Salvar</button>
+        <button type="submit" class="btn primary" id="btnSalvar">Salvar</button>
       </div>
     </form>
   </div>
@@ -258,14 +258,15 @@
    CONFIGURAÇÃO DO SUPABASE
    Troque pelos valores do SEU projeto (Settings > API)
    ========================================================= */
-const SUPABASE_URL = "https://nnzqwkhwtphkijlgtwxm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uenF3a2h3dHBoa2lqbGd0d3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTc5NTgsImV4cCI6MjEwMjIzMzk1OH0.nYOD0jnxyyxBTptQRsFrwfQO8haD0-ejMcujQ6IOsQQ";
+const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
+const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON-PUBLICA";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let colaboradores = [];
 let barChartInstance = null;
 let pieChartInstance = null;
+let editandoId = null; // null = cadastro novo | id = edição em andamento
 
 const DOC_FIELDS = [
   { key: "admissao", label: "Ficha de Admissão", expira: false },
@@ -361,6 +362,7 @@ function renderTabela(){
       <td>${pillHtml('epi', c)}</td>
       <td>${pillHtml('nr06', c)}</td>
       <td class="acoes">
+        <span title="Editar colaborador" onclick="editarColaborador('${c.id}')">✏️</span>
         <span title="Excluir colaborador" onclick="excluirColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">🗑️</span>
       </td>
     </tr>
@@ -378,26 +380,32 @@ function renderKpis(){
     return;
   }
 
-  let emDia = 0, algumVencendo = 0, algumVencido = 0;
+  // "Colaboradores em Dia" = pessoas (sem nenhum documento vencido/vencendo)
+  // "Documentos Vencendo/Vencidos" = contagem de DOCUMENTOS (cada colaborador tem 4),
+  // não de pessoas — por isso é calculado separadamente.
+  let emDia = 0;
+  let docsVencendo = 0, docsVencidos = 0;
+  const totalDocumentos = total * DOC_FIELDS.length;
+
   colaboradores.forEach(c=>{
     let temVencido = false, temVencendo = false;
     DOC_FIELDS.forEach(d=>{
       const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
-      if(s.chave === 'bad') temVencido = true;
-      if(s.chave === 'warn') temVencendo = true;
+      if(s.chave === 'bad'){ temVencido = true; docsVencidos++; }
+      if(s.chave === 'warn'){ temVencendo = true; docsVencendo++; }
     });
     if(!temVencido && !temVencendo) emDia++;
-    if(temVencendo) algumVencendo++;
-    if(temVencido) algumVencido++;
   });
 
-  const pct = (n)=> Math.round((n/total)*100);
-  document.getElementById('kpiEmDia').textContent = `${emDia} (${pct(emDia)}%)`;
-  document.getElementById('kpiVencendo').textContent = `${algumVencendo} (${pct(algumVencendo)}%)`;
-  document.getElementById('kpiVencidos').textContent = `${algumVencido} (${pct(algumVencido)}%)`;
+  const pctPessoas = (n)=> Math.round((n/total)*100);
+  const pctDocs = (n)=> Math.round((n/totalDocumentos)*100);
+  document.getElementById('kpiEmDia').textContent = `${emDia} (${pctPessoas(emDia)}%)`;
+  document.getElementById('kpiVencendo').textContent = `${docsVencendo} (${pctDocs(docsVencendo)}%)`;
+  document.getElementById('kpiVencidos').textContent = `${docsVencidos} (${pctDocs(docsVencidos)}%)`;
 }
 
 function renderGraficos(){
+ try {
   const setoresMap = {};
   colaboradores.forEach(c=>{
     const setor = c.local || 'Não informado';
@@ -448,6 +456,9 @@ function renderGraficos(){
 
   const legendEl = document.getElementById('pieLegend');
   legendEl.innerHTML = pendentes.map(p=>`<div class="legend-item"><span class="legend-dot" style="background:${p.cor}"></span>${p.label}</div>`).join('');
+ } catch(err){
+   console.error('Erro ao renderizar gráficos:', err);
+ }
 }
 
 /* ---------- Excluir colaborador ---------- */
@@ -460,10 +471,42 @@ async function excluirColaborador(id, nome){
 }
 window.excluirColaborador = excluirColaborador;
 
-/* ---------- Modal novo colaborador ---------- */
+/* ---------- Editar colaborador ---------- */
+function editarColaborador(id){
+  const c = colaboradores.find(x => x.id === id);
+  if(!c){ toast('Colaborador não encontrado.'); return; }
+
+  editandoId = id;
+  document.getElementById('modalTitulo').textContent = `Editar Colaborador — ${c.nome}`;
+  document.getElementById('btnSalvar').textContent = 'Salvar alterações';
+
+  const form = document.getElementById('formNovo');
+  const campos = ['nome','cpf','local','admissao_data','admissao_link','aso_data','aso_link','epi_data','epi_link','nr06_data','nr06_link'];
+  campos.forEach(campo=>{
+    if(form.elements[campo]) form.elements[campo].value = c[campo] || '';
+  });
+
+  modalOverlay.classList.add('open');
+}
+window.editarColaborador = editarColaborador;
+
+function fecharModal(){
+  modalOverlay.classList.remove('open');
+  document.getElementById('formNovo').reset();
+  editandoId = null;
+  document.getElementById('modalTitulo').textContent = 'Novo Colaborador';
+  document.getElementById('btnSalvar').textContent = 'Salvar';
+}
+
+/* ---------- Modal novo/editar colaborador ---------- */
 const modalOverlay = document.getElementById('modalOverlay');
-document.getElementById('btnAbrirNovo').addEventListener('click', ()=> modalOverlay.classList.add('open'));
-document.getElementById('btnCancelar').addEventListener('click', ()=> modalOverlay.classList.remove('open'));
+document.getElementById('btnAbrirNovo').addEventListener('click', ()=>{
+  editandoId = null;
+  document.getElementById('modalTitulo').textContent = 'Novo Colaborador';
+  document.getElementById('btnSalvar').textContent = 'Salvar';
+  modalOverlay.classList.add('open');
+});
+document.getElementById('btnCancelar').addEventListener('click', fecharModal);
 
 document.getElementById('formNovo').addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -471,12 +514,17 @@ document.getElementById('formNovo').addEventListener('submit', async (e)=>{
   const registro = Object.fromEntries(fd.entries());
   ['admissao_data','aso_data','epi_data','nr06_data'].forEach(k=>{ if(!registro[k]) registro[k] = null; });
 
-  const { error } = await supabaseClient.from('colaboradores').insert([registro]);
+  let error;
+  if(editandoId){
+    ({ error } = await supabaseClient.from('colaboradores').update(registro).eq('id', editandoId));
+  } else {
+    ({ error } = await supabaseClient.from('colaboradores').insert([registro]));
+  }
+
   if(error){ toast('Erro ao salvar: ' + error.message); return; }
 
-  toast('Colaborador adicionado.');
-  e.target.reset();
-  modalOverlay.classList.remove('open');
+  toast(editandoId ? 'Colaborador atualizado.' : 'Colaborador adicionado.');
+  fecharModal();
   loadColaboradores();
 });
 
