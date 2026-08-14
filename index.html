@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gestão de Segurança do Trabalho - Dashboard de Compliance</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -87,8 +87,6 @@
   .status-pill.ok{background:var(--verde-claro);color:#1e8e4c;}
   .status-pill.warn{background:var(--amarelo-claro);color:#b8720a;}
   .status-pill.bad{background:var(--vermelho-claro);color:#c0392b;}
-  .status-pill.link{cursor:pointer;}
-  .status-pill.nolink{cursor:default;opacity:0.85;}
 
   .acoes{display:flex;gap:12px;color:var(--cinza-texto);}
   .acoes span{cursor:pointer;}
@@ -286,10 +284,6 @@
 <script>
 /* =========================================================
    CONFIGURAÇÃO DO SUPABASE
-   ⚠️ TROQUE OS DOIS VALORES ABAIXO PELOS DO SEU PROJETO
-   (Supabase → Settings → API → Project URL / anon public key)
-   Se ficar "SEU-PROJETO" ou "SUA-CHAVE..." aqui, nada vai
-   carregar — é exatamente o erro que você viu agora.
    ========================================================= */
 const SUPABASE_URL = "https://nnzqwkhwtphkijlgtwxm.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uenF3a2h3dHBoa2lqbGd0d3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTc5NTgsImV4cCI6MjEwMjIzMzk1OH0.nYOD0jnxyyxBTptQRsFrwfQO8haD0-ejMcujQ6IOsQQ";
@@ -368,13 +362,11 @@ function renderTudo(){
   renderGraficos();
 }
 
+// A pílula na tabela é só informativa — não abre mais nada ao clicar.
+// Para visualizar o documento, use o botão "Ver documentos" (👁️) na coluna Ações.
 function pillHtml(campo, colaborador){
   const status = statusDocumento(colaborador[`${campo}_data`], colaborador[`${campo}_link`], DOC_FIELDS.find(d=>d.key===campo).expira);
-  const link = colaborador[`${campo}_link`];
-  if(link){
-    return `<a class="status-pill ${status.classe} link" href="${link}" target="_blank" rel="noopener">${status.icone} ${status.texto}</a>`;
-  }
-  return `<span class="status-pill ${status.classe} nolink">${status.icone} ${status.texto}</span>`;
+  return `<span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span>`;
 }
 
 function renderTabela(){
@@ -414,9 +406,6 @@ function renderKpis(){
     return;
   }
 
-  // "Colaboradores em Dia" = pessoas (sem nenhum documento vencido/vencendo)
-  // "Documentos Vencendo/Vencidos" = contagem de DOCUMENTOS (cada colaborador tem 4),
-  // não de pessoas — por isso é calculado separadamente.
   let emDia = 0;
   let docsVencendo = 0, docsVencidos = 0;
   const totalDocumentos = total * DOC_FIELDS.length;
@@ -440,6 +429,12 @@ function renderKpis(){
 
 function renderGraficos(){
  try {
+  if(typeof Chart === 'undefined'){
+    document.querySelector('#barChart').closest('.panel').querySelector('.chart-wrap').innerHTML =
+      '<p style="color:var(--vermelho);font-size:13px;">Não foi possível carregar a biblioteca de gráficos (Chart.js). Verifique sua conexão e recarregue a página.</p>';
+    console.error('Chart.js não está disponível (window.Chart é undefined).');
+    return;
+  }
   const setoresMap = {};
   colaboradores.forEach(c=>{
     const setor = c.local || 'Não informado';
@@ -545,7 +540,6 @@ function abrirDocumentos(id){
       </div>`;
   }).join('');
 
-  // reseta a área de pré-visualização
   const frame = document.getElementById('docsPreviewFrame');
   const empty = document.getElementById('docsPreviewEmpty');
   const linkBtn = document.getElementById('docsPreviewLink');
@@ -585,7 +579,7 @@ window.selecionarDocumento = selecionarDocumento;
 
 document.getElementById('btnFecharDocs').addEventListener('click', ()=>{
   modalDocsOverlay.classList.remove('open');
-  document.getElementById('docsPreviewFrame').src = ''; // para de carregar o documento ao fechar
+  document.getElementById('docsPreviewFrame').src = '';
 });
 
 function fecharModal(){
@@ -685,12 +679,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   doc.save(`colaboradores_${new Date().toISOString().slice(0,10)}.pdf`);
 });
 
-/* ---------- Importar Excel (correção em massa) ----------
-   Basta exportar, editar as colunas no Excel (datas e links)
-   e subir o mesmo arquivo aqui. A atualização usa o CPF como
-   chave — colaboradores existentes são atualizados de uma vez,
-   sem precisar editar um por um na tela.
------------------------------------------------------------- */
+/* ---------- Importar Excel (correção em massa) ---------- */
 document.getElementById('inputImport').addEventListener('change', async (e)=>{
   const arquivo = e.target.files[0];
   if(!arquivo) return;
