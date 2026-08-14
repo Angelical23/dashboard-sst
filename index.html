@@ -31,10 +31,44 @@
   body{margin:0;font-family:'Segoe UI', Arial, sans-serif;background:var(--cinza-fundo);color:var(--texto-escuro);padding:24px;}
   .dashboard{max-width:1450px;margin:0 auto;background:var(--branco);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.08);overflow:hidden;}
 
+  /* ---------- TELA DE LOGIN ---------- */
+  #loginScreen{
+    min-height:80vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .login-card{
+    background:var(--branco);
+    border-radius:16px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.08);
+    padding:40px 36px;
+    width:100%;
+    max-width:380px;
+    text-align:center;
+  }
+  .login-card .login-icon{
+    width:56px;height:56px;border-radius:50%;
+    background:var(--azul-header);color:white;
+    display:flex;align-items:center;justify-content:center;
+    font-size:26px;margin:0 auto 16px;
+  }
+  .login-card h1{font-size:17px;margin:0 0 4px;color:var(--texto-escuro);}
+  .login-card p{font-size:13px;color:var(--cinza-texto);margin:0 0 24px;}
+  .login-card label{display:block;font-size:12px;color:var(--cinza-texto);margin:12px 0 4px;text-align:left;}
+  .login-card input{width:100%;padding:10px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:14px;}
+  .login-card .btn.primary{width:100%;justify-content:center;margin-top:20px;padding:10px 14px;}
+  .login-erro{color:var(--vermelho);font-size:12px;margin-top:12px;display:none;}
+
+  #appContainer{display:none;}
+
   .header{background:linear-gradient(90deg, var(--azul-escuro), var(--azul-header));color:var(--branco);padding:18px 28px;display:flex;justify-content:space-between;align-items:center;}
   .header h1{margin:0;font-size:20px;letter-spacing:0.5px;font-weight:700;}
+  .header-actions{display:flex;align-items:center;gap:14px;}
   .header-add{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;background:transparent;color:white;}
   .header-add:hover{background:rgba(255,255,255,0.15);}
+  .header-logout{background:transparent;border:1px solid rgba(255,255,255,0.5);color:white;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;}
+  .header-logout:hover{background:rgba(255,255,255,0.15);}
 
   .userbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;border-bottom:1px solid var(--cinza-borda);flex-wrap:wrap;gap:10px;}
   .user-info{display:flex;align-items:center;gap:12px;}
@@ -125,11 +159,33 @@
 </head>
 <body>
 
+<!-- TELA DE LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-icon">🔒</div>
+    <h1>Gestão de Segurança do Trabalho</h1>
+    <p>Faça login para acessar o dashboard de compliance</p>
+    <form id="formLogin">
+      <label>E-mail</label>
+      <input type="email" id="loginEmail" required autocomplete="username">
+      <label>Senha</label>
+      <input type="password" id="loginSenha" required autocomplete="current-password">
+      <button type="submit" class="btn primary" id="btnLogin">Entrar</button>
+      <div class="login-erro" id="loginErro"></div>
+    </form>
+  </div>
+</div>
+
+<!-- APP (só aparece depois do login) -->
+<div id="appContainer">
 <div class="dashboard">
 
   <div class="header">
     <h1>GESTÃO DE SEGURANÇA DO TRABALHO - DASHBOARD DE COMPLIANCE</h1>
-    <button class="header-add" id="btnAbrirNovo" title="Adicionar colaborador">+</button>
+    <div class="header-actions">
+      <button class="header-logout" id="btnLogout">Sair</button>
+      <button class="header-add" id="btnAbrirNovo" title="Adicionar colaborador">+</button>
+    </div>
   </div>
 
   <div class="userbar">
@@ -137,7 +193,7 @@
       <div class="avatar">AS</div>
       <div>
         <div class="user-name">Ana Silva</div>
-        <div class="user-role">Gestora SST</div>
+        <div class="user-role" id="usuarioLogadoEmail">Gestora SST</div>
       </div>
     </div>
     <div class="toolbar">
@@ -281,6 +337,8 @@
   </div>
 </div>
 
+</div><!-- fim appContainer -->
+
 <script>
 /* =========================================================
    CONFIGURAÇÃO DO SUPABASE
@@ -301,6 +359,68 @@ const DOC_FIELDS = [
   { key: "epi",       label: "Ficha de EPI",       expira: true  },
   { key: "nr06",      label: "Certificado NR06",   expira: true  }
 ];
+
+/* =========================================================
+   AUTENTICAÇÃO
+   ========================================================= */
+const loginScreen = document.getElementById('loginScreen');
+const appContainer = document.getElementById('appContainer');
+
+function mostrarApp(session){
+  loginScreen.style.display = 'none';
+  appContainer.style.display = 'block';
+  document.getElementById('usuarioLogadoEmail').textContent = session.user.email;
+  loadColaboradores();
+}
+
+function mostrarLogin(){
+  appContainer.style.display = 'none';
+  loginScreen.style.display = 'flex';
+}
+
+// Verifica se já existe uma sessão ativa ao carregar a página
+supabaseClient.auth.getSession().then(({ data }) => {
+  if(data.session){
+    mostrarApp(data.session);
+  } else {
+    mostrarLogin();
+  }
+});
+
+// Reage a login/logout em tempo real
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  if(session){
+    mostrarApp(session);
+  } else {
+    mostrarLogin();
+  }
+});
+
+document.getElementById('formLogin').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const senha = document.getElementById('loginSenha').value;
+  const erroEl = document.getElementById('loginErro');
+  erroEl.style.display = 'none';
+
+  const btn = document.getElementById('btnLogin');
+  btn.textContent = 'Entrando...';
+  btn.disabled = true;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+
+  btn.textContent = 'Entrar';
+  btn.disabled = false;
+
+  if(error){
+    erroEl.textContent = 'E-mail ou senha incorretos.';
+    erroEl.style.display = 'block';
+  }
+});
+
+document.getElementById('btnLogout').addEventListener('click', async ()=>{
+  await supabaseClient.auth.signOut();
+});
 
 /* ---------- Utilidades ---------- */
 function toast(msg){
@@ -362,7 +482,7 @@ function renderTudo(){
   renderGraficos();
 }
 
-// A pílula na tabela é só informativa — não abre mais nada ao clicar.
+// A pílula na tabela é só informativa — não abre nada ao clicar.
 // Para visualizar o documento, use o botão "Ver documentos" (👁️) na coluna Ações.
 function pillHtml(campo, colaborador){
   const status = statusDocumento(colaborador[`${campo}_data`], colaborador[`${campo}_link`], DOC_FIELDS.find(d=>d.key===campo).expira);
@@ -721,9 +841,6 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
   toast(`${registros.length} colaborador(es) atualizado(s) com sucesso.`);
   loadColaboradores();
 });
-
-/* ---------- Inicialização ---------- */
-loadColaboradores();
 </script>
 
 </body>
