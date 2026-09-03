@@ -829,7 +829,42 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
    Aceita planilhas só com nome, cpf e local — as colunas de data e
    link são opcionais. O que não vier preenchido fica em branco e
    aparece como "Vencido" no dashboard, para ser editado depois.
+
+   O cabeçalho da planilha não precisa bater exatamente com nome/cpf/
+   local: a função abaixo reconhece variações comuns (com acento,
+   maiúsculas, "Local de Trabalho" por extenso, etc.).
 ------------------------------------------------------------ */
+function normalizarChave(k){
+  return k.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+const ALIASES_COLUNAS = {
+  nome:          ['nome', 'nome completo', 'colaborador', 'funcionario'],
+  cpf:           ['cpf', 'cpf do colaborador'],
+  local:         ['local', 'local de trabalho', 'setor', 'departamento', 'area'],
+  admissao_data: ['admissao_data', 'data de admissao', 'data admissao', 'admissao'],
+  admissao_link: ['admissao_link', 'link admissao', 'link da admissao'],
+  aso_data:      ['aso_data', 'data aso', 'data do aso', 'vencimento aso'],
+  aso_link:      ['aso_link', 'link aso'],
+  epi_data:      ['epi_data', 'data epi', 'data da epi', 'vencimento epi', 'ficha de epi'],
+  epi_link:      ['epi_link', 'link epi'],
+  nr06_data:     ['nr06_data', 'data nr06', 'vencimento nr06', 'certificado nr06'],
+  nr06_link:     ['nr06_link', 'link nr06']
+};
+
+function mapearLinhaImportada(linhaOriginal){
+  const mapeada = {};
+  Object.keys(linhaOriginal).forEach(chaveOriginal=>{
+    const chaveNorm = normalizarChave(chaveOriginal);
+    for(const [campo, variantes] of Object.entries(ALIASES_COLUNAS)){
+      if(variantes.includes(chaveNorm) && !mapeada[campo]){
+        mapeada[campo] = linhaOriginal[chaveOriginal];
+      }
+    }
+  });
+  return mapeada;
+}
+
 document.getElementById('inputImport').addEventListener('change', async (e)=>{
   const arquivo = e.target.files[0];
   if(!arquivo) return;
@@ -837,16 +872,17 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
   const dadosArray = await arquivo.arrayBuffer();
   const wb = XLSX.read(dadosArray);
   const primeiraAba = wb.Sheets[wb.SheetNames[0]];
-  const linhas = XLSX.utils.sheet_to_json(primeiraAba, { raw:false });
+  const linhasCruas = XLSX.utils.sheet_to_json(primeiraAba, { raw:false });
 
-  if(linhas.length === 0){ toast('Planilha vazia ou em formato inválido.'); e.target.value=''; return; }
+  if(linhasCruas.length === 0){ toast('Planilha vazia ou em formato inválido.'); e.target.value=''; return; }
 
-  const registros = linhas.map(l => {
+  const registros = linhasCruas.map(linhaCrua => {
+    const l = mapearLinhaImportada(linhaCrua);
     const norm = (v)=> v ? new Date(v).toISOString().slice(0,10) : null;
     return {
-      nome: l.nome,
-      cpf: l.cpf,
-      local: l.local,
+      nome: l.nome ? l.nome.toString().trim() : null,
+      cpf: l.cpf ? l.cpf.toString().trim() : null,
+      local: l.local ? l.local.toString().trim() : null,
       admissao_data: norm(l.admissao_data),
       admissao_link: l.admissao_link || null,
       aso_data: norm(l.aso_data),
