@@ -197,6 +197,7 @@
       </div>
     </div>
     <div class="toolbar">
+      <button class="btn" id="btnBaixarModelo">📄 Baixar modelo</button>
       <button class="btn" id="btnExportExcel">⬇ Exportar Excel</button>
       <button class="btn" id="btnExportPdf">⬇ Exportar PDF</button>
       <label class="btn" for="inputImport">⬆ Importar Excel (correção em massa)</label>
@@ -437,13 +438,14 @@ function diffDias(dataStr){
   return Math.round((alvo - hoje) / 86400000);
 }
 
+// Documento sem data cadastrada é tratado como VENCIDO (precisa de atenção),
+// até que alguém edite o colaborador e preencha a data/link reais.
 function statusDocumento(dataStr, link, expira){
-  if(!expira){
-    return dataStr ? { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' }
-                    : { chave:'bad', texto:'Pendente', classe:'bad', icone:'⛔' };
-  }
   if(!dataStr){
-    return { chave:'bad', texto:'Pendente', classe:'bad', icone:'⛔' };
+    return { chave:'bad', texto:'Vencido', classe:'bad', icone:'⛔' };
+  }
+  if(!expira){
+    return { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' };
   }
   const dias = diffDias(dataStr);
   if(dias < 0)  return { chave:'bad',  texto:'Vencido', classe:'bad', icone:'⛔' };
@@ -740,6 +742,30 @@ document.getElementById('formNovo').addEventListener('submit', async (e)=>{
   loadColaboradores();
 });
 
+/* ---------- Baixar modelo de planilha ---------- */
+document.getElementById('btnBaixarModelo').addEventListener('click', ()=>{
+  const linhaExemplo = [{
+    nome: 'João da Silva',
+    cpf: '000.000.000-00',
+    local: 'Production',
+    admissao_data: '',
+    admissao_link: '',
+    aso_data: '',
+    aso_link: '',
+    epi_data: '',
+    epi_link: '',
+    nr06_data: '',
+    nr06_link: ''
+  }];
+
+  const ws = XLSX.utils.json_to_sheet(linhaExemplo);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Modelo");
+  XLSX.writeFile(wb, 'modelo_importacao_colaboradores.xlsx');
+
+  toast('Preencha nome, cpf e local (as demais colunas podem ficar em branco) e importe depois.');
+});
+
 /* ---------- Exportar para Excel ---------- */
 document.getElementById('btnExportExcel').addEventListener('click', ()=>{
   if(colaboradores.length === 0){ toast('Não há dados para exportar.'); return; }
@@ -799,7 +825,11 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   doc.save(`colaboradores_${new Date().toISOString().slice(0,10)}.pdf`);
 });
 
-/* ---------- Importar Excel (correção em massa) ---------- */
+/* ---------- Importar Excel (cadastro/correção em massa) ----------
+   Aceita planilhas só com nome, cpf e local — as colunas de data e
+   link são opcionais. O que não vier preenchido fica em branco e
+   aparece como "Vencido" no dashboard, para ser editado depois.
+------------------------------------------------------------ */
 document.getElementById('inputImport').addEventListener('change', async (e)=>{
   const arquivo = e.target.files[0];
   if(!arquivo) return;
@@ -826,9 +856,9 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
       nr06_data: norm(l.nr06_data),
       nr06_link: l.nr06_link || null
     };
-  }).filter(r => r.cpf);
+  }).filter(r => r.cpf && r.nome);
 
-  if(registros.length === 0){ toast('Nenhuma linha com CPF válido encontrada.'); e.target.value=''; return; }
+  if(registros.length === 0){ toast('Nenhuma linha com nome e CPF válidos encontrada.'); e.target.value=''; return; }
 
   const { error } = await supabaseClient
     .from('colaboradores')
@@ -838,7 +868,7 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
 
   if(error){ toast('Erro ao importar: ' + error.message); console.error(error); return; }
 
-  toast(`${registros.length} colaborador(es) atualizado(s) com sucesso.`);
+  toast(`${registros.length} colaborador(es) importado(s)/atualizado(s). Documentos sem data aparecem como "Vencido" até você editar.`);
   loadColaboradores();
 });
 </script>
