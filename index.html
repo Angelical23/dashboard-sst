@@ -197,7 +197,7 @@
       </div>
     </div>
     <div class="toolbar">
-      <button class="btn" id="btnBaixarModelo">📄 Baixar modelo</button>
+      <button class="btn" id="btnAbrirAnexar">📎 Anexar Documentos</button>
       <button class="btn" id="btnExportExcel">⬇ Exportar Excel</button>
       <button class="btn" id="btnExportPdf">⬇ Exportar PDF</button>
       <label class="btn" for="inputImport">⬆ Importar Excel (correção em massa)</label>
@@ -334,6 +334,39 @@
     </div>
     <div class="modal-actions">
       <button type="button" class="btn" id="btnFecharDocs">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ANEXAR DOCUMENTOS EM MASSA -->
+<div class="modal-overlay" id="modalAnexarOverlay">
+  <div class="modal" style="max-width:640px;">
+    <h2>Anexar Documentos em Massa</h2>
+    <p style="font-size:13px;color:var(--cinza-texto);margin-top:-8px;">
+      Selecione TODOS os arquivos de uma pasta de uma vez (ex: a pasta com todos os ASOs).
+      O sistema reconhece o colaborador pelo nome do arquivo ou pelo CPF nele, envia o
+      arquivo e já vincula o link automaticamente — sem precisar editar um por um.
+    </p>
+
+    <label>Tipo de documento desta leva</label>
+    <select id="anexarTipoDoc" style="width:100%;padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:6px;font-size:13px;">
+      <option value="admissao">Ficha de Admissão</option>
+      <option value="aso">ASO</option>
+      <option value="epi">Ficha de EPI</option>
+      <option value="nr06">Certificado NR06</option>
+    </select>
+
+    <label>Data de vencimento para aplicar a todos os arquivos desta leva (opcional)</label>
+    <input type="date" id="anexarDataLote">
+
+    <label>Arquivos</label>
+    <input type="file" id="anexarArquivos" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:block;padding:8px 0;">
+
+    <div id="anexarResultado" style="margin-top:14px;font-size:12px;max-height:240px;overflow-y:auto;border-top:1px solid var(--cinza-borda);padding-top:10px;"></div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn" id="btnFecharAnexar">Fechar</button>
+      <button type="button" class="btn primary" id="btnEnviarAnexos">Enviar e Vincular</button>
     </div>
   </div>
 </div>
@@ -742,50 +775,163 @@ document.getElementById('formNovo').addEventListener('submit', async (e)=>{
   loadColaboradores();
 });
 
-/* ---------- Baixar modelo de planilha ---------- */
-document.getElementById('btnBaixarModelo').addEventListener('click', ()=>{
-  const linhaExemplo = [{
-    nome: 'João da Silva',
-    cpf: '000.000.000-00',
-    local: 'Production',
-    admissao_data: '',
-    admissao_link: '',
-    aso_data: '',
-    aso_link: '',
-    epi_data: '',
-    epi_link: '',
-    nr06_data: '',
-    nr06_link: ''
-  }];
+/* ---------- Anexar documentos em massa ---------- */
+const modalAnexarOverlay = document.getElementById('modalAnexarOverlay');
 
-  const ws = XLSX.utils.json_to_sheet(linhaExemplo);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Modelo");
-  XLSX.writeFile(wb, 'modelo_importacao_colaboradores.xlsx');
+document.getElementById('btnAbrirAnexar').addEventListener('click', ()=>{
+  document.getElementById('anexarResultado').innerHTML = '';
+  document.getElementById('anexarArquivos').value = '';
+  document.getElementById('anexarDataLote').value = '';
+  modalAnexarOverlay.classList.add('open');
+});
+document.getElementById('btnFecharAnexar').addEventListener('click', ()=>{
+  modalAnexarOverlay.classList.remove('open');
+});
 
-  toast('Preencha nome, cpf e local (as demais colunas podem ficar em branco) e importe depois.');
+function normalizarNomeParaComparacao(str){
+  return str
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[_\-]+/g, ' ')
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Tenta achar o colaborador dono de um arquivo, pelo CPF (se houver 11+ dígitos
+// no nome do arquivo) ou pelo nome (igualdade exata ou um nome "contido" no outro).
+function encontrarColaboradorPorArquivo(nomeSemExtensao){
+  const digitos = nomeSemExtensao.replace(/\D/g, '');
+  if(digitos.length >= 11){
+    const porCpf = colaboradores.filter(c => c.cpf && digitos.includes(c.cpf.replace(/\D/g, '')));
+    if(porCpf.length === 1) return porCpf[0];
+  }
+
+  const nomeNorm = normalizarNomeParaComparacao(nomeSemExtensao);
+
+  const exatos = colaboradores.filter(c => normalizarNomeParaComparacao(c.nome) === nomeNorm);
+  if(exatos.length === 1) return exatos[0];
+
+  const parciais = colaboradores.filter(c=>{
+    const cn = normalizarNomeParaComparacao(c.nome);
+    return cn.length > 3 && (nomeNorm.includes(cn) || cn.includes(nomeNorm));
+  });
+  if(parciais.length === 1) return parciais[0];
+
+  return null;
+}
+
+document.getElementById('btnEnviarAnexos').addEventListener('click', async ()=>{
+  const tipoDoc = document.getElementById('anexarTipoDoc').value;
+  const dataLote = document.getElementById('anexarDataLote').value || null;
+  const arquivos = Array.from(document.getElementById('anexarArquivos').files);
+  const resultadoEl = document.getElementById('anexarResultado');
+  const btn = document.getElementById('btnEnviarAnexos');
+
+  if(arquivos.length === 0){ toast('Selecione ao menos um arquivo.'); return; }
+
+  btn.disabled = true;
+  let vinculados = 0;
+  const semCorrespondencia = [];
+  const comFalha = [];
+
+  for(let i = 0; i < arquivos.length; i++){
+    const file = arquivos[i];
+    btn.textContent = `Enviando ${i+1}/${arquivos.length}...`;
+
+    const extensaoMatch = file.name.match(/\.[^.]+$/);
+    const extensao = extensaoMatch ? extensaoMatch[0] : '';
+    const nomeSemExtensao = file.name.replace(/\.[^.]+$/, '');
+
+    const colaborador = encontrarColaboradorPorArquivo(nomeSemExtensao);
+
+    if(!colaborador){
+      semCorrespondencia.push(file.name);
+      continue;
+    }
+
+    const caminho = `${tipoDoc}/${colaborador.id}${extensao}`;
+
+    const { error: erroUpload } = await supabaseClient.storage
+      .from('documentos')
+      .upload(caminho, file, { upsert: true });
+
+    if(erroUpload){
+      comFalha.push(`${file.name} (${colaborador.nome}): ${erroUpload.message}`);
+      continue;
+    }
+
+    const { data: urlData } = supabaseClient.storage.from('documentos').getPublicUrl(caminho);
+    const atualizacao = { [`${tipoDoc}_link`]: urlData.publicUrl };
+    if(dataLote) atualizacao[`${tipoDoc}_data`] = dataLote;
+
+    const { error: erroUpdate } = await supabaseClient
+      .from('colaboradores')
+      .update(atualizacao)
+      .eq('id', colaborador.id);
+
+    if(erroUpdate){
+      comFalha.push(`${file.name} (${colaborador.nome}): ${erroUpdate.message}`);
+    } else {
+      vinculados++;
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Enviar e Vincular';
+
+  let html = `<p style="color:var(--verde);font-weight:600;">${vinculados} documento(s) vinculado(s) com sucesso.</p>`;
+  if(semCorrespondencia.length){
+    html += `<p style="color:var(--amarelo);font-weight:600;margin-top:10px;">${semCorrespondencia.length} arquivo(s) sem colaborador correspondente (renomeie ou vincule manualmente):</p>`;
+    html += `<ul style="margin:4px 0 0 18px;padding:0;">${semCorrespondencia.map(n=>`<li>${n}</li>`).join('')}</ul>`;
+  }
+  if(comFalha.length){
+    html += `<p style="color:var(--vermelho);font-weight:600;margin-top:10px;">${comFalha.length} arquivo(s) com erro no envio:</p>`;
+    html += `<ul style="margin:4px 0 0 18px;padding:0;">${comFalha.map(n=>`<li>${n}</li>`).join('')}</ul>`;
+  }
+  resultadoEl.innerHTML = html;
+
+  if(vinculados > 0) loadColaboradores();
 });
 
 /* ---------- Exportar para Excel ---------- */
 document.getElementById('btnExportExcel').addEventListener('click', ()=>{
   if(colaboradores.length === 0){ toast('Não há dados para exportar.'); return; }
 
-  const linhas = colaboradores.map(c => ({
-    id: c.id,
-    nome: c.nome,
-    cpf: c.cpf,
-    local: c.local,
-    admissao_data: c.admissao_data,
-    admissao_link: c.admissao_link,
-    aso_data: c.aso_data,
-    aso_link: c.aso_link,
-    epi_data: c.epi_data,
-    epi_link: c.epi_link,
-    nr06_data: c.nr06_data,
-    nr06_link: c.nr06_link
-  }));
+  const linhas = colaboradores.map(c => {
+    const statusOf = (campo, expira) => statusDocumento(c[`${campo}_data`], c[`${campo}_link`], expira).texto;
+    return {
+      'Nome Completo': c.nome,
+      'CPF': c.cpf,
+      'Local de Trabalho': c.local,
+
+      'Status Ficha de Admissão': statusOf('admissao', false),
+      'Data Admissão': c.admissao_data || '',
+      'Link Admissão': c.admissao_link || '',
+
+      'Status ASO': statusOf('aso', true),
+      'Data Vencimento ASO': c.aso_data || '',
+      'Link ASO': c.aso_link || '',
+
+      'Status Ficha de EPI': statusOf('epi', true),
+      'Data Vencimento EPI': c.epi_data || '',
+      'Link EPI': c.epi_link || '',
+
+      'Status Certificado NR06': statusOf('nr06', true),
+      'Data Vencimento NR06': c.nr06_data || '',
+      'Link NR06': c.nr06_link || ''
+    };
+  });
 
   const ws = XLSX.utils.json_to_sheet(linhas);
+  // Larguras de coluna aproximadas, pra não ficar tudo espremido
+  ws['!cols'] = [
+    {wch:28},{wch:16},{wch:16},
+    {wch:22},{wch:14},{wch:30},
+    {wch:16},{wch:18},{wch:30},
+    {wch:18},{wch:18},{wch:30},
+    {wch:20},{wch:18},{wch:30}
+  ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Colaboradores");
   XLSX.writeFile(wb, `colaboradores_${new Date().toISOString().slice(0,10)}.xlsx`);
