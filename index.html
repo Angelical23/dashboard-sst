@@ -166,8 +166,8 @@
     <h1>Gestão de Segurança do Trabalho</h1>
     <p>Faça login para acessar o dashboard de compliance</p>
     <form id="formLogin">
-      <label>E-mail</label>
-      <input type="email" id="loginEmail" required autocomplete="username">
+      <label>Usuário</label>
+      <input type="text" id="loginUsuario" required autocomplete="username" autocapitalize="none" spellcheck="false">
       <label>Senha</label>
       <input type="password" id="loginSenha" required autocomplete="current-password">
       <button type="submit" class="btn primary" id="btnLogin">Entrar</button>
@@ -403,7 +403,7 @@ const appContainer = document.getElementById('appContainer');
 function mostrarApp(session){
   loginScreen.style.display = 'none';
   appContainer.style.display = 'block';
-  document.getElementById('usuarioLogadoEmail').textContent = session.user.email;
+  document.getElementById('usuarioLogadoEmail').textContent = session.user.email.split('@')[0];
   loadColaboradores();
 }
 
@@ -430,9 +430,16 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   }
 });
 
+// O Supabase Auth só trabalha com e-mail internamente — então cada "usuário"
+// digitado é convertido para um e-mail interno fixo (invisível pro usuário final).
+const DOMINIO_LOGIN_INTERNO = 'dashboard-sst.local';
+function usuarioParaEmail(usuario){
+  return `${usuario.trim().toLowerCase()}@${DOMINIO_LOGIN_INTERNO}`;
+}
+
 document.getElementById('formLogin').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const email = document.getElementById('loginEmail').value;
+  const usuario = document.getElementById('loginUsuario').value;
   const senha = document.getElementById('loginSenha').value;
   const erroEl = document.getElementById('loginErro');
   erroEl.style.display = 'none';
@@ -441,13 +448,16 @@ document.getElementById('formLogin').addEventListener('submit', async (e)=>{
   btn.textContent = 'Entrando...';
   btn.disabled = true;
 
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: usuarioParaEmail(usuario),
+    password: senha
+  });
 
   btn.textContent = 'Entrar';
   btn.disabled = false;
 
   if(error){
-    erroEl.textContent = 'E-mail ou senha incorretos.';
+    erroEl.textContent = 'Usuário ou senha incorretos.';
     erroEl.style.display = 'block';
   }
 });
