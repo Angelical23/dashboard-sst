@@ -84,7 +84,7 @@
   .btn.primary:hover{background:var(--azul-escuro);}
   input[type=file]{display:none;}
 
-  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px 28px;}
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
   .kpi-card{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;}
   .kpi-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
   .kpi-icon.blue{background:#e3edf1;color:var(--azul-header);}
@@ -97,7 +97,7 @@
   .kpi-value.yellow{color:var(--amarelo);}
   .kpi-value.red{color:var(--vermelho);}
 
-  .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;padding:0 28px 20px 28px;}
+  .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
   .panel{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:18px;}
   .panel h3{margin:0 0 12px 0;font-size:14px;letter-spacing:0.3px;}
   .chart-wrap{position:relative;height:250px;}
@@ -107,7 +107,7 @@
   .legend-item{display:flex;align-items:center;gap:8px;}
   .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 
-  .table-panel{margin:0 28px 28px 28px;background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;overflow:hidden;}
+  .table-panel{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;overflow:hidden;}
   .table-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--cinza-borda);flex-wrap:wrap;gap:10px;}
   .table-header h3{margin:0;font-size:14px;letter-spacing:0.3px;}
   .table-scroll{overflow-x:auto;}
@@ -153,6 +153,31 @@
   .docs-preview-empty{padding:20px;color:var(--cinza-texto);font-size:13px;text-align:center;}
   .docs-preview-link{display:block;text-align:center;padding:8px;font-size:12px;background:var(--cinza-fundo);border-top:1px solid var(--cinza-borda);}
 
+  /* ---------- LAYOUT COM MENU LATERAL ---------- */
+  .app-shell{display:flex;min-height:calc(100vh - 48px);max-width:1600px;margin:0 auto;background:var(--branco);box-shadow:0 10px 40px rgba(0,0,0,0.08);border-radius:16px;overflow:hidden;}
+  .sidebar{width:230px;flex-shrink:0;background:linear-gradient(180deg, var(--azul-escuro), var(--azul-header));color:white;display:flex;flex-direction:column;}
+  .sidebar-brand{padding:22px 20px;font-weight:700;font-size:14px;letter-spacing:0.3px;line-height:1.4;border-bottom:1px solid rgba(255,255,255,0.15);}
+  .sidebar-nav{display:flex;flex-direction:column;padding:12px 0;flex:1;}
+  .side-link{display:flex;align-items:center;gap:10px;padding:12px 20px;background:transparent;border:none;border-left:3px solid transparent;color:rgba(255,255,255,0.8);font-size:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;}
+  .side-link:hover{background:rgba(255,255,255,0.08);color:white;}
+  .side-link.active{background:rgba(255,255,255,0.12);color:white;font-weight:600;border-left-color:var(--verde);}
+  .sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.15);}
+  .sidebar-footer .user-name{color:white;}
+  .sidebar-footer .user-role{color:rgba(255,255,255,0.7);}
+  .sidebar-footer .header-logout{width:100%;margin-top:12px;justify-content:center;}
+  .main-content{flex:1;padding:28px;min-width:0;overflow-x:auto;}
+  .view-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+  .view-header h1{margin:0;font-size:20px;color:var(--texto-escuro);}
+
+  @media (max-width:900px){
+    .app-shell{flex-direction:column;}
+    .sidebar{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;}
+    .sidebar-nav{flex-direction:row;flex-wrap:wrap;padding:8px;}
+    .side-link{width:auto;border-left:none;border-radius:8px;}
+    .sidebar-footer{margin-left:auto;border-top:none;display:flex;align-items:center;gap:10px;}
+    .sidebar-footer .header-logout{width:auto;margin-top:0;}
+  }
+
   @media (max-width:1100px){.kpi-row{grid-template-columns:repeat(2,1fr);} .charts-row{grid-template-columns:1fr;}}
   @media (max-width:600px){.kpi-row{grid-template-columns:1fr;}}
 </style>
@@ -178,67 +203,82 @@
 
 <!-- APP (só aparece depois do login) -->
 <div id="appContainer">
-<div class="dashboard">
+<div class="app-shell">
 
-  <div class="header">
-    <h1>GESTÃO DE SEGURANÇA DO TRABALHO - DASHBOARD DE COMPLIANCE</h1>
-    <div class="header-actions">
+  <aside class="sidebar">
+    <div class="sidebar-brand">GESTÃO DE SEGURANÇA DO TRABALHO<br>Dashboard de Compliance</div>
+    <nav class="sidebar-nav">
+      <button class="side-link active" data-view="painel">📊 Painel</button>
+      <button class="side-link" data-view="colaboradores">👥 Colaboradores</button>
+      <button class="side-link" data-view="treinamentos">🎓 Treinamentos</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar">AS</div>
+        <div>
+          <div class="user-name">Angelica Alves</div>
+          <div class="user-role" id="usuarioLogadoEmail">Gestora SST</div>
+        </div>
+      </div>
       <button class="header-logout" id="btnLogout">Sair</button>
-      <button class="header-add" id="btnAbrirNovo" title="Adicionar colaborador">+</button>
     </div>
-  </div>
+  </aside>
 
-  <div class="userbar">
-    <div class="user-info">
-      <div class="avatar">AS</div>
-      <div>
-        <div class="user-name">Angelica Alves</div>
-        <div class="user-role" id="usuarioLogadoEmail">Gestora SST</div>
+  <main class="main-content">
+
+    <!-- VIEW: PAINEL -->
+    <section id="viewPainel">
+      <div class="view-header"><h1>Painel</h1></div>
+
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon blue">👥</div>
+          <div><div class="kpi-label">Total de Funcionários</div><div class="kpi-value" id="kpiTotal">–</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon green">✔</div>
+          <div><div class="kpi-label">Colaboradores em Dia</div><div class="kpi-value green" id="kpiEmDia">–</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon yellow">⚠</div>
+          <div><div class="kpi-label">Documentos Vencendo (30 dias)</div><div class="kpi-value yellow" id="kpiVencendo">–</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon red">⛔</div>
+          <div><div class="kpi-label">Documentos Vencidos</div><div class="kpi-value red" id="kpiVencidos">–</div></div>
+        </div>
       </div>
-    </div>
-    <div class="toolbar">
-      <button class="btn" id="btnAbrirAnexar">📎 Anexar Documentos</button>
-      <button class="btn" id="btnExportExcel">⬇ Exportar Excel</button>
-      <button class="btn" id="btnExportPdf">⬇ Exportar PDF</button>
-      <label class="btn" for="inputImport">⬆ Importar Excel (correção em massa)</label>
-      <input type="file" id="inputImport" accept=".xlsx,.xls,.csv">
-    </div>
-  </div>
 
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-icon blue">👥</div>
-      <div><div class="kpi-label">Total de Funcionários</div><div class="kpi-value" id="kpiTotal">–</div></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon green">✔</div>
-      <div><div class="kpi-label">Colaboradores em Dia</div><div class="kpi-value green" id="kpiEmDia">–</div></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon yellow">⚠</div>
-      <div><div class="kpi-label">Documentos Vencendo (30 dias)</div><div class="kpi-value yellow" id="kpiVencendo">–</div></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon red">⛔</div>
-      <div><div class="kpi-label">Documentos Vencidos</div><div class="kpi-value red" id="kpiVencidos">–</div></div>
-    </div>
-  </div>
-
-  <div class="charts-row">
-    <div class="panel">
-      <h3>Status de Documentação por Setor</h3>
-      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
-    </div>
-    <div class="panel">
-      <h3>Distribuição de Documentos Pendentes</h3>
-      <div class="pie-wrap">
-        <div class="pie-canvas-holder"><canvas id="pieChart"></canvas></div>
-        <div class="legend" id="pieLegend"></div>
+      <div class="charts-row">
+        <div class="panel">
+          <h3>Status de Documentação por Setor</h3>
+          <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Distribuição de Documentos Pendentes</h3>
+          <div class="pie-wrap">
+            <div class="pie-canvas-holder"><canvas id="pieChart"></canvas></div>
+            <div class="legend" id="pieLegend"></div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="table-panel">
+    <!-- VIEW: COLABORADORES -->
+    <section id="viewColaboradores" style="display:none;">
+      <div class="view-header">
+        <h1>Colaboradores</h1>
+        <div class="toolbar">
+          <button class="btn primary" id="btnAbrirNovo">+ Novo Colaborador</button>
+          <button class="btn" id="btnAbrirAnexar">📎 Anexar Documentos</button>
+          <button class="btn" id="btnExportExcel">⬇ Exportar Excel</button>
+          <button class="btn" id="btnExportPdf">⬇ Exportar PDF</button>
+          <label class="btn" for="inputImport">⬆ Importar Excel (correção em massa)</label>
+          <input type="file" id="inputImport" accept=".xlsx,.xls,.csv">
+        </div>
+      </div>
+
+      <div class="table-panel">
     <div class="table-header">
       <h3>VISÃO GERAL DE DOCUMENTAÇÃO POR COLABORADOR</h3>
     </div>
@@ -263,7 +303,39 @@
       </table>
     </div>
   </div>
+    </section>
 
+    <!-- VIEW: TREINAMENTOS -->
+    <section id="viewTreinamentos" style="display:none;">
+      <div class="view-header">
+        <h1>Treinamentos</h1>
+        <div class="toolbar">
+          <button class="btn primary" id="btnNovoTreinamento">+ Novo Treinamento</button>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Local de Trabalho</th>
+                <th>Treinamento</th>
+                <th>Realizado em</th>
+                <th>Validade</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="treinamentosBody">
+              <tr><td colspan="6" class="loading">Carregando treinamentos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
 </div>
 
 <!-- MODAL NOVO COLABORADOR -->
@@ -371,9 +443,41 @@
   </div>
 </div>
 
+<!-- MODAL NOVO/EDITAR TREINAMENTO -->
+<div class="modal-overlay" id="modalTreinamentoOverlay">
+  <div class="modal">
+    <h2 id="treinamentoModalTitulo">Novo Treinamento</h2>
+    <form id="formTreinamento">
+      <label>Local de Trabalho</label>
+      <input type="text" name="local_trabalho" placeholder="Ex: CEAGESP">
+
+      <label>Nome do treinamento</label>
+      <input type="text" name="nome_treinamento" placeholder="Ex: NR-35 Trabalho em Altura" required>
+
+      <label>Data de realização</label>
+      <input type="date" name="data_realizacao">
+
+      <label>Data de validade (deixe em branco se não vencer)</label>
+      <input type="date" name="data_validade">
+
+      <label>Link do certificado</label>
+      <input type="url" name="certificado_link" placeholder="https://...">
+
+      <label>Link do Relatório</label>
+      <input type="url" name="relatorio_link" placeholder="https://...">
+
+      <div class="modal-actions">
+        <button type="button" class="btn" id="btnCancelarTreinamento">Cancelar</button>
+        <button type="submit" class="btn primary" id="btnSalvarTreinamento">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 </div><!-- fim appContainer -->
 
 <script>
+/* =========================================================
 /* =========================================================
    CONFIGURAÇÃO DO SUPABASE
    ========================================================= */
@@ -464,6 +568,35 @@ document.getElementById('formLogin').addEventListener('submit', async (e)=>{
 
 document.getElementById('btnLogout').addEventListener('click', async ()=>{
   await supabaseClient.auth.signOut();
+});
+
+/* =========================================================
+   NAVEGAÇÃO DO MENU LATERAL
+   ========================================================= */
+let treinamentosCarregados = false;
+
+const VIEWS = {
+  painel: document.getElementById('viewPainel'),
+  colaboradores: document.getElementById('viewColaboradores'),
+  treinamentos: document.getElementById('viewTreinamentos')
+};
+
+document.querySelectorAll('.side-link').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const alvo = btn.dataset.view;
+
+    document.querySelectorAll('.side-link').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+
+    Object.keys(VIEWS).forEach(k=>{
+      VIEWS[k].style.display = (k === alvo) ? 'block' : 'none';
+    });
+
+    if(alvo === 'treinamentos' && !treinamentosCarregados){
+      treinamentosCarregados = true;
+      loadTreinamentos();
+    }
+  });
 });
 
 /* ---------- Utilidades ---------- */
@@ -717,6 +850,19 @@ function abrirDocumentos(id){
 }
 window.abrirDocumentos = abrirDocumentos;
 
+// Extensões do Office (Word/Excel/PowerPoint) que o navegador não sabe
+// exibir sozinho — usamos o visualizador público da Microsoft pra elas.
+const EXTENSOES_OFFICE = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+
+function montarUrlPreview(link){
+  const semQuery = link.split('?')[0];
+  const extensao = semQuery.split('.').pop().toLowerCase();
+  if(EXTENSOES_OFFICE.includes(extensao)){
+    return 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(link);
+  }
+  return link; // PDF e imagens o navegador já exibe direto
+}
+
 function selecionarDocumento(el){
   document.querySelectorAll('.doc-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
@@ -736,9 +882,9 @@ function selecionarDocumento(el){
 
   empty.style.display = 'none';
   frame.style.display = 'block';
-  frame.src = link;
+  frame.src = montarUrlPreview(link);
   linkBtn.style.display = 'block';
-  linkBtn.href = link;
+  linkBtn.href = link; // "Abrir em nova aba" sempre aponta pro arquivo original
 }
 window.selecionarDocumento = selecionarDocumento;
 
@@ -902,6 +1048,129 @@ document.getElementById('btnEnviarAnexos').addEventListener('click', async ()=>{
   resultadoEl.innerHTML = html;
 
   if(vinculados > 0) loadColaboradores();
+});
+
+/* =========================================================
+   TREINAMENTOS
+   ========================================================= */
+let treinamentos = [];
+let editandoTreinamentoId = null;
+const modalTreinamentoOverlay = document.getElementById('modalTreinamentoOverlay');
+
+async function loadTreinamentos(){
+  const { data, error } = await supabaseClient
+    .from('treinamentos')
+    .select('*')
+    .order('data_validade', { ascending: true, nullsFirst: false });
+
+  if(error){
+    document.getElementById('treinamentosBody').innerHTML =
+      `<tr><td colspan="6" class="empty">Erro ao carregar treinamentos: ${error.message}</td></tr>`;
+    console.error(error);
+    return;
+  }
+
+  treinamentos = data || [];
+  renderTreinamentos();
+}
+
+// Mesma lógica de status dos documentos: sem validade = não vence;
+// com validade, calcula Em Dia / Vence em X dias / Vencido.
+function statusTreinamento(dataValidade){
+  if(!dataValidade) return { texto: 'Não vence', classe: 'ok', icone: '✔' };
+  const dias = diffDias(dataValidade);
+  if(dias < 0) return { texto: 'Vencido', classe: 'bad', icone: '⛔' };
+  if(dias <= 30) return { texto: `Vence em ${dias} dias`, classe: 'warn', icone: '⚠' };
+  return { texto: 'Em Dia', classe: 'ok', icone: '✔' };
+}
+
+function renderTreinamentos(){
+  const tbody = document.getElementById('treinamentosBody');
+  if(treinamentos.length === 0){
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">Nenhum treinamento cadastrado ainda.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = treinamentos.map(t=>{
+    const status = statusTreinamento(t.data_validade);
+    return `
+      <tr>
+        <td>${t.local_trabalho || '-'}</td>
+        <td>${t.nome_treinamento}</td>
+        <td>${t.data_realizacao || '-'}</td>
+        <td>${t.data_validade || 'Não vence'}</td>
+        <td><span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span></td>
+        <td class="acoes">
+          ${t.certificado_link ? `<span title="Ver certificado" onclick="window.open(montarUrlPreview('${t.certificado_link.replace(/'/g,"\\'")}'),'_blank')">👁️</span>` : ''}
+          ${t.relatorio_link ? `<span title="Ver relatório" onclick="window.open(montarUrlPreview('${t.relatorio_link.replace(/'/g,"\\'")}'),'_blank')">📄</span>` : ''}
+          <span title="Editar" onclick="editarTreinamento('${t.id}')">✏️</span>
+          <span title="Excluir" onclick="excluirTreinamento('${t.id}','${t.nome_treinamento.replace(/'/g,"\\'")}')">🗑️</span>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+document.getElementById('btnNovoTreinamento').addEventListener('click', ()=>{
+  editandoTreinamentoId = null;
+  document.getElementById('treinamentoModalTitulo').textContent = 'Novo Treinamento';
+  document.getElementById('formTreinamento').reset();
+  modalTreinamentoOverlay.classList.add('open');
+});
+
+function editarTreinamento(id){
+  const t = treinamentos.find(x => x.id === id);
+  if(!t){ toast('Treinamento não encontrado.'); return; }
+
+  editandoTreinamentoId = id;
+  document.getElementById('treinamentoModalTitulo').textContent = 'Editar Treinamento';
+
+  const form = document.getElementById('formTreinamento');
+  form.elements['local_trabalho'].value = t.local_trabalho || '';
+  form.elements['nome_treinamento'].value = t.nome_treinamento || '';
+  form.elements['data_realizacao'].value = t.data_realizacao || '';
+  form.elements['data_validade'].value = t.data_validade || '';
+  form.elements['certificado_link'].value = t.certificado_link || '';
+  form.elements['relatorio_link'].value = t.relatorio_link || '';
+
+  modalTreinamentoOverlay.classList.add('open');
+}
+window.editarTreinamento = editarTreinamento;
+
+async function excluirTreinamento(id, nome){
+  if(!confirm(`Excluir o treinamento "${nome}"? Essa ação não pode ser desfeita.`)) return;
+  const { error } = await supabaseClient.from('treinamentos').delete().eq('id', id);
+  if(error){ toast('Erro ao excluir: ' + error.message); return; }
+  toast('Treinamento excluído.');
+  loadTreinamentos();
+}
+window.excluirTreinamento = excluirTreinamento;
+
+document.getElementById('btnCancelarTreinamento').addEventListener('click', ()=>{
+  modalTreinamentoOverlay.classList.remove('open');
+});
+
+document.getElementById('formTreinamento').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const registro = Object.fromEntries(fd.entries());
+  if(!registro.data_realizacao) registro.data_realizacao = null;
+  if(!registro.data_validade) registro.data_validade = null;
+  if(!registro.certificado_link) registro.certificado_link = null;
+  if(!registro.relatorio_link) registro.relatorio_link = null;
+  if(!registro.local_trabalho) registro.local_trabalho = null;
+
+  let error;
+  if(editandoTreinamentoId){
+    ({ error } = await supabaseClient.from('treinamentos').update(registro).eq('id', editandoTreinamentoId));
+  } else {
+    ({ error } = await supabaseClient.from('treinamentos').insert([registro]));
+  }
+
+  if(error){ toast('Erro ao salvar: ' + error.message); return; }
+
+  toast(editandoTreinamentoId ? 'Treinamento atualizado.' : 'Treinamento adicionado.');
+  modalTreinamentoOverlay.classList.remove('open');
+  loadTreinamentos();
 });
 
 /* ---------- Exportar para Excel ---------- */
