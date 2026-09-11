@@ -355,7 +355,11 @@
         <label>Data de admissão</label>
         <input type="date" name="admissao_data">
         <label>Link do documento</label>
-        <input type="url" name="admissao_link" placeholder="https://...">
+        <div style="display:flex;gap:8px;">
+          <input type="url" name="admissao_link" placeholder="https://..." style="flex:1;">
+          <label class="btn" for="upload_admissao_link" style="margin:0;white-space:nowrap;">📎 Anexar</label>
+          <input type="file" id="upload_admissao_link" class="input-upload-doc" data-target="admissao_link" data-pasta="admissao" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
       </div>
 
       <div class="grupo">
@@ -363,7 +367,11 @@
         <label>Data de vencimento</label>
         <input type="date" name="aso_data">
         <label>Link do documento</label>
-        <input type="url" name="aso_link" placeholder="https://...">
+        <div style="display:flex;gap:8px;">
+          <input type="url" name="aso_link" placeholder="https://..." style="flex:1;">
+          <label class="btn" for="upload_aso_link" style="margin:0;white-space:nowrap;">📎 Anexar</label>
+          <input type="file" id="upload_aso_link" class="input-upload-doc" data-target="aso_link" data-pasta="aso" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
       </div>
 
       <div class="grupo">
@@ -371,7 +379,11 @@
         <label>Data de vencimento</label>
         <input type="date" name="epi_data">
         <label>Link do documento</label>
-        <input type="url" name="epi_link" placeholder="https://...">
+        <div style="display:flex;gap:8px;">
+          <input type="url" name="epi_link" placeholder="https://..." style="flex:1;">
+          <label class="btn" for="upload_epi_link" style="margin:0;white-space:nowrap;">📎 Anexar</label>
+          <input type="file" id="upload_epi_link" class="input-upload-doc" data-target="epi_link" data-pasta="epi" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
       </div>
 
       <div class="grupo">
@@ -379,7 +391,11 @@
         <label>Data de vencimento</label>
         <input type="date" name="nr06_data">
         <label>Link do documento</label>
-        <input type="url" name="nr06_link" placeholder="https://...">
+        <div style="display:flex;gap:8px;">
+          <input type="url" name="nr06_link" placeholder="https://..." style="flex:1;">
+          <label class="btn" for="upload_nr06_link" style="margin:0;white-space:nowrap;">📎 Anexar</label>
+          <input type="file" id="upload_nr06_link" class="input-upload-doc" data-target="nr06_link" data-pasta="nr06" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
       </div>
 
       <div class="modal-actions">
@@ -461,10 +477,18 @@
       <input type="date" name="data_validade">
 
       <label>Link do certificado</label>
-      <input type="url" name="certificado_link" placeholder="https://...">
+      <div style="display:flex;gap:8px;">
+        <input type="url" name="certificado_link" placeholder="https://..." style="flex:1;">
+        <label class="btn" for="upload_certificado_link" style="margin:0;white-space:nowrap;">📎 Anexar</label>
+        <input type="file" id="upload_certificado_link" class="input-upload-doc" data-target="certificado_link" data-pasta="treinamento-certificados" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+      </div>
 
       <label>Link do Relatório</label>
-      <input type="url" name="relatorio_link" placeholder="https://...">
+      <div style="display:flex;gap:8px;">
+        <input type="url" name="relatorio_link" placeholder="https://..." style="flex:1;">
+        <label class="btn" for="upload_relatorio_link" style="margin:0;white-space:nowrap;">📎 Anexar</label>
+        <input type="file" id="upload_relatorio_link" class="input-upload-doc" data-target="relatorio_link" data-pasta="treinamento-relatorios" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+      </div>
 
       <div class="modal-actions">
         <button type="button" class="btn" id="btnCancelarTreinamento">Cancelar</button>
@@ -820,9 +844,12 @@ window.editarColaborador = editarColaborador;
 /* ---------- Ver documentos ---------- */
 const modalDocsOverlay = document.getElementById('modalDocsOverlay');
 
+let colaboradorDocsAtual = null;
+
 function abrirDocumentos(id){
   const c = colaboradores.find(x => x.id === id);
   if(!c){ toast('Colaborador não encontrado.'); return; }
+  colaboradorDocsAtual = c;
 
   document.getElementById('docsModalTitulo').textContent = `Documentos — ${c.nome}`;
 
@@ -830,11 +857,16 @@ function abrirDocumentos(id){
   listEl.innerHTML = DOC_FIELDS.map(d=>{
     const link = c[`${d.key}_link`] || '';
     const status = statusDocumento(c[`${d.key}_data`], link, d.expira);
+    const inputId = `anexoVer_${d.key}`;
     return `
       <div class="doc-item" data-link="${link.replace(/"/g,'&quot;')}" onclick="selecionarDocumento(this)">
         <div class="doc-nome">${d.label}</div>
         <span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span>
         ${!link ? '<div class="doc-sem-link">Sem link cadastrado</div>' : ''}
+        <div onclick="event.stopPropagation()" style="margin-top:8px;">
+          <label class="btn" for="${inputId}" style="font-size:11px;padding:4px 8px;margin:0;">📎 ${link ? 'Substituir' : 'Anexar'}</label>
+          <input type="file" id="${inputId}" class="input-upload-doc-ver" data-campo="${d.key}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
       </div>`;
   }).join('');
 
@@ -929,6 +961,89 @@ document.getElementById('formNovo').addEventListener('submit', async (e)=>{
   toast(editandoId ? 'Colaborador atualizado.' : 'Colaborador adicionado.');
   fecharModal();
   loadColaboradores();
+});
+
+/* ---------- Anexar direto na tela "Ver Documentos" (já salva no colaborador) ---------- */
+document.addEventListener('change', async (e)=>{
+  if(!e.target.classList || !e.target.classList.contains('input-upload-doc-ver')) return;
+
+  const input = e.target;
+  const file = input.files[0];
+  if(!file || !colaboradorDocsAtual) return;
+
+  const campo = input.dataset.campo;
+  const label = document.querySelector(`label[for="${input.id}"]`);
+  const textoOriginal = label ? label.textContent : null;
+  if(label) label.textContent = 'Enviando...';
+
+  try{
+    const extensaoMatch = file.name.match(/\.[^.]+$/);
+    const extensao = extensaoMatch ? extensaoMatch[0] : '';
+    const caminho = `${campo}/${colaboradorDocsAtual.id}${extensao}`;
+
+    const { error: erroUpload } = await supabaseClient.storage
+      .from('documentos')
+      .upload(caminho, file, { upsert: true });
+    if(erroUpload) throw erroUpload;
+
+    const { data } = supabaseClient.storage.from('documentos').getPublicUrl(caminho);
+
+    const { error: erroUpdate } = await supabaseClient
+      .from('colaboradores')
+      .update({ [`${campo}_link`]: data.publicUrl })
+      .eq('id', colaboradorDocsAtual.id);
+    if(erroUpdate) throw erroUpdate;
+
+    toast('Documento anexado com sucesso.');
+    await loadColaboradores();
+    abrirDocumentos(colaboradorDocsAtual.id); // reabre já atualizado
+  } catch(err){
+    toast('Erro ao anexar: ' + err.message);
+    console.error(err);
+  } finally {
+    if(label) label.textContent = textoOriginal;
+  }
+});
+
+/* ---------- Anexar 1 documento direto no formulário (Colaborador/Treinamento) ----------
+   Qualquer campo com a classe "input-upload-doc" sobe o arquivo pro mesmo
+   bucket do Supabase Storage e preenche sozinho o campo de link ao lado.
+------------------------------------------------------------ */
+document.addEventListener('change', async (e)=>{
+  if(!e.target.classList || !e.target.classList.contains('input-upload-doc')) return;
+
+  const input = e.target;
+  const file = input.files[0];
+  if(!file) return;
+
+  const form = input.closest('form');
+  const targetInput = form ? form.elements[input.dataset.target] : null;
+  if(!targetInput){ toast('Campo de destino não encontrado.'); input.value=''; return; }
+
+  const label = document.querySelector(`label[for="${input.id}"]`);
+  const textoOriginal = label ? label.textContent : null;
+  if(label) label.textContent = 'Enviando...';
+
+  try{
+    const extensaoMatch = file.name.match(/\.[^.]+$/);
+    const extensao = extensaoMatch ? extensaoMatch[0] : '';
+    const caminho = `${input.dataset.pasta}/${crypto.randomUUID()}${extensao}`;
+
+    const { error: erroUpload } = await supabaseClient.storage
+      .from('documentos')
+      .upload(caminho, file, { upsert: true });
+    if(erroUpload) throw erroUpload;
+
+    const { data } = supabaseClient.storage.from('documentos').getPublicUrl(caminho);
+    targetInput.value = data.publicUrl;
+    toast('Arquivo anexado. Clique em Salvar para confirmar.');
+  } catch(err){
+    toast('Erro ao enviar arquivo: ' + err.message);
+    console.error(err);
+  } finally {
+    if(label) label.textContent = textoOriginal;
+    input.value = '';
+  }
 });
 
 /* ---------- Anexar documentos em massa ---------- */
