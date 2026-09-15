@@ -916,7 +916,9 @@ function selecionarDocumento(el){
   frame.style.display = 'block';
   frame.src = montarUrlPreview(link);
   linkBtn.style.display = 'block';
-  linkBtn.href = link; // "Abrir em nova aba" sempre aponta pro arquivo original
+  // "Abrir em nova aba" usa a mesma conversão da pré-visualização: assim
+  // arquivos do Word abrem no visualizador do Office em vez de baixar.
+  linkBtn.href = montarUrlPreview(link);
 }
 window.selecionarDocumento = selecionarDocumento;
 
