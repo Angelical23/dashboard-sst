@@ -1219,7 +1219,7 @@ async function loadTreinamentos(){
 // Mesma lógica de status dos documentos: sem validade = não vence;
 // com validade, calcula Em Dia / Vence em X dias / Vencido.
 function statusTreinamento(dataValidade){
-  if(!dataValidade) return { texto: 'Não vence', classe: 'ok', icone: '✔' };
+  if(!dataValidade) return { texto: '', classe: 'ok', icone: '✔' };
   const dias = diffDias(dataValidade);
   if(dias < 0) return { texto: 'Vencido', classe: 'bad', icone: '⛔' };
   if(dias <= 30) return { texto: `Vence em ${dias} dias`, classe: 'warn', icone: '⚠' };
@@ -1243,7 +1243,7 @@ function renderTreinamentos(){
         <td>${t.data_validade || 'Não vence'}</td>
         <td><span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span></td>
         <td class="acoes">
-          ${t.certificado_link ? `<span title="Ver certificado" onclick="window.open(montarUrlPreview('${t.certificado_link.replace(/'/g,"\\'")}'),'_blank')">👁️</span>` : ''}
+          ${t.certificado_link ? `<span title="Ver certificado" onclick="window.open(montarUrlPreview('${t.certificado_link.replace(/'/g,"\\'")}'),'_blank')">🎓</span>` : ''}
           ${t.relatorio_link ? `<span title="Ver relatório" onclick="window.open(montarUrlPreview('${t.relatorio_link.replace(/'/g,"\\'")}'),'_blank')">📄</span>` : ''}
           <span title="Editar" onclick="editarTreinamento('${t.id}')">✏️</span>
           <span title="Excluir" onclick="excluirTreinamento('${t.id}','${t.nome_treinamento.replace(/'/g,"\\'")}')">🗑️</span>
