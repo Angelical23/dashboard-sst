@@ -418,6 +418,7 @@
         <iframe id="docsPreviewFrame" src="" title="Pré-visualização do documento" style="display:none;"></iframe>
         <div id="docsPreviewEmpty" class="docs-preview-empty">Selecione um documento à esquerda para visualizar.</div>
         <a id="docsPreviewLink" class="docs-preview-link" href="#" target="_blank" rel="noopener" style="display:none;">Abrir em nova aba ↗</a>
+        <a id="docsDownloadLink" class="docs-preview-link" href="#" download style="display:none;">⬇ Baixar para editar</a>
       </div>
     </div>
     <div class="modal-actions">
@@ -886,13 +887,28 @@ window.abrirDocumentos = abrirDocumentos;
 // exibir sozinho — usamos o visualizador público da Microsoft pra elas.
 const EXTENSOES_OFFICE = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
 
+// Links que já são do OneDrive/SharePoint abrem no próprio Office da empresa,
+// onde dá pra EDITAR. Então esses não passam pelo visualizador só-leitura.
+function ehLinkOneDriveOuSharePoint(link){
+  return /1drv\.ms|onedrive\.live\.com|sharepoint\.com|office\.com/i.test(link);
+}
+
 function montarUrlPreview(link){
+  if(ehLinkOneDriveOuSharePoint(link)) return link;
   const semQuery = link.split('?')[0];
   const extensao = semQuery.split('.').pop().toLowerCase();
   if(EXTENSOES_OFFICE.includes(extensao)){
     return 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(link);
   }
   return link; // PDF e imagens o navegador já exibe direto
+}
+
+// Só faz sentido oferecer "baixar para editar" em arquivos do Office
+// guardados no nosso Storage — links do OneDrive já são editáveis online.
+function ehEditavelSomenteBaixando(link){
+  if(ehLinkOneDriveOuSharePoint(link)) return false;
+  const extensao = link.split('?')[0].split('.').pop().toLowerCase();
+  return EXTENSOES_OFFICE.includes(extensao);
 }
 
 function selecionarDocumento(el){
@@ -903,10 +919,12 @@ function selecionarDocumento(el){
   const frame = document.getElementById('docsPreviewFrame');
   const empty = document.getElementById('docsPreviewEmpty');
   const linkBtn = document.getElementById('docsPreviewLink');
+  const downloadBtn = document.getElementById('docsDownloadLink');
 
   if(!link){
     frame.style.display = 'none'; frame.src = '';
     linkBtn.style.display = 'none';
+    downloadBtn.style.display = 'none';
     empty.style.display = 'block';
     empty.textContent = 'Nenhum link cadastrado para este documento ainda. Edite o colaborador para adicionar um.';
     return;
@@ -919,6 +937,13 @@ function selecionarDocumento(el){
   // "Abrir em nova aba" usa a mesma conversão da pré-visualização: assim
   // arquivos do Word abrem no visualizador do Office em vez de baixar.
   linkBtn.href = montarUrlPreview(link);
+
+  if(ehEditavelSomenteBaixando(link)){
+    downloadBtn.style.display = 'block';
+    downloadBtn.href = link;
+  } else {
+    downloadBtn.style.display = 'none';
+  }
 }
 window.selecionarDocumento = selecionarDocumento;
 
