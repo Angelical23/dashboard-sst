@@ -13,30 +13,32 @@
 
 <style>
   :root{
-    --azul-escuro:#1f4e5f;
-    --azul-header:#2b6777;
+    --azul-escuro:#0f2b3c;
+    --azul-sidebar:#081b28;
+    --azul-header:#0f2b3c;
     --verde:#2ecc71;
     --verde-claro:#eafaf0;
     --amarelo:#f5a623;
     --amarelo-claro:#fff8e6;
-    --vermelho:#e74c3c;
+    --vermelho:#e31c4b;
+    --vermelho-hover:#c7133d;
     --vermelho-claro:#fdecea;
-    --cinza-fundo:#eef1f5;
+    --cinza-fundo:#f4f7f9;
     --cinza-borda:#e1e6ec;
     --cinza-texto:#5a6b7b;
     --texto-escuro:#243447;
     --branco:#ffffff;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:'Segoe UI', Arial, sans-serif;background:var(--cinza-fundo);color:var(--texto-escuro);padding:24px;}
-  .dashboard{max-width:1450px;margin:0 auto;background:var(--branco);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.08);overflow:hidden;}
+  body{margin:0;font-family:'Segoe UI', Arial, sans-serif;background:var(--cinza-fundo);color:var(--texto-escuro);padding:0;}
 
   /* ---------- TELA DE LOGIN ---------- */
   #loginScreen{
-    min-height:80vh;
+    min-height:100vh;
     display:flex;
     align-items:center;
     justify-content:center;
+    background:var(--cinza-fundo);
   }
   .login-card{
     background:var(--branco);
@@ -62,14 +64,6 @@
 
   #appContainer{display:none;}
 
-  .header{background:linear-gradient(90deg, var(--azul-escuro), var(--azul-header));color:var(--branco);padding:18px 28px;display:flex;justify-content:space-between;align-items:center;}
-  .header h1{margin:0;font-size:20px;letter-spacing:0.5px;font-weight:700;}
-  .header-actions{display:flex;align-items:center;gap:14px;}
-  .header-add{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;background:transparent;color:white;}
-  .header-add:hover{background:rgba(255,255,255,0.15);}
-  .header-logout{background:transparent;border:1px solid rgba(255,255,255,0.5);color:white;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;}
-  .header-logout:hover{background:rgba(255,255,255,0.15);}
-
   .userbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;border-bottom:1px solid var(--cinza-borda);flex-wrap:wrap;gap:10px;}
   .user-info{display:flex;align-items:center;gap:12px;}
   .avatar{width:42px;height:42px;border-radius:50%;background:#c9d6df;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--azul-header);position:relative;}
@@ -78,11 +72,79 @@
   .user-role{font-size:12px;color:var(--cinza-texto);}
 
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;}
-  .btn{border:1px solid var(--cinza-borda);background:var(--branco);color:var(--texto-escuro);padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+  .btn{border:1px solid var(--cinza-borda);background:var(--branco);color:var(--texto-escuro);padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:500;}
   .btn:hover{background:var(--cinza-fundo);}
-  .btn.primary{background:var(--azul-header);color:white;border-color:var(--azul-header);}
-  .btn.primary:hover{background:var(--azul-escuro);}
+  .btn.primary{background:#115266;color:white;border-color:#115266;}
+  .btn.primary:hover{background:#0a3b4a;}
+  .btn.danger{background:var(--vermelho);color:white;border-color:var(--vermelho);}
+  .btn.danger:hover{background:var(--vermelho-hover);}
   input[type=file]{display:none;}
+
+  /* BARRA DE FILTRO E BUSCA */
+  .search-card{
+    background:var(--branco);
+    border:1px solid var(--cinza-borda);
+    border-radius:12px;
+    padding:14px 20px;
+    margin-bottom:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .search-input-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:8px;
+    padding:8px 14px;
+    flex:1;
+    max-width:380px;
+  }
+  .search-input-wrap input{
+    border:none;
+    background:transparent;
+    outline:none;
+    font-size:13px;
+    width:100%;
+    color:var(--texto-escuro);
+  }
+  .search-input-wrap svg{
+    color:#94a3b8;
+    flex-shrink:0;
+  }
+  .search-filter-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .search-select, .search-date-input{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:8px;
+    padding:8px 12px;
+    font-size:13px;
+    color:var(--texto-escuro);
+    outline:none;
+  }
+  .search-date-label{
+    font-size:12px;
+    color:var(--cinza-texto);
+    font-weight:600;
+  }
+  .btn-limpar-filtro{
+    background:transparent;
+    border:none;
+    color:#2563eb;
+    font-size:13px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
 
   .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
   .kpi-card{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;}
@@ -109,34 +171,91 @@
 
   .table-panel{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;overflow:hidden;}
   .table-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--cinza-borda);flex-wrap:wrap;gap:10px;}
-  .table-header h3{margin:0;font-size:14px;letter-spacing:0.3px;}
+  .table-header h3{margin:0;font-size:13px;letter-spacing:0.5px;color:#2563eb;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .table-header .dot-red{width:8px;height:8px;background-color:#e31c4b;border-radius:50%;display:inline-block;}
+  .table-header .header-sub{font-size:12px;color:#94a3b8;font-weight:400;}
+  
   .table-scroll{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;font-size:13px;min-width:1000px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:1100px;}
   thead th{background:var(--cinza-fundo);color:var(--cinza-texto);text-align:left;padding:10px 14px;font-weight:600;border-bottom:1px solid var(--cinza-borda);white-space:nowrap;}
-  tbody td{padding:10px 14px;border-bottom:1px solid var(--cinza-borda);white-space:nowrap;}
+  tbody td{padding:10px 14px;border-bottom:1px solid var(--cinza-borda);white-space:nowrap;vertical-align:middle;}
   tbody tr:hover{background:#fafbfc;}
   .colab-avatar{width:28px;height:28px;border-radius:50%;background:#c9d6df;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#2b6777;}
+
+  .nome-riscado {
+    text-decoration: line-through;
+    color: #334155;
+    font-weight: 700;
+  }
+  .sub-inativo {
+    font-size: 11px;
+    color: #e31c4b;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .pill-arquivado {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+  }
+  .btn-reativar-outline {
+    border: 1px solid #0d9488;
+    background: #f0fdf4;
+    color: #0d9488;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+  .btn-reativar-outline:hover {
+    background: #ccfbf1;
+  }
 
   .status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;}
   .status-pill.ok{background:var(--verde-claro);color:#1e8e4c;}
   .status-pill.warn{background:var(--amarelo-claro);color:#b8720a;}
   .status-pill.bad{background:var(--vermelho-claro);color:#c0392b;}
+  .status-pill.inactive{background:#f1f5f9;color:#475569;}
 
-  .acoes{display:flex;gap:12px;color:var(--cinza-texto);}
+  .acoes{display:flex;gap:12px;color:var(--cinza-texto);align-items:center;}
   .acoes span{cursor:pointer;}
-  .acoes span:hover{color:var(--texto-escuro);}
+  .acoes span:hover{opacity:0.8;}
+  .acoes .icon-desligar{display:inline-flex;align-items:center;justify-content:center;color:var(--vermelho);transition:color 0.2s, transform 0.2s;}
+  .acoes .icon-desligar:hover{opacity:1;color:var(--vermelho-hover);transform:translateY(-1px);}
+  .acoes .icon-desligar:focus-visible{outline:2px solid var(--vermelho);outline-offset:2px;border-radius:6px;}
 
   .loading, .empty{padding:30px;text-align:center;color:var(--cinza-texto);}
 
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15, 23, 42, 0.5);align-items:center;justify-content:center;z-index:100;padding:20px;}
   .modal-overlay.open{display:flex;}
-  .modal{background:white;border-radius:12px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;}
+  .modal{background:white;border-radius:12px;padding:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);}
   .modal h2{margin-top:0;font-size:17px;}
-  .modal label{display:block;font-size:12px;color:var(--cinza-texto);margin:10px 0 4px;}
-  .modal input{width:100%;padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:6px;font-size:13px;}
+  .modal label{display:block;font-size:11px;font-weight:700;color:#475569;margin:12px 0 4px;letter-spacing:0.5px;}
+  .modal input, .modal select, .modal textarea{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;background:#f8fafc;color:#1e293b;}
+  .modal input:focus, .modal select:focus{outline:none;border-color:#3b82f6;background:#fff;}
   .modal .grupo{border:1px solid var(--cinza-borda);border-radius:8px;padding:10px 12px;margin-top:14px;}
   .modal .grupo-titulo{font-weight:700;font-size:13px;margin-bottom:4px;}
-  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
+
+  .modal-desligar-card{padding:0;overflow:hidden;border-radius:16px;max-width:480px;}
+  .modal-desligar-header{background:var(--vermelho);color:white;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+  .modal-desligar-header h3{margin:0;font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px;}
+  .modal-desligar-close{background:transparent;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;}
+  .modal-desligar-body{padding:24px;}
+  .modal-desligar-alert{background:#fdf2f2;border-radius:10px;padding:14px 16px;color:#9b1c1c;font-size:13px;line-height:1.4;margin-bottom:18px;}
 
   .toast{position:fixed;bottom:24px;right:24px;background:var(--texto-escuro);color:white;padding:12px 18px;border-radius:8px;font-size:13px;z-index:200;display:none;}
   .toast.show{display:block;}
@@ -151,33 +270,61 @@
   .docs-preview{flex:1;min-width:260px;border:1px solid var(--cinza-borda);border-radius:8px;overflow:hidden;position:relative;background:#fafbfc;}
   .docs-preview iframe{width:100%;height:360px;border:0;display:block;}
   .docs-preview-empty{padding:20px;color:var(--cinza-texto);font-size:13px;text-align:center;}
-  .docs-preview-link{display:block;text-align:center;padding:8px;font-size:12px;background:var(--cinza-fundo);border-top:1px solid var(--cinza-borda);}
+  
+  .docs-preview-actions{
+    display:flex;
+    gap:10px;
+    padding:10px;
+    background:var(--cinza-fundo);
+    border-top:1px solid var(--cinza-borda);
+  }
+  .docs-preview-link{
+    flex:1;
+    text-align:center;
+    padding:8px 12px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--azul-header);
+    background:white;
+    border:1px solid var(--cinza-borda);
+    border-radius:6px;
+    text-decoration:none;
+  }
+  .docs-preview-link:hover{
+    background:#f1f5f9;
+  }
 
-  /* ---------- LAYOUT COM MENU LATERAL ---------- */
-  .app-shell{display:flex;min-height:calc(100vh - 48px);max-width:1600px;margin:0 auto;background:var(--branco);box-shadow:0 10px 40px rgba(0,0,0,0.08);border-radius:16px;overflow:hidden;}
-  .sidebar{width:230px;flex-shrink:0;background:linear-gradient(180deg, var(--azul-escuro), var(--azul-header));color:white;display:flex;flex-direction:column;}
-  .sidebar-brand{padding:22px 20px;font-weight:700;font-size:14px;letter-spacing:0.3px;line-height:1.4;border-bottom:1px solid rgba(255,255,255,0.15);}
-  .sidebar-nav{display:flex;flex-direction:column;padding:12px 0;flex:1;}
-  .side-link{display:flex;align-items:center;gap:10px;padding:12px 20px;background:transparent;border:none;border-left:3px solid transparent;color:rgba(255,255,255,0.8);font-size:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;}
-  .side-link:hover{background:rgba(255,255,255,0.08);color:white;}
-  .side-link.active{background:rgba(255,255,255,0.12);color:white;font-weight:600;border-left-color:var(--verde);}
-  .sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.15);}
+  /* ---------- LAYOUT E MENU LATERAL ---------- */
+  .app-shell{display:flex;min-height:100vh;width:100%;background:var(--cinza-fundo);}
+  .sidebar{width:260px;flex-shrink:0;background:#061824;color:white;display:flex;flex-direction:column;padding:20px 14px;}
+  .sidebar-brand{padding:10px 12px 24px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .sidebar-brand-title{color:#2ecc71;font-weight:700;font-size:13px;letter-spacing:0.5px;line-height:1.3;}
+  .sidebar-brand-sub{color:white;font-weight:700;font-size:15px;margin-top:4px;}
+  
+  .sidebar-nav{display:flex;flex-direction:column;gap:8px;margin-top:20px;flex:1;}
+  .side-link{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:transparent;border:1px solid transparent;border-radius:10px;color:#94a3b8;font-size:14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:all 0.2s;}
+  .side-link:hover{color:white;background:rgba(255,255,255,0.03);}
+  .side-link.active{background:#0e3342;border:1px solid #1a5266;color:white;font-weight:600;}
+  .side-link-content{display:flex;align-items:center;gap:12px;}
+  .side-icon{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;}
+  
+  .side-badge{background:#114e52;color:#2ecc71;font-size:12px;padding:2px 9px;border-radius:12px;font-weight:600;}
+  .side-badge.red{background:#3b1319;color:#f87171;}
+
+  .sidebar-footer{padding:16px 12px 0;border-top:1px solid rgba(255,255,255,0.08);}
   .sidebar-footer .user-name{color:white;}
-  .sidebar-footer .user-role{color:rgba(255,255,255,0.7);}
-  .sidebar-footer .header-logout{width:100%;margin-top:12px;justify-content:center;}
-  .main-content{flex:1;padding:28px;min-width:0;overflow-x:auto;}
-  .view-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
-  .view-header h1{margin:0;font-size:20px;color:var(--texto-escuro);}
+  .sidebar-footer .user-role{color:#64748b;}
+  .sidebar-footer .header-logout{width:100%;margin-top:12px;justify-content:center;background:transparent;border:1px solid #334155;color:#cbd5e1;padding:8px;border-radius:8px;cursor:pointer;}
+  .sidebar-footer .header-logout:hover{background:rgba(255,255,255,0.05);color:white;}
+
+  .main-content{flex:1;padding:32px;min-width:0;overflow-x:auto;}
+  .view-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;}
+  .view-header h1{margin:0;font-size:22px;color:var(--texto-escuro);font-weight:700;}
 
   @media (max-width:900px){
     .app-shell{flex-direction:column;}
-    .sidebar{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;}
-    .sidebar-nav{flex-direction:row;flex-wrap:wrap;padding:8px;}
-    .side-link{width:auto;border-left:none;border-radius:8px;}
-    .sidebar-footer{margin-left:auto;border-top:none;display:flex;align-items:center;gap:10px;}
-    .sidebar-footer .header-logout{width:auto;margin-top:0;}
+    .sidebar{width:100%;padding:16px;}
   }
-
   @media (max-width:1100px){.kpi-row{grid-template-columns:repeat(2,1fr);} .charts-row{grid-template-columns:1fr;}}
   @media (max-width:600px){.kpi-row{grid-template-columns:1fr;}}
 </style>
@@ -206,18 +353,57 @@
 <div class="app-shell">
 
   <aside class="sidebar">
-    <div class="sidebar-brand">GESTÃO DE SEGURANÇA DO TRABALHO<br>Dashboard de Compliance</div>
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-title">GESTÃO DE SEGURANÇA DO TRABALHO</div>
+      <div class="sidebar-brand-sub">Dashboard de Compliance</div>
+    </div>
+    
     <nav class="sidebar-nav">
-      <button class="side-link active" data-view="painel">📊 Painel</button>
-      <button class="side-link" data-view="colaboradores">👥 Colaboradores</button>
-      <button class="side-link" data-view="treinamentos">🎓 Treinamentos</button>
+      <button class="side-link active" data-view="painel">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+          </span> 
+          Painel Geral
+        </span>
+      </button>
+
+      <button class="side-link" data-view="colaboradores">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+          </span> 
+          Colaboradores Ativos
+        </span>
+        <span class="side-badge" id="badgeAtivos">0</span>
+      </button>
+
+      <button class="side-link" data-view="inativos">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="17" y1="11" x2="22" y2="16"/><line x1="22" y1="11" x2="17" y2="16"/></svg>
+          </span> 
+          Inativos / Desligados
+        </span>
+        <span class="side-badge red" id="badgeInativos">0</span>
+      </button>
+
+      <button class="side-link" data-view="treinamentos">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </span> 
+          Treinamentos
+        </span>
+      </button>
     </nav>
+
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="avatar">AS</div>
         <div>
           <div class="user-name">Angelica Alves</div>
-          <div class="user-role" id="usuarioLogadoEmail">Gestora SST</div>
+          <div class="user-role" id="usuarioLogadoEmail">Modo Teste</div>
         </div>
       </div>
       <button class="header-logout" id="btnLogout">Sair</button>
@@ -228,12 +414,12 @@
 
     <!-- VIEW: PAINEL -->
     <section id="viewPainel">
-      <div class="view-header"><h1>Painel</h1></div>
+      <div class="view-header"><h1>Painel Geral</h1></div>
 
       <div class="kpi-row">
         <div class="kpi-card">
           <div class="kpi-icon blue">👥</div>
-          <div><div class="kpi-label">Total de Funcionários</div><div class="kpi-value" id="kpiTotal">–</div></div>
+          <div><div class="kpi-label">Ativos no Quadro</div><div class="kpi-value" id="kpiTotal">–</div></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-icon green">✔</div>
@@ -251,7 +437,7 @@
 
       <div class="charts-row">
         <div class="panel">
-          <h3>Status de Documentação por Setor</h3>
+          <h3>Status de Documentação por Setor (Ativos)</h3>
           <div class="chart-wrap"><canvas id="barChart"></canvas></div>
         </div>
         <div class="panel">
@@ -262,12 +448,52 @@
           </div>
         </div>
       </div>
+
+      <div style="margin-top: 28px;">
+        <div style="font-size:13px; font-weight:700; color:#0f2b3c; margin-bottom:12px; letter-spacing:0.5px;">
+          🚪 GESTÃO DE DESLIGAMENTOS E TURNOVER (MÊS VIGENTE)
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 16px; margin-bottom: 20px;">
+          <div class="kpi-card">
+            <div class="kpi-icon red">📉</div>
+            <div>
+              <div class="kpi-label">Desligados no Mês</div>
+              <div class="kpi-value red" id="kpiDesligadosMes">0</div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:2px;" id="kpiMesAnoAtual">-</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon blue">📊</div>
+            <div>
+              <div class="kpi-label">Taxa de Turnover</div>
+              <div class="kpi-value" id="kpiTaxaTurnover">0.0%</div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Proporção no mês</div>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon yellow">🏷️</div>
+            <div>
+              <div class="kpi-label">Principal Motivo de Desligamento</div>
+              <div class="kpi-value" style="font-size:15px; margin-top:2px;" id="kpiMotivoPrincipal">-</div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:2px;" id="kpiMotivoSecundario">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Evolução Mensal de Desligamentos (Histórico de Saídas)</h3>
+          <div class="chart-wrap" style="height:220px;"><canvas id="turnoverChart"></canvas></div>
+        </div>
+      </div>
     </section>
 
-    <!-- VIEW: COLABORADORES -->
+    <!-- VIEW: COLABORADORES (ATIVOS) -->
     <section id="viewColaboradores" style="display:none;">
       <div class="view-header">
-        <h1>Colaboradores</h1>
+        <h1>Colaboradores Ativos</h1>
         <div class="toolbar">
           <button class="btn primary" id="btnAbrirNovo">+ Novo Colaborador</button>
           <button class="btn" id="btnAbrirAnexar">📎 Anexar Documentos</button>
@@ -278,31 +504,95 @@
         </div>
       </div>
 
+      <div class="search-card">
+        <div class="search-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="inputBuscaAtivos" placeholder="Buscar por Nome, CPF ou Local...">
+        </div>
+        <div class="search-filter-wrap">
+          <select id="selectFiltroLocal" class="search-select">
+            <option value="">Todos os Locais</option>
+          </select>
+          <button class="btn-limpar-filtro" id="btnLimparFiltros">Limpar filtro</button>
+        </div>
+      </div>
+
       <div class="table-panel">
-    <div class="table-header">
-      <h3>VISÃO GERAL DE DOCUMENTAÇÃO POR COLABORADOR</h3>
-    </div>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>Nome Completo</th>
-            <th>CPF</th>
-            <th>Local de Trabalho</th>
-            <th>Ficha de Admissão</th>
-            <th>ASO</th>
-            <th>Ficha de EPI</th>
-            <th>Certificado NR06</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="9" class="loading">Carregando colaboradores...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+        <div class="table-header">
+          <h3>VISÃO GERAL DE DOCUMENTAÇÃO POR COLABORADOR</h3>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>NOME COMPLETO</th>
+                <th>CPF</th>
+                <th>LOCAL DE TRABALHO</th>
+                <th>Ficha de Admissão</th>
+                <th>ASO</th>
+                <th>OS - Ordem de Serviço</th>
+                <th>Ficha de EPI</th>
+                <th>Certificado NR06</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="10" class="loading">Carregando colaboradores...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW: INATIVOS / DESLIGADOS -->
+    <section id="viewInativos" style="display:none;">
+      <div class="view-header">
+        <h1>Colaboradores Inativos / Desligados</h1>
+        <div class="toolbar">
+          <button class="btn" id="btnExportInativosExcel">⬇ Exportar Inativos Excel</button>
+        </div>
+      </div>
+
+      <div class="search-card">
+        <div class="search-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="inputBuscaInativos" placeholder="Buscar por Nome, CPF ou Local...">
+        </div>
+        <div class="search-filter-wrap">
+          <span class="search-date-label">Desligados De:</span>
+          <input type="date" id="filtroDataInicio" class="search-date-input">
+          <span class="search-date-label">Até:</span>
+          <input type="date" id="filtroDataFim" class="search-date-input">
+          <button class="btn-limpar-filtro" id="btnLimparFiltrosInativos">Limpar filtro</button>
+        </div>
+      </div>
+
+      <div class="table-panel">
+        <div class="table-header">
+          <h3><span class="dot-red"></span> HISTÓRICO DE COLABORADORES DESLIGADOS</h3>
+          <span class="header-sub">Registro passivo de auditoria SST</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>NOME COMPLETO</th>
+                <th>CPF</th>
+                <th>LOCAL / SETOR</th>
+                <th>DATA DESLIGAMENTO</th>
+                <th>MOTIVO</th>
+                <th>HISTÓRICO DOCS</th>
+                <th>AÇÕES</th>
+              </tr>
+            </thead>
+            <tbody id="tableInativosBody">
+              <tr><td colspan="8" class="loading">Carregando inativos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- VIEW: TREINAMENTOS -->
@@ -375,6 +665,18 @@
       </div>
 
       <div class="grupo">
+        <div class="grupo-titulo">OS - Ordem de Serviço</div>
+        <label>Data de emissão/vencimento</label>
+        <input type="date" name="os_data">
+        <label>Link do documento</label>
+        <div style="display:flex;gap:8px;">
+          <input type="url" name="os_link" placeholder="https://..." style="flex:1;">
+          <label class="btn" for="upload_os_link" style="margin:0;white-space:nowrap;">📎 Anexar</label>
+          <input type="file" id="upload_os_link" class="input-upload-doc" data-target="os_link" data-pasta="os" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
+      </div>
+
+      <div class="grupo">
         <div class="grupo-titulo">Ficha de EPI</div>
         <label>Data de vencimento</label>
         <input type="date" name="epi_data">
@@ -403,6 +705,52 @@
         <button type="submit" class="btn primary" id="btnSalvar">Salvar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- MODAL DE DESLIGAMENTO -->
+<div class="modal-overlay" id="modalDesligarOverlay">
+  <div class="modal modal-desligar-card">
+    <div class="modal-desligar-header">
+      <h3>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+        Confirmar Desligamento
+      </h3>
+      <button class="modal-desligar-close" id="btnFecharDesligarTopo">&times;</button>
+    </div>
+
+    <div class="modal-desligar-body">
+      <div class="modal-desligar-alert">
+        Ao desligar, o colaborador deixará de contabilizar para as pendências de documentos ativas, mas seu histórico permanecerá arquivado para auditoria.
+      </div>
+
+      <form id="formDesligamento">
+        <input type="hidden" id="desligarColaboradorId">
+        
+        <label>COLABORADOR</label>
+        <input type="text" id="desligarNomeExibicao" readonly style="background:#f1f5f9;font-weight:700;color:#334155;">
+
+        <label>DATA DE DESLIGAMENTO *</label>
+        <input type="date" id="desligarData" required>
+
+        <label>MOTIVO DO DESLIGAMENTO *</label>
+        <select id="desligarMotivo" required>
+          <option value="" disabled selected>Selecione o motivo...</option>
+          <option value="Sem justa causa">Demissão sem justa causa</option>
+          <option value="Com justa causa">Demissão com justa causa</option>
+          <option value="Pedido de demissão">Pedido de demissão</option>
+          <option value="Término de contrato">Término de contrato de experiência / determinado</option>
+          <option value="Acordo mútuo">Acordo entre as partes (Art. 484-A CLT)</option>
+          <option value="Aposentadoria">Aposentadoria</option>
+          <option value="Outros">Outros</option>
+        </select>
+
+        <div class="modal-actions">
+          <button type="button" class="btn" id="btnCancelarDesligamento" style="background:#f1f5f9;border:none;padding:10px 18px;border-radius:8px;">Cancelar</button>
+          <button type="submit" class="btn danger" id="btnConfirmarDesligamento" style="padding:10px 18px;border-radius:8px;font-weight:600;">Confirmar Desligamento</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
@@ -441,6 +789,7 @@
     <select id="anexarTipoDoc" style="width:100%;padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:6px;font-size:13px;">
       <option value="admissao">Ficha de Admissão</option>
       <option value="aso">ASO</option>
+      <option value="os">OS - Ordem de Serviço</option>
       <option value="epi">Ficha de EPI</option>
       <option value="nr06">Certificado NR06</option>
     </select>
@@ -514,11 +863,13 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let colaboradores = [];
 let barChartInstance = null;
 let pieChartInstance = null;
+let turnoverChartInstance = null;
 let editandoId = null; // null = cadastro novo | id = edição em andamento
 
 const DOC_FIELDS = [
   { key: "admissao", label: "Ficha de Admissão", expira: false },
   { key: "aso",       label: "ASO",               expira: true  },
+  { key: "os",        label: "OS - Ordem de Serviço", expira: true  },
   { key: "epi",       label: "Ficha de EPI",       expira: true  },
   { key: "nr06",      label: "Certificado NR06",   expira: true  }
 ];
@@ -603,6 +954,7 @@ let treinamentosCarregados = false;
 const VIEWS = {
   painel: document.getElementById('viewPainel'),
   colaboradores: document.getElementById('viewColaboradores'),
+  inativos: document.getElementById('viewInativos'),
   treinamentos: document.getElementById('viewTreinamentos')
 };
 
@@ -630,6 +982,16 @@ function toast(msg){
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function normalizarTexto(str){
+  return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function formatDataBR(dataIso){
+  if(!dataIso) return '-';
+  const partes = dataIso.split('-');
+  return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataIso;
 }
 
 function diffDias(dataStr){
@@ -669,149 +1031,166 @@ async function loadColaboradores(){
 
   if(error){
     document.getElementById('tableBody').innerHTML =
-      `<tr><td colspan="9" class="empty">Erro ao carregar dados: ${error.message}</td></tr>`;
+      `<tr><td colspan="10" class="empty">Erro ao carregar dados: ${error.message}</td></tr>`;
     console.error(error);
     return;
   }
 
   colaboradores = data || [];
+  popularFiltroLocais();
   renderTudo();
 }
 
 /* ---------- Renderização geral ---------- */
-function renderTudo(){
-  renderTabela();
-  renderKpis();
-  renderGraficos();
+function popularFiltroLocais(){
+  const select = document.getElementById('selectFiltroLocal');
+  const valorAtual = select.value;
+  const locais = [...new Set(colaboradores.map(c => (c.local || '').trim()).filter(Boolean))].sort();
+  select.innerHTML = '<option value="">Todos os Locais</option>' + locais.map(l => `<option value="${l}">${l}</option>`).join('');
+  select.value = valorAtual;
 }
 
-// A pílula na tabela é só informativa — não abre nada ao clicar.
-// Para visualizar o documento, use o botão "Ver documentos" (👁️) na coluna Ações.
+function renderTudo(){
+  renderTabelaAtivos();
+  renderTabelaInativos();
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  const inativos = colaboradores.filter(c => c.status === 'INATIVO');
+  renderKpis(ativos, inativos);
+  renderGraficos(ativos, inativos);
+}
+
 function pillHtml(campo, colaborador){
-  const status = statusDocumento(colaborador[`${campo}_data`], colaborador[`${campo}_link`], DOC_FIELDS.find(d=>d.key===campo).expira);
+  const doc = DOC_FIELDS.find(d=>d.key===campo);
+  const status = statusDocumento(colaborador[`${campo}_data`], colaborador[`${campo}_link`], doc ? doc.expira : true);
   return `<span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span>`;
 }
 
-function renderTabela(){
+const inputBuscaAtivos = document.getElementById('inputBuscaAtivos');
+const selectFiltroLocal = document.getElementById('selectFiltroLocal');
+const inputBuscaInativos = document.getElementById('inputBuscaInativos');
+const filtroDataInicio = document.getElementById('filtroDataInicio');
+const filtroDataFim = document.getElementById('filtroDataFim');
+
+inputBuscaAtivos.addEventListener('input', renderTabelaAtivos);
+selectFiltroLocal.addEventListener('change', renderTabelaAtivos);
+document.getElementById('btnLimparFiltros').addEventListener('click', ()=>{
+  inputBuscaAtivos.value = ''; selectFiltroLocal.value = ''; renderTabelaAtivos();
+});
+inputBuscaInativos.addEventListener('input', renderTabelaInativos);
+filtroDataInicio.addEventListener('change', renderTabelaInativos);
+filtroDataFim.addEventListener('change', renderTabelaInativos);
+document.getElementById('btnLimparFiltrosInativos').addEventListener('click', ()=>{
+  inputBuscaInativos.value = ''; filtroDataInicio.value = ''; filtroDataFim.value = ''; renderTabelaInativos();
+});
+
+/* Bonequinho (silhueta de pessoa) usado na coluna AÇÕES para desligar/inativar. */
+const ICON_PESSOA = `<svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="12" cy="7.4" r="4.3"/><path d="M4.4 20.8v-1.9c0-3.5 3.4-6.1 7.6-6.1s7.6 2.6 7.6 6.1v1.9z"/></svg>`;
+
+function renderTabelaAtivos(){
+  const termo = normalizarTexto(inputBuscaAtivos.value);
+  const termoNumerico = termo.replace(/\D/g, '');
+  const local = selectFiltroLocal.value;
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  const filtrados = ativos.filter(c => {
+    const textoOk = normalizarTexto(c.nome).includes(termo) || normalizarTexto(c.local).includes(termo) || (termoNumerico && (c.cpf || '').replace(/\D/g, '').includes(termoNumerico));
+    return textoOk && (!local || (c.local || '').trim() === local);
+  });
+  document.getElementById('badgeAtivos').textContent = ativos.length;
   const tbody = document.getElementById('tableBody');
-  if(colaboradores.length === 0){
-    tbody.innerHTML = `<tr><td colspan="9" class="empty">Nenhum colaborador cadastrado ainda.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = colaboradores.map(c => `
-    <tr>
-      <td><div class="colab-avatar">${iniciais(c.nome)}</div></td>
-      <td>${c.nome}</td>
-      <td>${formatCPF(c.cpf)}</td>
-      <td>${c.local || '-'}</td>
-      <td>${pillHtml('admissao', c)}</td>
-      <td>${pillHtml('aso', c)}</td>
-      <td>${pillHtml('epi', c)}</td>
-      <td>${pillHtml('nr06', c)}</td>
-      <td class="acoes">
-        <span title="Ver documentos" onclick="abrirDocumentos('${c.id}')">👁️</span>
-        <span title="Editar colaborador" onclick="editarColaborador('${c.id}')">✏️</span>
-        <span title="Excluir colaborador" onclick="excluirColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">🗑️</span>
-      </td>
-    </tr>
-  `).join('');
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="10" class="empty">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>'; return; }
+  tbody.innerHTML = filtrados.map(c => `<tr>
+    <td><div class="colab-avatar">${iniciais(c.nome)}</div></td><td><b>${c.nome}</b></td><td>${formatCPF(c.cpf)}</td><td>${c.local || '-'}</td>
+    <td>${pillHtml('admissao', c)}</td><td>${pillHtml('aso', c)}</td><td>${pillHtml('os', c)}</td><td>${pillHtml('epi', c)}</td><td>${pillHtml('nr06', c)}</td>
+    <td class="acoes"><span title="Ver documentos" onclick="abrirDocumentos('${c.id}')">👁️</span><span title="Editar colaborador" onclick="editarColaborador('${c.id}')">✏️</span><span class="btn-icon-desligar icon-desligar" role="button" tabindex="0" title="Desligar / Inativar colaborador" onclick="abrirModalDesligar('${c.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalDesligar('${c.id}');}">${ICON_PESSOA}</span></td>
+  </tr>`).join('');
 }
 
-function renderKpis(){
-  const total = colaboradores.length;
+function renderTabelaInativos(){
+  const termo = normalizarTexto(inputBuscaInativos.value);
+  const termoNumerico = termo.replace(/\D/g, '');
+  const inicio = filtroDataInicio.value, fim = filtroDataFim.value;
+  const inativos = colaboradores.filter(c => c.status === 'INATIVO');
+  const filtrados = inativos.filter(c => {
+    const textoOk = normalizarTexto(c.nome).includes(termo) || normalizarTexto(c.local).includes(termo) || (termoNumerico && (c.cpf || '').replace(/\D/g, '').includes(termoNumerico));
+    const dataOk = !c.data_desligamento || ((!inicio || c.data_desligamento >= inicio) && (!fim || c.data_desligamento <= fim));
+    return textoOk && dataOk;
+  });
+  document.getElementById('badgeInativos').textContent = inativos.length;
+  const tbody = document.getElementById('tableInativosBody');
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum colaborador inativo encontrado.</td></tr>'; return; }
+  tbody.innerHTML = filtrados.map(c => `<tr>
+    <td><div class="colab-avatar">${iniciais(c.nome)}</div></td><td><div class="nome-riscado">${c.nome}</div><div class="sub-inativo">Inativo</div></td><td>${formatCPF(c.cpf)}</td><td>${c.local || '-'}</td><td>${formatDataBR(c.data_desligamento)}</td><td><span class="status-pill inactive">${c.motivo_desligamento || 'Não informado'}</span></td>
+    <td><button class="pill-arquivado" onclick="abrirDocumentos('${c.id}')">📦 Arquivado</button></td><td class="acoes"><button class="btn-reativar-outline" onclick="reativarColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">↻ Reativar</button><span title="Excluir definitivamente" onclick="excluirColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">🗑️</span></td>
+  </tr>`).join('');
+}
+
+function renderKpis(ativos, inativos){
+  const total = ativos.length;
   document.getElementById('kpiTotal').textContent = total;
-
-  if(total === 0){
-    document.getElementById('kpiEmDia').textContent = '0 (0%)';
-    document.getElementById('kpiVencendo').textContent = '0 (0%)';
-    document.getElementById('kpiVencidos').textContent = '0 (0%)';
-    return;
-  }
-
-  let emDia = 0;
-  let docsVencendo = 0, docsVencidos = 0;
-  const totalDocumentos = total * DOC_FIELDS.length;
-
-  colaboradores.forEach(c=>{
-    let temVencido = false, temVencendo = false;
-    DOC_FIELDS.forEach(d=>{
-      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
-      if(s.chave === 'bad'){ temVencido = true; docsVencidos++; }
-      if(s.chave === 'warn'){ temVencendo = true; docsVencendo++; }
-    });
-    if(!temVencido && !temVencendo) emDia++;
+  let emDia=0, docsVencendo=0, docsVencidos=0;
+  ativos.forEach(c=>{
+    let vencido=false, vencendo=false;
+    DOC_FIELDS.forEach(d=>{ const s=statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira); if(s.chave==='bad'){vencido=true;docsVencidos++;} if(s.chave==='warn'){vencendo=true;docsVencendo++;} });
+    if(!vencido && !vencendo) emDia++;
   });
-
-  const pctPessoas = (n)=> Math.round((n/total)*100);
-  const pctDocs = (n)=> Math.round((n/totalDocumentos)*100);
-  document.getElementById('kpiEmDia').textContent = `${emDia} (${pctPessoas(emDia)}%)`;
-  document.getElementById('kpiVencendo').textContent = `${docsVencendo} (${pctDocs(docsVencendo)}%)`;
-  document.getElementById('kpiVencidos').textContent = `${docsVencidos} (${pctDocs(docsVencidos)}%)`;
+  const totalDocs=total*DOC_FIELDS.length;
+  document.getElementById('kpiEmDia').textContent = total ? `${emDia} (${Math.round(emDia/total*100)}%)` : '0 (0%)';
+  document.getElementById('kpiVencendo').textContent = totalDocs ? `${docsVencendo} (${Math.round(docsVencendo/totalDocs*100)}%)` : '0 (0%)';
+  document.getElementById('kpiVencidos').textContent = totalDocs ? `${docsVencidos} (${Math.round(docsVencidos/totalDocs*100)}%)` : '0 (0%)';
+  const agora=new Date(), ano=agora.getFullYear(), mes=agora.getMonth();
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('kpiMesAnoAtual').textContent=`${meses[mes]} / ${ano}`;
+  const desligados=inativos.filter(c=>{ if(!c.data_desligamento)return false; const d=new Date(c.data_desligamento+'T00:00:00'); return d.getFullYear()===ano&&d.getMonth()===mes; });
+  document.getElementById('kpiDesligadosMes').textContent=desligados.length;
+  document.getElementById('kpiTaxaTurnover').textContent=`${(total+desligados.length ? desligados.length/(total+desligados.length)*100 : 0).toFixed(1)}%`;
+  const contagem={}; desligados.forEach(c=>{const m=c.motivo_desligamento||'Não informado';contagem[m]=(contagem[m]||0)+1;});
+  const motivos=Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('kpiMotivoPrincipal').textContent=motivos.length ? `${motivos[0][0]} (${Math.round(motivos[0][1]/desligados.length*100)}%)` : 'Sem saídas este mês';
+  document.getElementById('kpiMotivoSecundario').textContent=motivos[1] ? `2º: ${motivos[1][0]} (${Math.round(motivos[1][1]/desligados.length*100)}%)` : (motivos.length ? 'Motivo único registrado' : 'Quadro estável');
 }
 
-function renderGraficos(){
- try {
-  if(typeof Chart === 'undefined'){
-    document.querySelector('#barChart').closest('.panel').querySelector('.chart-wrap').innerHTML =
-      '<p style="color:var(--vermelho);font-size:13px;">Não foi possível carregar a biblioteca de gráficos (Chart.js). Verifique sua conexão e recarregue a página.</p>';
-    console.error('Chart.js não está disponível (window.Chart é undefined).');
-    return;
-  }
-  const setoresMap = {};
-  colaboradores.forEach(c=>{
-    const setor = c.local || 'Não informado';
-    if(!setoresMap[setor]) setoresMap[setor] = { regular:0, vencendo:0, vencido:0 };
-    DOC_FIELDS.forEach(d=>{
-      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
-      if(s.chave === 'ok') setoresMap[setor].regular++;
-      else if(s.chave === 'warn') setoresMap[setor].vencendo++;
-      else setoresMap[setor].vencido++;
-    });
-  });
-  const setores = Object.keys(setoresMap).map(nome => ({ nome, ...setoresMap[nome] }));
-
-  const pendCores = { admissao:'#2b6777', aso:'#2ecc71', epi:'#f5c518', nr06:'#e74c3c' };
-  const pendentes = DOC_FIELDS.map(d=>{
-    let count = 0;
-    colaboradores.forEach(c=>{
-      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
-      if(s.chave !== 'ok') count++;
-    });
-    return { label: d.label, valor: count, cor: pendCores[d.key] };
-  });
-
-  if(barChartInstance) barChartInstance.destroy();
-  barChartInstance = new Chart(document.getElementById('barChart'), {
-    type:'bar',
-    data:{
-      labels: setores.map(s=>s.nome),
-      datasets:[
-        { label:'Regular', data: setores.map(s=>s.regular), backgroundColor:'#2b6777', borderRadius:3 },
-        { label:'Vence em Breve', data: setores.map(s=>s.vencendo), backgroundColor:'#f5c518', borderRadius:3 },
-        { label:'Vencido', data: setores.map(s=>s.vencido), backgroundColor:'#e74c3c', borderRadius:3 }
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'circle', font:{size:11} } } },
-      scales:{ y:{ beginAtZero:true, grid:{color:'#eef1f5'} }, x:{ grid:{display:false} } }
-    }
-  });
-
-  if(pieChartInstance) pieChartInstance.destroy();
-  pieChartInstance = new Chart(document.getElementById('pieChart'), {
-    type:'doughnut',
-    data:{ labels: pendentes.map(p=>p.label), datasets:[{ data: pendentes.map(p=>p.valor), backgroundColor: pendentes.map(p=>p.cor), borderWidth:2, borderColor:'#fff' }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, cutout:'55%' }
-  });
-
-  const legendEl = document.getElementById('pieLegend');
-  legendEl.innerHTML = pendentes.map(p=>`<div class="legend-item"><span class="legend-dot" style="background:${p.cor}"></span>${p.label}</div>`).join('');
- } catch(err){
-   console.error('Erro ao renderizar gráficos:', err);
- }
+function renderGraficos(ativos, inativos){
+ try{
+  if(typeof Chart==='undefined') return;
+  const setoresMap={}; ativos.forEach(c=>{const setor=c.local||'Não informado';if(!setoresMap[setor])setoresMap[setor]={regular:0,vencendo:0,vencido:0};DOC_FIELDS.forEach(d=>{const s=statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira);setoresMap[setor][s.chave==='ok'?'regular':s.chave==='warn'?'vencendo':'vencido']++;});});
+  const setores=Object.keys(setoresMap).map(nome=>({nome,...setoresMap[nome]}));
+  if(barChartInstance)barChartInstance.destroy(); barChartInstance=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels:setores.length?setores.map(s=>s.nome):['Sem dados'],datasets:[{label:'Regular',data:setores.length?setores.map(s=>s.regular):[0],backgroundColor:'#2b6777',borderRadius:3},{label:'Vence em Breve',data:setores.length?setores.map(s=>s.vencendo):[0],backgroundColor:'#f5c518',borderRadius:3},{label:'Vencido',data:setores.length?setores.map(s=>s.vencido):[0],backgroundColor:'#e74c3c',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true},x:{grid:{display:false}}}}});
+  const cores={admissao:'#2b6777',aso:'#2ecc71',os:'#3498db',epi:'#f5c518',nr06:'#e74c3c'}; const pendentes=DOC_FIELDS.map(d=>({label:d.label,valor:ativos.filter(c=>statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira).chave!=='ok').length,cor:cores[d.key]}));
+  if(pieChartInstance)pieChartInstance.destroy(); pieChartInstance=new Chart(document.getElementById('pieChart'),{type:'doughnut',data:{labels:pendentes.map(p=>p.label),datasets:[{data:pendentes.map(p=>p.valor),backgroundColor:pendentes.map(p=>p.cor),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'55%'}}); document.getElementById('pieLegend').innerHTML=pendentes.map(p=>`<div class="legend-item"><span class="legend-dot" style="background:${p.cor}"></span>${p.label}</div>`).join('');
+  const meses=[]; const agora=new Date(); for(let i=5;i>=0;i--){const d=new Date(agora.getFullYear(),agora.getMonth()-i,1);meses.push({ano:d.getFullYear(),mes:d.getMonth(),label:d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','')+'/'+String(d.getFullYear()).slice(2)});}
+  const saidas=meses.map(m=>inativos.filter(c=>{if(!c.data_desligamento)return false;const d=new Date(c.data_desligamento+'T00:00:00');return d.getFullYear()===m.ano&&d.getMonth()===m.mes;}).length);
+  if(turnoverChartInstance)turnoverChartInstance.destroy(); turnoverChartInstance=new Chart(document.getElementById('turnoverChart'),{type:'bar',data:{labels:meses.map(m=>m.label),datasets:[{label:'Desligamentos',data:saidas,backgroundColor:'rgba(227,28,75,.85)',borderRadius:6,maxBarThickness:38}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,precision:0}},x:{grid:{display:false}}}}});
+ }catch(err){console.error('Erro ao renderizar gráficos:',err);}
 }
+
+/* ---------- Desligar / reativar colaborador ---------- */
+const modalDesligarOverlay = document.getElementById('modalDesligarOverlay');
+function abrirModalDesligar(id){
+  const c=colaboradores.find(x=>x.id===id); if(!c)return;
+  document.getElementById('desligarColaboradorId').value=id;
+  document.getElementById('desligarNomeExibicao').value=c.nome;
+  document.getElementById('desligarData').value=new Date().toISOString().slice(0,10);
+  document.getElementById('desligarMotivo').value='';
+  modalDesligarOverlay.classList.add('open');
+}
+window.abrirModalDesligar=abrirModalDesligar;
+function fecharModalDesligar(){modalDesligarOverlay.classList.remove('open');}
+document.getElementById('btnCancelarDesligamento').addEventListener('click',fecharModalDesligar);
+document.getElementById('btnFecharDesligarTopo').addEventListener('click',fecharModalDesligar);
+document.getElementById('formDesligamento').addEventListener('submit',async e=>{
+  e.preventDefault(); const id=document.getElementById('desligarColaboradorId').value;
+  const registro={status:'INATIVO',data_desligamento:document.getElementById('desligarData').value,motivo_desligamento:document.getElementById('desligarMotivo').value};
+  const {error}=await supabaseClient.from('colaboradores').update(registro).eq('id',id);
+  if(error){toast('Erro ao confirmar desligamento: '+error.message);return;}
+  toast('Desligamento confirmado com sucesso.'); fecharModalDesligar(); loadColaboradores();
+});
+async function reativarColaborador(id,nome){
+  if(!confirm(`Deseja reativar o colaborador "${nome}" no quadro ativo?`))return;
+  const {error}=await supabaseClient.from('colaboradores').update({status:'ATIVO',data_desligamento:null,motivo_desligamento:null}).eq('id',id);
+  if(error){toast('Erro ao reativar: '+error.message);return;}
+  toast(`Colaborador "${nome}" reativado.`); loadColaboradores();
+}
+window.reativarColaborador=reativarColaborador;
 
 /* ---------- Excluir colaborador ---------- */
 async function excluirColaborador(id, nome){
@@ -833,7 +1212,7 @@ function editarColaborador(id){
   document.getElementById('btnSalvar').textContent = 'Salvar alterações';
 
   const form = document.getElementById('formNovo');
-  const campos = ['nome','cpf','local','admissao_data','admissao_link','aso_data','aso_link','epi_data','epi_link','nr06_data','nr06_link'];
+  const campos = ['nome','cpf','local','admissao_data','admissao_link','aso_data','aso_link','os_data','os_link','epi_data','epi_link','nr06_data','nr06_link'];
   campos.forEach(campo=>{
     if(form.elements[campo]) form.elements[campo].value = c[campo] || '';
   });
@@ -974,7 +1353,7 @@ document.getElementById('formNovo').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const fd = new FormData(e.target);
   const registro = Object.fromEntries(fd.entries());
-  ['admissao_data','aso_data','epi_data','nr06_data'].forEach(k=>{ if(!registro[k]) registro[k] = null; });
+  ['admissao_data','aso_data','os_data','epi_data','nr06_data'].forEach(k=>{ if(!registro[k]) registro[k] = null; });
 
   let error;
   if(editandoId){
@@ -1317,9 +1696,10 @@ document.getElementById('formTreinamento').addEventListener('submit', async (e)=
 
 /* ---------- Exportar para Excel ---------- */
 document.getElementById('btnExportExcel').addEventListener('click', ()=>{
-  if(colaboradores.length === 0){ toast('Não há dados para exportar.'); return; }
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  if(ativos.length === 0){ toast('Não há colaboradores ativos para exportar.'); return; }
 
-  const linhas = colaboradores.map(c => {
+  const linhas = ativos.map(c => {
     const statusOf = (campo, expira) => statusDocumento(c[`${campo}_data`], c[`${campo}_link`], expira).texto;
     return {
       'Nome Completo': c.nome,
@@ -1333,6 +1713,10 @@ document.getElementById('btnExportExcel').addEventListener('click', ()=>{
       'Status ASO': statusOf('aso', true),
       'Data Vencimento ASO': c.aso_data || '',
       'Link ASO': c.aso_link || '',
+
+      'Status OS - Ordem de Serviço': statusOf('os', true),
+      'Data OS': c.os_data || '',
+      'Link OS': c.os_link || '',
 
       'Status Ficha de EPI': statusOf('epi', true),
       'Data Vencimento EPI': c.epi_data || '',
@@ -1358,9 +1742,19 @@ document.getElementById('btnExportExcel').addEventListener('click', ()=>{
   XLSX.writeFile(wb, `colaboradores_${new Date().toISOString().slice(0,10)}.xlsx`);
 });
 
+/* ---------- Exportar inativos para Excel ---------- */
+document.getElementById('btnExportInativosExcel').addEventListener('click', ()=>{
+  const inativos=colaboradores.filter(c=>c.status==='INATIVO');
+  if(!inativos.length){toast('Não há colaboradores inativos para exportar.');return;}
+  const linhas=inativos.map(c=>({'Nome Completo':c.nome,'CPF':c.cpf||'','Local de Trabalho':c.local||'','Data de Desligamento':c.data_desligamento||'','Motivo':c.motivo_desligamento||''}));
+  const ws=XLSX.utils.json_to_sheet(linhas); ws['!cols']=[{wch:30},{wch:16},{wch:22},{wch:20},{wch:35}];
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Inativos'); XLSX.writeFile(wb,`colaboradores_inativos_${new Date().toISOString().slice(0,10)}.xlsx`);
+});
+
 /* ---------- Exportar para PDF ---------- */
 document.getElementById('btnExportPdf').addEventListener('click', ()=>{
-  if(colaboradores.length === 0){ toast('Não há dados para exportar.'); return; }
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  if(ativos.length === 0){ toast('Não há colaboradores ativos para exportar.'); return; }
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'landscape' });
@@ -1368,7 +1762,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   doc.setFontSize(14);
   doc.text('Gestão de Segurança do Trabalho - Visão Geral por Colaborador', 14, 15);
 
-  const linhas = colaboradores.map(c => {
+  const linhas = ativos.map(c => {
     const status = (campo, expira) => statusDocumento(c[`${campo}_data`], c[`${campo}_link`], expira).texto;
     return [
       c.nome,
@@ -1376,6 +1770,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
       c.local || '-',
       status('admissao', false),
       status('aso', true),
+      status('os', true),
       status('epi', true),
       status('nr06', true)
     ];
@@ -1383,7 +1778,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
 
   doc.autoTable({
     startY: 22,
-    head: [['Nome Completo','CPF','Local','Ficha de Admissão','ASO','Ficha de EPI','Certificado NR06']],
+    head: [['Nome Completo','CPF','Local','Ficha de Admissão','ASO','OS - Ordem de Serviço','Ficha de EPI','Certificado NR06']],
     body: linhas,
     styles: { fontSize: 9 },
     headStyles: { fillColor: [43,103,119] }
@@ -1413,6 +1808,8 @@ const ALIASES_COLUNAS = {
   admissao_link: ['admissao_link', 'link admissao', 'link da admissao'],
   aso_data:      ['aso_data', 'data aso', 'data do aso', 'vencimento aso'],
   aso_link:      ['aso_link', 'link aso'],
+  os_data:       ['os_data', 'data os', 'data da os', 'vencimento os', 'ordem de servico'],
+  os_link:       ['os_link', 'link os', 'link ordem de servico'],
   epi_data:      ['epi_data', 'data epi', 'data da epi', 'vencimento epi', 'ficha de epi'],
   epi_link:      ['epi_link', 'link epi'],
   nr06_data:     ['nr06_data', 'data nr06', 'vencimento nr06', 'certificado nr06'],
@@ -1454,6 +1851,8 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
       admissao_link: l.admissao_link || null,
       aso_data: norm(l.aso_data),
       aso_link: l.aso_link || null,
+      os_data: norm(l.os_data),
+      os_link: l.os_link || null,
       epi_data: norm(l.epi_data),
       epi_link: l.epi_link || null,
       nr06_data: norm(l.nr06_data),
