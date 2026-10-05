@@ -1862,15 +1862,46 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
 
   if(registros.length === 0){ toast('Nenhuma linha com nome e CPF válidos encontrada.'); e.target.value=''; return; }
 
-  const { error } = await supabaseClient
-    .from('colaboradores')
-    .upsert(registros, { onConflict: 'cpf' });
+  // Preserva documentos já salvos: busca os cadastros existentes e só
+  // sobrescreve um campo quando a planilha trouxer valor para ele.
+  const soDigitos = (v)=> (v||'').toString().replace(/\D/g,'');
+  const { data: existentes, error: erroBusca } = await supabaseClient.from('colaboradores').select('*');
+  if(erroBusca){ toast('Erro ao ler cadastros atuais: ' + erroBusca.message); e.target.value=''; return; }
+  const mapaExist = {};
+  (existentes||[]).forEach(c=>{ mapaExist[soDigitos(c.cpf)] = c; });
+
+  const vistos = new Set();
+  const mesclados = [];
+  registros.forEach(r=>{
+    const chave = soDigitos(r.cpf);
+    if(!chave || vistos.has(chave)) return;
+    vistos.add(chave);
+    const atual = mapaExist[chave];
+    if(atual){
+      const m = { ...atual };
+      Object.keys(r).forEach(k=>{ if(r[k] !== null && r[k] !== '') m[k] = r[k]; });
+      m.cpf = atual.cpf;
+      mesclados.push(m);
+    } else {
+      mesclados.push(r);
+    }
+  });
+
+  const novos = mesclados.filter(m=>!m.id);
+  const atualizados = mesclados.filter(m=>m.id);
+  let error = null;
+  if(atualizados.length){
+    ({ error } = await supabaseClient.from('colaboradores').upsert(atualizados, { onConflict: 'id' }));
+  }
+  if(!error && novos.length){
+    ({ error } = await supabaseClient.from('colaboradores').insert(novos));
+  }
 
   e.target.value = '';
 
   if(error){ toast('Erro ao importar: ' + error.message); console.error(error); return; }
 
-  toast(`${registros.length} colaborador(es) importado(s)/atualizado(s). Documentos sem data aparecem como "Vencido" até você editar.`);
+  toast(`${novos.length} novo(s) e ${atualizados.length} atualizado(s). Documentos já salvos foram mantidos.`);
   loadColaboradores();
 });
 </script>
