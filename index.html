@@ -238,11 +238,11 @@
   }
 
   .status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;}
-  .status-pill.ok{background:var(--verde-claro);color:#1e8e4c;}
-  .status-pill.warn{background:var(--amarelo-claro);color:#b8720a;}
-  .status-pill.bad{background:var(--vermelho-claro);color:#c0392b;}
+  .status-pill.ok{background:#16a34a;color:#fff;}
+  .status-pill.warn{background:#d97706;color:#fff;}
+  .status-pill.bad{background:#dc2626;color:#fff;}
   .status-pill.inactive{background:#f1f5f9;color:#475569;}
-  .status-pill.nodate{background:#f1f5f9;color:#64748b;border:1px dashed #cbd5e1;}
+  .status-pill.nodate{background:#e2e8f0;color:#475569;border:1px dashed #94a3b8;}
 
   .acoes{display:flex;gap:12px;color:var(--cinza-texto);align-items:center;}
   .acoes span{cursor:pointer;}
@@ -449,7 +449,7 @@
         </div>
         <div class="kpi-card">
           <div class="kpi-icon gray">📝</div>
-          <div><div class="kpi-label">Sem Data (Pendente de cadastro)</div><div class="kpi-value gray" id="kpiSemData">–</div></div>
+          <div><div class="kpi-label">Documentos Pendentes (sem data)</div><div class="kpi-value gray" id="kpiSemData">–</div></div>
         </div>
       </div>
 
@@ -474,7 +474,7 @@
             <div><span class="dot" style="background:#2b6777"></span>Regular</div>
             <div><span class="dot" style="background:#f5c518"></span>Vence em Breve</div>
             <div><span class="dot" style="background:#e74c3c"></span>Vencido</div>
-            <div><span class="dot" style="background:#cbd5e1"></span>Sem data</div>
+            <div><span class="dot" style="background:#cbd5e1"></span>Pendente</div>
           </div>
           <div class="chart-scroll">
             <div id="barChartInner" style="position:relative;height:300px;"><canvas id="barChart"></canvas></div>
@@ -482,7 +482,7 @@
           <div class="chart-info" id="barChartInfo"></div>
         </div>
         <div class="panel">
-          <h3>Distribuição de Documentos Pendentes</h3>
+          <h3>Documentos com Pendência ou Irregulares</h3>
           <div class="pie-wrap">
             <div class="pie-canvas-holder"><canvas id="pieChart"></canvas></div>
             <div class="legend" id="pieLegend"></div>
@@ -567,7 +567,7 @@
             <option value="ok">Em Dia</option>
             <option value="warn">Vence em breve</option>
             <option value="bad">Vencido</option>
-            <option value="nodate">Sem data</option>
+            <option value="nodate">Pendente</option>
           </select>
           <button class="btn-limpar-filtro" id="btnLimparFiltros">Limpar filtro</button>
         </div>
@@ -1061,7 +1061,7 @@ function diffDias(dataStr){
 // mais como "Vencido". Vencido = data cadastrada e já passada.
 function statusDocumento(dataStr, link, expira){
   if(!dataStr){
-    return { chave:'nodate', texto:'Sem data', classe:'nodate', icone:'📝' };
+    return { chave:'nodate', texto:'Pendente', classe:'nodate', icone:'⏳' };
   }
   if(!expira){
     return { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' };
@@ -1294,7 +1294,7 @@ function renderBarraSetores(){
         { label:'Regular',        data: setores.map(s=>valor(s,'regular')),  backgroundColor:'#2b6777' },
         { label:'Vence em Breve', data: setores.map(s=>valor(s,'vencendo')), backgroundColor:'#f5c518' },
         { label:'Vencido',        data: setores.map(s=>valor(s,'vencido')),  backgroundColor:'#e74c3c' },
-        { label:'Sem data',       data: setores.map(s=>valor(s,'semdata')),  backgroundColor:'#cbd5e1' }
+        { label:'Pendente',       data: setores.map(s=>valor(s,'semdata')),  backgroundColor:'#cbd5e1' }
       ]
     },
     options: {
