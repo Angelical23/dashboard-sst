@@ -146,18 +146,20 @@
     padding:0;
   }
 
-  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:20px;}
   .kpi-card{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;}
   .kpi-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
   .kpi-icon.blue{background:#e3edf1;color:var(--azul-header);}
   .kpi-icon.green{background:var(--verde-claro);color:var(--verde);}
   .kpi-icon.yellow{background:var(--amarelo-claro);color:var(--amarelo);}
   .kpi-icon.red{background:var(--vermelho-claro);color:var(--vermelho);}
+  .kpi-icon.gray{background:#f1f5f9;color:#64748b;}
   .kpi-label{font-size:13px;color:var(--cinza-texto);margin-bottom:4px;}
   .kpi-value{font-size:22px;font-weight:700;}
   .kpi-value.green{color:var(--verde);}
   .kpi-value.yellow{color:var(--amarelo);}
   .kpi-value.red{color:var(--vermelho);}
+  .kpi-value.gray{color:#64748b;}
 
   .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
   .panel{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:18px;}
@@ -168,6 +170,17 @@
   .legend{display:flex;flex-direction:column;gap:10px;font-size:13px;}
   .legend-item{display:flex;align-items:center;gap:8px;}
   .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+  /* Gráfico de setores (barras horizontais com ranking) */
+  .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .panel-head h3{margin:0;}
+  .chart-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .chart-controls input,.chart-controls select{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:12px;color:var(--texto-escuro);outline:none;}
+  .chart-controls input{width:140px;}
+  .chart-legend{display:flex;gap:14px;font-size:12px;color:var(--cinza-texto);margin-bottom:8px;flex-wrap:wrap;align-items:center;}
+  .chart-legend span.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;}
+  .chart-scroll{max-height:420px;overflow-y:auto;overflow-x:hidden;}
+  .chart-info{font-size:11px;color:#94a3b8;margin-top:6px;}
 
   .table-panel{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;overflow:hidden;}
   .table-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--cinza-borda);flex-wrap:wrap;gap:10px;}
@@ -229,6 +242,7 @@
   .status-pill.warn{background:var(--amarelo-claro);color:#b8720a;}
   .status-pill.bad{background:var(--vermelho-claro);color:#c0392b;}
   .status-pill.inactive{background:#f1f5f9;color:#475569;}
+  .status-pill.nodate{background:#f1f5f9;color:#64748b;border:1px dashed #cbd5e1;}
 
   .acoes{display:flex;gap:12px;color:var(--cinza-texto);align-items:center;}
   .acoes span{cursor:pointer;}
@@ -433,12 +447,39 @@
           <div class="kpi-icon red">⛔</div>
           <div><div class="kpi-label">Documentos Vencidos</div><div class="kpi-value red" id="kpiVencidos">–</div></div>
         </div>
+        <div class="kpi-card">
+          <div class="kpi-icon gray">📝</div>
+          <div><div class="kpi-label">Sem Data (Pendente de cadastro)</div><div class="kpi-value gray" id="kpiSemData">–</div></div>
+        </div>
       </div>
 
       <div class="charts-row">
         <div class="panel">
-          <h3>Status de Documentação por Setor (Ativos)</h3>
-          <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+          <div class="panel-head">
+            <h3>Status de Documentação por Setor (Ativos)</h3>
+            <div class="chart-controls">
+              <input type="text" id="buscaSetorGrafico" placeholder="Filtrar setor...">
+              <select id="topSetoresSelect">
+                <option value="10">Top 10</option>
+                <option value="20" selected>Top 20</option>
+                <option value="0">Todos</option>
+              </select>
+              <select id="modoSetorSelect">
+                <option value="qtd">Quantidade</option>
+                <option value="pct">Percentual (%)</option>
+              </select>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <div><span class="dot" style="background:#2b6777"></span>Regular</div>
+            <div><span class="dot" style="background:#f5c518"></span>Vence em Breve</div>
+            <div><span class="dot" style="background:#e74c3c"></span>Vencido</div>
+            <div><span class="dot" style="background:#cbd5e1"></span>Sem data</div>
+          </div>
+          <div class="chart-scroll">
+            <div id="barChartInner" style="position:relative;height:300px;"><canvas id="barChart"></canvas></div>
+          </div>
+          <div class="chart-info" id="barChartInfo"></div>
         </div>
         <div class="panel">
           <h3>Distribuição de Documentos Pendentes</h3>
@@ -512,6 +553,21 @@
         <div class="search-filter-wrap">
           <select id="selectFiltroLocal" class="search-select">
             <option value="">Todos os Locais</option>
+          </select>
+          <select id="selectFiltroDoc" class="search-select">
+            <option value="">Qualquer documento</option>
+            <option value="admissao">Ficha de Admissão</option>
+            <option value="aso">ASO</option>
+            <option value="os">OS - Ordem de Serviço</option>
+            <option value="epi">Ficha de EPI</option>
+            <option value="nr06">Certificado NR06</option>
+          </select>
+          <select id="selectFiltroStatus" class="search-select">
+            <option value="">Todos os status</option>
+            <option value="ok">Em Dia</option>
+            <option value="warn">Vence em breve</option>
+            <option value="bad">Vencido</option>
+            <option value="nodate">Sem data</option>
           </select>
           <button class="btn-limpar-filtro" id="btnLimparFiltros">Limpar filtro</button>
         </div>
@@ -852,7 +908,6 @@
 
 <script>
 /* =========================================================
-/* =========================================================
    CONFIGURAÇÃO DO SUPABASE
    ========================================================= */
 const SUPABASE_URL = "https://nnzqwkhwtphkijlgtwxm.supabase.co";
@@ -864,6 +919,7 @@ let colaboradores = [];
 let barChartInstance = null;
 let pieChartInstance = null;
 let turnoverChartInstance = null;
+let ativosGrafico = [];
 let editandoId = null; // null = cadastro novo | id = edição em andamento
 
 const DOC_FIELDS = [
@@ -1001,17 +1057,17 @@ function diffDias(dataStr){
   return Math.round((alvo - hoje) / 86400000);
 }
 
-// Documento sem data cadastrada é tratado como VENCIDO (precisa de atenção),
-// até que alguém edite o colaborador e preencha a data/link reais.
+// Documento sem data cadastrada é "Sem data" (pendente de cadastro) — não conta
+// mais como "Vencido". Vencido = data cadastrada e já passada.
 function statusDocumento(dataStr, link, expira){
   if(!dataStr){
-    return { chave:'bad', texto:'Vencido', classe:'bad', icone:'⛔' };
+    return { chave:'nodate', texto:'Sem data', classe:'nodate', icone:'📝' };
   }
   if(!expira){
     return { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' };
   }
   const dias = diffDias(dataStr);
-  if(dias < 0)  return { chave:'bad',  texto:'Vencido', classe:'bad', icone:'⛔' };
+  if(dias < 0)   return { chave:'bad',  texto:'Vencido', classe:'bad', icone:'⛔' };
   if(dias <= 30) return { chave:'warn', texto:`Vence em ${dias} dias`, classe:'warn', icone:'⚠' };
   return { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' };
 }
@@ -1067,14 +1123,22 @@ function pillHtml(campo, colaborador){
 
 const inputBuscaAtivos = document.getElementById('inputBuscaAtivos');
 const selectFiltroLocal = document.getElementById('selectFiltroLocal');
+const selectFiltroDoc = document.getElementById('selectFiltroDoc');
+const selectFiltroStatus = document.getElementById('selectFiltroStatus');
 const inputBuscaInativos = document.getElementById('inputBuscaInativos');
 const filtroDataInicio = document.getElementById('filtroDataInicio');
 const filtroDataFim = document.getElementById('filtroDataFim');
 
 inputBuscaAtivos.addEventListener('input', renderTabelaAtivos);
 selectFiltroLocal.addEventListener('change', renderTabelaAtivos);
+selectFiltroDoc.addEventListener('change', renderTabelaAtivos);
+selectFiltroStatus.addEventListener('change', renderTabelaAtivos);
 document.getElementById('btnLimparFiltros').addEventListener('click', ()=>{
-  inputBuscaAtivos.value = ''; selectFiltroLocal.value = ''; renderTabelaAtivos();
+  inputBuscaAtivos.value = '';
+  selectFiltroLocal.value = '';
+  selectFiltroDoc.value = '';
+  selectFiltroStatus.value = '';
+  renderTabelaAtivos();
 });
 inputBuscaInativos.addEventListener('input', renderTabelaInativos);
 filtroDataInicio.addEventListener('change', renderTabelaInativos);
@@ -1090,11 +1154,30 @@ function renderTabelaAtivos(){
   const termo = normalizarTexto(inputBuscaAtivos.value);
   const termoNumerico = termo.replace(/\D/g, '');
   const local = selectFiltroLocal.value;
+  const docSel = selectFiltroDoc.value;
+  const statusSel = selectFiltroStatus.value;
   const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+
   const filtrados = ativos.filter(c => {
-    const textoOk = normalizarTexto(c.nome).includes(termo) || normalizarTexto(c.local).includes(termo) || (termoNumerico && (c.cpf || '').replace(/\D/g, '').includes(termoNumerico));
-    return textoOk && (!local || (c.local || '').trim() === local);
+    const textoOk = normalizarTexto(c.nome).includes(termo)
+      || normalizarTexto(c.local).includes(termo)
+      || (termoNumerico && (c.cpf || '').replace(/\D/g, '').includes(termoNumerico));
+    const localOk = !local || (c.local || '').trim() === local;
+
+    let statusOk = true;
+    if(statusSel){
+      const docs = docSel ? DOC_FIELDS.filter(d => d.key === docSel) : DOC_FIELDS;
+      const statusDe = d => statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira).chave;
+      // "Em Dia" sem documento escolhido = TODOS os documentos em dia.
+      // Os demais status = pelo menos um documento naquele status.
+      statusOk = (statusSel === 'ok' && !docSel)
+        ? docs.every(d => statusDe(d) === 'ok')
+        : docs.some(d => statusDe(d) === statusSel);
+    }
+
+    return textoOk && localOk && statusOk;
   });
+
   document.getElementById('badgeAtivos').textContent = ativos.length;
   const tbody = document.getElementById('tableBody');
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="10" class="empty">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>'; return; }
@@ -1127,16 +1210,24 @@ function renderTabelaInativos(){
 function renderKpis(ativos, inativos){
   const total = ativos.length;
   document.getElementById('kpiTotal').textContent = total;
-  let emDia=0, docsVencendo=0, docsVencidos=0;
+  let emDia=0, docsVencendo=0, docsVencidos=0, docsSemData=0;
   ativos.forEach(c=>{
-    let vencido=false, vencendo=false;
-    DOC_FIELDS.forEach(d=>{ const s=statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira); if(s.chave==='bad'){vencido=true;docsVencidos++;} if(s.chave==='warn'){vencendo=true;docsVencendo++;} });
-    if(!vencido && !vencendo) emDia++;
+    let problema=false;
+    DOC_FIELDS.forEach(d=>{
+      const s=statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira);
+      if(s.chave==='bad'){docsVencidos++;problema=true;}
+      if(s.chave==='warn'){docsVencendo++;problema=true;}
+      if(s.chave==='nodate'){docsSemData++;problema=true;}
+    });
+    if(!problema) emDia++;
   });
   const totalDocs=total*DOC_FIELDS.length;
+  const pctDocs=(n)=> totalDocs ? `${n} (${Math.round(n/totalDocs*100)}%)` : '0 (0%)';
   document.getElementById('kpiEmDia').textContent = total ? `${emDia} (${Math.round(emDia/total*100)}%)` : '0 (0%)';
-  document.getElementById('kpiVencendo').textContent = totalDocs ? `${docsVencendo} (${Math.round(docsVencendo/totalDocs*100)}%)` : '0 (0%)';
-  document.getElementById('kpiVencidos').textContent = totalDocs ? `${docsVencidos} (${Math.round(docsVencidos/totalDocs*100)}%)` : '0 (0%)';
+  document.getElementById('kpiVencendo').textContent = pctDocs(docsVencendo);
+  document.getElementById('kpiVencidos').textContent = pctDocs(docsVencidos);
+  document.getElementById('kpiSemData').textContent = pctDocs(docsSemData);
+
   const agora=new Date(), ano=agora.getFullYear(), mes=agora.getMonth();
   const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   document.getElementById('kpiMesAnoAtual').textContent=`${meses[mes]} / ${ano}`;
@@ -1149,17 +1240,119 @@ function renderKpis(ativos, inativos){
   document.getElementById('kpiMotivoSecundario').textContent=motivos[1] ? `2º: ${motivos[1][0]} (${Math.round(motivos[1][1]/desligados.length*100)}%)` : (motivos.length ? 'Motivo único registrado' : 'Quadro estável');
 }
 
+/* ---------- Gráfico de status por setor (barras horizontais, ranking) ---------- */
+function renderBarraSetores(){
+  if(typeof Chart === 'undefined') return;
+
+  // Conta documentos por setor
+  const mapa = {};
+  ativosGrafico.forEach(c=>{
+    const setor = (c.local || 'Não informado').trim();
+    if(!mapa[setor]) mapa[setor] = { regular:0, vencendo:0, vencido:0, semdata:0 };
+    DOC_FIELDS.forEach(d=>{
+      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      mapa[setor][s.chave==='ok' ? 'regular' : s.chave==='warn' ? 'vencendo' : s.chave==='nodate' ? 'semdata' : 'vencido']++;
+    });
+  });
+
+  let setores = Object.entries(mapa).map(([nome,v])=>({
+    nome, ...v, total: v.regular + v.vencendo + v.vencido + v.semdata
+  }));
+  const totalGeral = setores.length;
+
+  // Filtro por busca
+  const termo = normalizarTexto(document.getElementById('buscaSetorGrafico').value);
+  if(termo) setores = setores.filter(s => normalizarTexto(s.nome).includes(termo));
+
+  const pct = document.getElementById('modoSetorSelect').value === 'pct';
+
+  // Ranking: vencidos reais pesam mais, depois vencendo, depois sem data
+  setores.sort((a,b)=>{
+    const pa = a.vencido*3 + a.vencendo*2 + a.semdata;
+    const pb = b.vencido*3 + b.vencendo*2 + b.semdata;
+    return pct ? (pb/(b.total||1)) - (pa/(a.total||1)) : pb - pa;
+  });
+
+  // Limite Top N
+  const top = parseInt(document.getElementById('topSetoresSelect').value, 10);
+  if(top > 0) setores = setores.slice(0, top);
+
+  const valor = (s,k)=> pct ? +(s[k] / (s.total||1) * 100).toFixed(1) : s[k];
+  const truncar = (t)=> t.length > 28 ? t.slice(0,27) + '…' : t;
+
+  // Altura dinâmica: 28px por setor
+  document.getElementById('barChartInner').style.height = Math.max(220, setores.length * 28 + 50) + 'px';
+  document.getElementById('barChartInfo').textContent =
+    `Mostrando ${setores.length} de ${totalGeral} setores — ordenados do mais crítico (vencidos) para o menos crítico`;
+
+  if(barChartInstance) barChartInstance.destroy();
+  barChartInstance = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: setores.length ? setores.map(s=>s.nome) : ['Sem dados'],
+      datasets: [
+        { label:'Regular',        data: setores.map(s=>valor(s,'regular')),  backgroundColor:'#2b6777' },
+        { label:'Vence em Breve', data: setores.map(s=>valor(s,'vencendo')), backgroundColor:'#f5c518' },
+        { label:'Vencido',        data: setores.map(s=>valor(s,'vencido')),  backgroundColor:'#e74c3c' },
+        { label:'Sem data',       data: setores.map(s=>valor(s,'semdata')),  backgroundColor:'#cbd5e1' }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: {
+            title: (items)=> items[0].label,
+            label: (ctx)=> `${ctx.dataset.label}: ${ctx.parsed.x}${pct ? '%' : ' docs'}`
+          }
+        }
+      },
+      scales: {
+        x: { stacked:true, beginAtZero:true, max: pct ? 100 : undefined,
+             ticks:{ callback:(v)=> pct ? v + '%' : v } },
+        y: { stacked:true, grid:{display:false},
+             ticks:{ autoSkip:false, font:{size:11},
+                     callback:function(v){ return truncar(this.getLabelForValue(v)); } } }
+      }
+    }
+  });
+}
+
+document.getElementById('buscaSetorGrafico').addEventListener('input', renderBarraSetores);
+document.getElementById('topSetoresSelect').addEventListener('change', renderBarraSetores);
+document.getElementById('modoSetorSelect').addEventListener('change', renderBarraSetores);
+
 function renderGraficos(ativos, inativos){
  try{
   if(typeof Chart==='undefined') return;
-  const setoresMap={}; ativos.forEach(c=>{const setor=c.local||'Não informado';if(!setoresMap[setor])setoresMap[setor]={regular:0,vencendo:0,vencido:0};DOC_FIELDS.forEach(d=>{const s=statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira);setoresMap[setor][s.chave==='ok'?'regular':s.chave==='warn'?'vencendo':'vencido']++;});});
-  const setores=Object.keys(setoresMap).map(nome=>({nome,...setoresMap[nome]}));
-  if(barChartInstance)barChartInstance.destroy(); barChartInstance=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels:setores.length?setores.map(s=>s.nome):['Sem dados'],datasets:[{label:'Regular',data:setores.length?setores.map(s=>s.regular):[0],backgroundColor:'#2b6777',borderRadius:3},{label:'Vence em Breve',data:setores.length?setores.map(s=>s.vencendo):[0],backgroundColor:'#f5c518',borderRadius:3},{label:'Vencido',data:setores.length?setores.map(s=>s.vencido):[0],backgroundColor:'#e74c3c',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true},x:{grid:{display:false}}}}});
-  const cores={admissao:'#2b6777',aso:'#2ecc71',os:'#3498db',epi:'#f5c518',nr06:'#e74c3c'}; const pendentes=DOC_FIELDS.map(d=>({label:d.label,valor:ativos.filter(c=>statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira).chave!=='ok').length,cor:cores[d.key]}));
-  if(pieChartInstance)pieChartInstance.destroy(); pieChartInstance=new Chart(document.getElementById('pieChart'),{type:'doughnut',data:{labels:pendentes.map(p=>p.label),datasets:[{data:pendentes.map(p=>p.valor),backgroundColor:pendentes.map(p=>p.cor),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'55%'}}); document.getElementById('pieLegend').innerHTML=pendentes.map(p=>`<div class="legend-item"><span class="legend-dot" style="background:${p.cor}"></span>${p.label}</div>`).join('');
-  const meses=[]; const agora=new Date(); for(let i=5;i>=0;i--){const d=new Date(agora.getFullYear(),agora.getMonth()-i,1);meses.push({ano:d.getFullYear(),mes:d.getMonth(),label:d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','')+'/'+String(d.getFullYear()).slice(2)});}
+
+  // Gráfico por setor
+  ativosGrafico = ativos;
+  renderBarraSetores();
+
+  // Rosca: documentos pendentes (tudo que não está "Em Dia")
+  const cores={admissao:'#2b6777',aso:'#2ecc71',os:'#3498db',epi:'#f5c518',nr06:'#e74c3c'};
+  const pendentes=DOC_FIELDS.map(d=>({
+    label:d.label,
+    valor:ativos.filter(c=>statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira).chave!=='ok').length,
+    cor:cores[d.key]
+  }));
+  if(pieChartInstance)pieChartInstance.destroy();
+  pieChartInstance=new Chart(document.getElementById('pieChart'),{type:'doughnut',data:{labels:pendentes.map(p=>p.label),datasets:[{data:pendentes.map(p=>p.valor),backgroundColor:pendentes.map(p=>p.cor),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'55%'}});
+  document.getElementById('pieLegend').innerHTML=pendentes.map(p=>`<div class="legend-item"><span class="legend-dot" style="background:${p.cor}"></span>${p.label}</div>`).join('');
+
+  // Evolução mensal de desligamentos
+  const meses=[]; const agora=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(agora.getFullYear(),agora.getMonth()-i,1);
+    meses.push({ano:d.getFullYear(),mes:d.getMonth(),label:d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','')+'/'+String(d.getFullYear()).slice(2)});
+  }
   const saidas=meses.map(m=>inativos.filter(c=>{if(!c.data_desligamento)return false;const d=new Date(c.data_desligamento+'T00:00:00');return d.getFullYear()===m.ano&&d.getMonth()===m.mes;}).length);
-  if(turnoverChartInstance)turnoverChartInstance.destroy(); turnoverChartInstance=new Chart(document.getElementById('turnoverChart'),{type:'bar',data:{labels:meses.map(m=>m.label),datasets:[{label:'Desligamentos',data:saidas,backgroundColor:'rgba(227,28,75,.85)',borderRadius:6,maxBarThickness:38}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,precision:0}},x:{grid:{display:false}}}}});
+  if(turnoverChartInstance)turnoverChartInstance.destroy();
+  turnoverChartInstance=new Chart(document.getElementById('turnoverChart'),{type:'bar',data:{labels:meses.map(m=>m.label),datasets:[{label:'Desligamentos',data:saidas,backgroundColor:'rgba(227,28,75,.85)',borderRadius:6,maxBarThickness:38}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,precision:0}},x:{grid:{display:false}}}}});
  }catch(err){console.error('Erro ao renderizar gráficos:',err);}
 }
 
@@ -1790,7 +1983,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
 /* ---------- Importar Excel (cadastro/correção em massa) ----------
    Aceita planilhas só com nome, cpf e local — as colunas de data e
    link são opcionais. O que não vier preenchido fica em branco e
-   aparece como "Vencido" no dashboard, para ser editado depois.
+   aparece como "Sem data" no dashboard, para ser editado depois.
 
    O cabeçalho da planilha não precisa bater exatamente com nome/cpf/
    local: a função abaixo reconhece variações comuns (com acento,
