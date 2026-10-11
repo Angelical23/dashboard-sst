@@ -341,6 +341,15 @@
   }
   @media (max-width:1100px){.kpi-row{grid-template-columns:repeat(2,1fr);} .charts-row{grid-template-columns:1fr;}}
   @media (max-width:600px){.kpi-row{grid-template-columns:1fr;}}
+
+  /* Filtro por local no Painel Geral + lista de colaboradores com pendência */
+  .link-colab{cursor:pointer;color:#2563eb;font-weight:700;}
+  .link-colab:hover{text-decoration:underline;}
+  .doc-chip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin:2px 4px 2px 0;color:#fff;}
+  .doc-chip.bad{background:#dc2626;}
+  .doc-chip.warn{background:#d97706;}
+  .doc-chip.nodate{background:#94a3b8;}
+  .num-col{text-align:center;font-weight:700;}
 </style>
 </head>
 <body>
@@ -430,6 +439,17 @@
     <section id="viewPainel">
       <div class="view-header"><h1>Painel Geral</h1></div>
 
+      <div class="search-card">
+        <div class="search-filter-wrap">
+          <span class="search-date-label">📍 Local de trabalho:</span>
+          <select id="painelFiltroLocal" class="search-select" style="min-width:280px;">
+            <option value="">Todos os locais</option>
+          </select>
+          <button class="btn-limpar-filtro" id="btnLimparFiltroPainel">Limpar filtro</button>
+        </div>
+        <div class="chart-info" id="painelFiltroInfo" style="margin:0;"></div>
+      </div>
+
       <div class="kpi-row">
         <div class="kpi-card">
           <div class="kpi-icon blue">👥</div>
@@ -456,8 +476,8 @@
       <div class="charts-row">
         <div class="panel">
           <div class="panel-head">
-            <h3>Status de Documentação por Setor (Ativos)</h3>
-            <div class="chart-controls">
+            <h3 id="tituloGraficoSetor">Status de Documentação por Setor (Ativos)</h3>
+            <div class="chart-controls" id="chartControlsSetor">
               <input type="text" id="buscaSetorGrafico" placeholder="Filtrar setor...">
               <select id="topSetoresSelect">
                 <option value="10">Top 10</option>
@@ -487,6 +507,29 @@
             <div class="pie-canvas-holder"><canvas id="pieChart"></canvas></div>
             <div class="legend" id="pieLegend"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- Lista de colaboradores com pendência (aparece só quando um local está selecionado) -->
+      <div class="table-panel" id="painelListaLocal" style="display:none;margin-top:16px;">
+        <div class="table-header">
+          <h3 id="painelListaTitulo">Colaboradores com pendência</h3>
+          <span class="header-sub" id="painelListaSub"></span>
+        </div>
+        <div class="table-scroll">
+          <table style="min-width:900px;">
+            <thead>
+              <tr>
+                <th>COLABORADOR</th>
+                <th>CPF</th>
+                <th style="text-align:center;">Pendentes</th>
+                <th style="text-align:center;">Vencidos</th>
+                <th style="text-align:center;">Vencendo</th>
+                <th>Documentos com problema</th>
+              </tr>
+            </thead>
+            <tbody id="painelListaBody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -1094,6 +1137,7 @@ async function loadColaboradores(){
 
   colaboradores = data || [];
   popularFiltroLocais();
+  popularFiltroPainel();
   renderTudo();
 }
 
@@ -1109,11 +1153,85 @@ function popularFiltroLocais(){
 function renderTudo(){
   renderTabelaAtivos();
   renderTabelaInativos();
-  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
-  const inativos = colaboradores.filter(c => c.status === 'INATIVO');
+  renderPainel();
+}
+
+/* ---------- Painel Geral com filtro por Local de trabalho ---------- */
+const localDe = (c)=> (c.local || 'Não informado').trim();
+
+function popularFiltroPainel(){
+  const sel = document.getElementById('painelFiltroLocal');
+  const atual = sel.value;
+  const contagem = {};
+  colaboradores.forEach(c=>{
+    const l = localDe(c);
+    if(!contagem[l]) contagem[l] = { a:0, i:0 };
+    contagem[l][c.status === 'INATIVO' ? 'i' : 'a']++;
+  });
+  const locais = Object.keys(contagem).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  sel.innerHTML = '<option value="">Todos os locais</option>' +
+    locais.map(l=>`<option value="${l.replace(/"/g,'&quot;')}">${l} (${contagem[l].a} ativos)</option>`).join('');
+  sel.value = atual;
+}
+
+function renderPainel(){
+  const localSel = document.getElementById('painelFiltroLocal').value;
+  const doLocal = (c)=> !localSel || localDe(c) === localSel;
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO' && doLocal(c));
+  const inativos = colaboradores.filter(c => c.status === 'INATIVO' && doLocal(c));
+
+  document.getElementById('painelFiltroInfo').textContent = localSel
+    ? `Exibindo apenas "${localSel}" — ${ativos.length} ativo(s) e ${inativos.length} desligado(s)`
+    : `Exibindo todos os locais — ${ativos.length} ativos e ${inativos.length} desligados`;
+
   renderKpis(ativos, inativos);
   renderGraficos(ativos, inativos);
+  renderListaLocal(ativos, localSel);
 }
+
+function renderListaLocal(ativos, localSel){
+  const painel = document.getElementById('painelListaLocal');
+  if(!localSel){ painel.style.display = 'none'; return; }
+  painel.style.display = 'block';
+
+  const linhas = ativos.map(c=>{
+    let pend = 0, venc = 0, vcdo = 0;
+    const chips = [];
+    DOC_FIELDS.forEach(d=>{
+      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      if(s.chave === 'nodate') pend++;
+      else if(s.chave === 'warn') venc++;
+      else if(s.chave === 'bad') vcdo++;
+      if(s.chave !== 'ok') chips.push(`<span class="doc-chip ${s.classe}">${d.label}: ${s.texto}</span>`);
+    });
+    return { c, pend, venc, vcdo, chips };
+  })
+  .filter(x => x.chips.length)
+  .sort((a,b)=> (b.vcdo*3 + b.venc*2 + b.pend) - (a.vcdo*3 + a.venc*2 + a.pend) || a.c.nome.localeCompare(b.c.nome,'pt-BR'));
+
+  document.getElementById('painelListaTitulo').textContent = `Colaboradores com pendência — ${localSel}`;
+  document.getElementById('painelListaSub').textContent = `${linhas.length} de ${ativos.length} colaboradores ativos • clique no nome para ver os documentos`;
+
+  const tbody = document.getElementById('painelListaBody');
+  if(!linhas.length){
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum colaborador com pendência neste local. 🎉</td></tr>';
+    return;
+  }
+  tbody.innerHTML = linhas.map(x=>`<tr>
+    <td><span class="link-colab" onclick="abrirDocumentos('${x.c.id}')">${x.c.nome}</span></td>
+    <td>${formatCPF(x.c.cpf)}</td>
+    <td class="num-col" style="color:#64748b;">${x.pend}</td>
+    <td class="num-col" style="color:#dc2626;">${x.vcdo}</td>
+    <td class="num-col" style="color:#d97706;">${x.venc}</td>
+    <td style="white-space:normal;">${x.chips.join('')}</td>
+  </tr>`).join('');
+}
+
+document.getElementById('painelFiltroLocal').addEventListener('change', renderPainel);
+document.getElementById('btnLimparFiltroPainel').addEventListener('click', ()=>{
+  document.getElementById('painelFiltroLocal').value = '';
+  renderPainel();
+});
 
 function pillHtml(campo, colaborador){
   const doc = DOC_FIELDS.find(d=>d.key===campo);
@@ -1241,8 +1359,60 @@ function renderKpis(ativos, inativos){
 }
 
 /* ---------- Gráfico de status por setor (barras horizontais, ranking) ---------- */
+// Quando um local está selecionado, o gráfico mostra o status POR DOCUMENTO
+// daquele local (em vez de comparar setores).
+function renderBarraDocumentos(localSel){
+  document.getElementById('tituloGraficoSetor').textContent = `Status por Documento — ${localSel}`;
+  document.getElementById('chartControlsSetor').style.display = 'none';
+
+  const dados = DOC_FIELDS.map(d=>{
+    const v = { regular:0, vencendo:0, vencido:0, semdata:0 };
+    ativosGrafico.forEach(c=>{
+      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      v[s.chave==='ok' ? 'regular' : s.chave==='warn' ? 'vencendo' : s.chave==='nodate' ? 'semdata' : 'vencido']++;
+    });
+    return { nome:d.label, ...v };
+  });
+
+  document.getElementById('barChartInner').style.height = '300px';
+  document.getElementById('barChartInfo').textContent =
+    `${ativosGrafico.length} colaborador(es) ativo(s) neste local — uma barra por tipo de documento`;
+
+  if(barChartInstance) barChartInstance.destroy();
+  barChartInstance = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: dados.map(d=>d.nome),
+      datasets: [
+        { label:'Regular',        data: dados.map(d=>d.regular),  backgroundColor:'#2b6777' },
+        { label:'Vence em Breve', data: dados.map(d=>d.vencendo), backgroundColor:'#f5c518' },
+        { label:'Vencido',        data: dados.map(d=>d.vencido),  backgroundColor:'#e74c3c' },
+        { label:'Pendente',       data: dados.map(d=>d.semdata),  backgroundColor:'#cbd5e1' }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks: { label: (ctx)=> `${ctx.dataset.label}: ${ctx.parsed.x} colaborador(es)` } }
+      },
+      scales: {
+        x: { stacked:true, beginAtZero:true, ticks:{ precision:0 } },
+        y: { stacked:true, grid:{display:false} }
+      }
+    }
+  });
+}
+
 function renderBarraSetores(){
   if(typeof Chart === 'undefined') return;
+
+  const localSel = document.getElementById('painelFiltroLocal').value;
+  if(localSel){ renderBarraDocumentos(localSel); return; }
+  document.getElementById('tituloGraficoSetor').textContent = 'Status de Documentação por Setor (Ativos)';
+  document.getElementById('chartControlsSetor').style.display = 'flex';
 
   // Conta documentos por setor
   const mapa = {};
