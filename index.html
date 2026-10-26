@@ -10,6 +10,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- Assinatura eletrônica: pdf-lib (escreve a assinatura no PDF) e pdf.js (mostra o PDF na tela) -->
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 
 <style>
   :root{
@@ -350,6 +353,137 @@
   .doc-chip.warn{background:#d97706;}
   .doc-chip.nodate{background:#94a3b8;}
   .num-col{text-align:center;font-weight:700;}
+
+  /* Assinatura eletrônica */
+  .btn-assinar{margin-top:8px;width:100%;justify-content:center;background:#115266;color:#fff;border-color:#115266;font-size:12px;padding:6px 8px;}
+  .btn-assinar:hover{background:#0a3b4a;}
+  .assin-info{font-size:11px;color:#1e8e4c;font-weight:600;margin-top:6px;}
+  .assin-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0;font-size:13px;}
+  .assin-dica{font-size:13px;color:var(--cinza-texto);margin:6px 0 0;}
+  .assin-pdf-wrap{max-height:58vh;overflow:auto;background:#2b2b2b;border-radius:8px;padding:8px;text-align:center;}
+  .assin-pdf-inner{position:relative;display:inline-block;line-height:0;}
+  .assin-pdf-inner canvas{display:block;background:#fff;cursor:crosshair;}
+  .assin-box{position:absolute;border:2px dashed #dc2626;background:rgba(220,38,38,0.12);color:#dc2626;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;aspect-ratio:3/1;pointer-events:none;line-height:1.1;}
+  .assin-aviso{background:#eaf3f5;border:1px solid #1a5266;color:#0f2b3c;padding:12px 14px;border-radius:10px;font-size:14px;margin:8px 0 12px;}
+  .assin-pad{display:block;width:100%;height:200px;background:#fff;border:2px dashed #94a3b8;border-radius:8px;touch-action:none;}
+
+  /* ---------- Menu lateral em seções + migalha ---------- */
+  .side-sec{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#6c8797;margin:14px 10px 0;font-weight:600;}
+  .crumb-bar{font-size:12.5px;color:var(--cinza-texto);margin:-14px 0 18px;}
+  .crumb-bar b{color:var(--texto-escuro);font-weight:600;}
+  .crumb-bar i{font-style:normal;margin:0 6px;opacity:.6;}
+
+  /* ---------- Colaboradores Ativos: situação + documentos abaixo do nome ---------- */
+  table.tbl-ativos{min-width:0;}
+  .tbl-ativos tbody td{white-space:normal;}
+  .tbl-ativos .at-sit,.tbl-ativos td.acoes{white-space:nowrap;}
+  .at-namebtn{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:700;color:var(--texto-escuro);padding:2px 0;text-align:left;}
+  .at-namebtn:hover .at-nm{text-decoration:underline;}
+  .at-namebtn:focus-visible{outline:2px solid #2563eb;outline-offset:2px;border-radius:6px;}
+  .at-chev{width:16px;height:16px;flex:none;color:var(--cinza-texto);transition:transform .15s;}
+  .at-chev.open{transform:rotate(90deg);}
+  .at-pillbtn{all:unset;cursor:pointer;display:inline-flex;gap:6px;flex-wrap:wrap;}
+  .at-pillbtn:focus-visible{outline:2px solid #2563eb;outline-offset:2px;border-radius:6px;}
+  tr.at-aberta td{background:#f8fafc;}
+  tr.at-detalhe td{background:#f8fafc;padding:4px 14px 16px;white-space:normal;}
+  .at-dhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 10px;font-size:12.5px;color:var(--cinza-texto);}
+  .at-dhead b{color:var(--texto-escuro);}
+  .at-docs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+  .at-doc{background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0;}
+  .at-doc .dn{font-weight:600;font-size:13px;}
+  .at-doc .di{font-size:12px;color:var(--cinza-texto);}
+  .at-doc .da{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+  .btn.btn-sm{padding:4px 9px;font-size:12px;}
+  .sub-local{display:none;font-weight:400;font-size:12px;color:var(--cinza-texto);}
+  @media (max-width:760px){
+    .tbl-ativos .col-cpf,.tbl-ativos .col-loc{display:none;}
+    .sub-local{display:block;}
+  }
+
+  /* ---------- Controle de EPI ---------- */
+  .epi-sub{font-size:13px;color:var(--cinza-texto);margin-top:3px;max-width:64ch;}
+  .epi-aviso{background:#fff8e6;border:1px solid #f0d79a;color:#8a5a06;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:16px;line-height:1.5;}
+  .epi-aviso code{background:#fdeebb;padding:1px 5px;border-radius:4px;}
+  .epi-chips{display:flex;gap:6px;flex-wrap:wrap;}
+  .epi-chip{border:1px solid var(--cinza-borda);background:#fff;border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;font-family:inherit;}
+  .epi-chip.on{background:#115266;border-color:#115266;color:#fff;}
+  .epi-chip b{font-weight:600;margin-left:5px;font-size:11.5px;}
+  .epi-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+  .epi-bar .sp{flex:1;}
+  .epi-hint{font-size:12px;color:var(--cinza-texto);margin-bottom:12px;}
+  .epi-paper-wrap{overflow-x:auto;background:#d9e1e7;padding:20px;border:1px solid var(--cinza-borda);border-radius:10px;}
+
+  #epiPaper{--p-blue:#0d47a1;--p-title:#154da4;--p-line:#a0a0a0;--p-label:#eceff1;--p-alt:#f7f8fa;--p-text:#1a1a1a;--p-muted:#666666;--p-hover:#eaf1ff;
+    background:#fff;color:var(--p-text);font-family:Arial,Helvetica,sans-serif;font-size:12px;width:794px;margin:0 auto;padding:36px 42px 40px;box-shadow:0 4px 18px rgba(0,0,0,.2);}
+  #epiPaper table{border-collapse:collapse;width:100%;min-width:0;font-size:inherit;}
+  #epiPaper td,#epiPaper th{white-space:normal;}
+  #epiPaper tbody tr:hover{background:transparent;}
+  #epiPaper .hd td{border:1px solid var(--p-line);padding:10px 12px;vertical-align:middle;}
+  #epiPaper .hd .logo{width:170px;text-align:center;}
+  #epiPaper .hd .logo img{display:block;margin:0 auto;max-width:100%;height:auto;max-height:64px;}
+  #epiPaper .hd .tt{text-align:center;}
+  #epiPaper .hd .tt b{display:block;color:var(--p-title);font-size:17px;letter-spacing:.1px;}
+  #epiPaper .hd .tt i{display:block;color:var(--p-muted);font-size:10.5px;margin-top:3px;}
+  #epiPaper .hd .cd{width:158px;font-family:Cambria,Georgia,"Times New Roman",serif;font-weight:700;color:var(--p-muted);font-size:10.5px;line-height:1.6;}
+  #epiPaper h3{color:var(--p-blue);font-size:14px;font-weight:700;margin:22px 0 10px;text-transform:uppercase;}
+  #epiPaper .idt td{border:1px solid var(--p-line);padding:0 10px;height:50px;vertical-align:middle;}
+  #epiPaper .idt td.lb{background:var(--p-label);font-weight:700;width:128px;color:#263238;}
+  #epiPaper .idt td.lb.s{width:70px;}
+  #epiPaper input,#epiPaper select{border:0;background:transparent;font:inherit;color:inherit;width:100%;padding:3px 2px;border-radius:2px;outline:none;box-sizing:border-box;}
+  #epiPaper input:hover,#epiPaper select:hover{background:var(--p-hover);}
+  #epiPaper input:focus,#epiPaper select:focus{background:var(--p-hover);box-shadow:inset 0 -2px 0 var(--p-blue);}
+  #epiPaper input[readonly],#epiPaper select:disabled{cursor:default;color:inherit;opacity:1;-webkit-text-fill-color:currentColor;}
+  #epiPaper input[readonly]:hover,#epiPaper select:disabled:hover{background:transparent;}
+  #epiPaper .decl p{margin:9px 0;font-size:11.5px;line-height:1.45;}
+  #epiPaper .et{table-layout:fixed;margin-top:8px;}
+  #epiPaper .et th{background:var(--p-blue);color:#fff;font-size:10.5px;text-transform:uppercase;text-align:center;padding:12px 6px;font-weight:700;border:1px solid var(--p-blue);border-left-color:rgba(255,255,255,.25);}
+  #epiPaper .et td{border:1px solid var(--p-line);padding:3px 4px;height:42px;vertical-align:middle;font-family:Cambria,Georgia,"Times New Roman",serif;}
+  #epiPaper .et td.dt{font-family:Arial,Helvetica,sans-serif;}
+  #epiPaper .et tbody tr:nth-child(even) td{background:var(--p-alt);}
+  #epiPaper .et td.c{text-align:center;}
+  #epiPaper .et td.xx{border:0;background:transparent !important;padding:0 0 0 4px;}
+  #epiPaper .et th.xx{border:0;background:transparent;padding:0;}
+  #epiPaper .et img{max-height:32px;max-width:100%;display:block;margin:0 auto;}
+  #epiPaper .et .at{font-family:Arial,sans-serif;font-size:9px;color:var(--p-muted);text-align:center;}
+  #epiPaper .okm{font-family:Arial,sans-serif;font-size:11px;color:#15803d;font-weight:700;display:block;text-align:center;}
+  #epiPaper .legend{font-size:10.5px;font-style:italic;color:var(--p-muted);margin-top:6px;}
+  #epiPaper .sigs{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:34px;text-align:center;}
+  #epiPaper .sigline{height:58px;border-bottom:1px solid #444;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;}
+  #epiPaper .sigline img{max-height:52px;max-width:100%;}
+  #epiPaper .sigs .lab{font-weight:700;font-size:11.5px;color:#333;margin-top:5px;}
+  #epiPaper .sigs .nm{font-size:10px;color:var(--p-muted);margin-top:2px;}
+  #epiPaper .sigs .ctl{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+  #epiPaper .vazio{text-align:center;color:#777;font-size:12px;padding:14px 0 2px;}
+  .pbtn{border:1px solid #0d47a1;background:#fff;color:#0d47a1;border-radius:5px;padding:3px 9px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .pbtn:hover{background:#eaf1ff;}
+  .pbtn:disabled{opacity:.45;cursor:not-allowed;}
+  .pbtn.x{border-color:#b0b0b0;color:#777;padding:1px 7px;font-size:14px;line-height:1.2;}
+  .pbtn.lk{border:0;background:transparent;color:#777;font-weight:400;text-decoration:underline;padding:0;font-size:9px;display:block;margin:2px auto 0;}
+
+  /* impressão: sai somente a folha, no tamanho A4 */
+  @media print{
+    @page{size:A4 portrait;margin:11mm;}
+    body.imprimindo-epi{background:#fff !important;padding:0 !important;}
+    body.imprimindo-epi *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body.imprimindo-epi .sidebar,
+    body.imprimindo-epi .crumb-bar,
+    body.imprimindo-epi .epi-np,
+    body.imprimindo-epi .toast,
+    body.imprimindo-epi .modal-overlay{display:none !important;}
+    body.imprimindo-epi .app-shell{display:block !important;min-height:0 !important;background:#fff !important;}
+    body.imprimindo-epi .main-content{padding:0 !important;overflow:visible !important;}
+    body.imprimindo-epi .epi-paper-wrap{padding:0 !important;background:none !important;border:0 !important;border-radius:0 !important;overflow:visible !important;}
+    body.imprimindo-epi #epiPaper{width:auto !important;margin:0 !important;padding:0 !important;box-shadow:none !important;font-size:10pt;}
+    body.imprimindo-epi #epiPaper input,
+    body.imprimindo-epi #epiPaper select{background:transparent !important;box-shadow:none !important;-webkit-appearance:none;appearance:none;}
+    body.imprimindo-epi #epiPaper input[type=date]::-webkit-calendar-picker-indicator{display:none;}
+    body.imprimindo-epi #epiPaper .et .xx,
+    body.imprimindo-epi #epiPaper .et col.xx{display:none !important;}
+    body.imprimindo-epi #epiPaper .et thead{display:table-header-group;}
+    body.imprimindo-epi #epiPaper .et tr{page-break-inside:avoid;break-inside:avoid;}
+    body.imprimindo-epi #epiPaper .sigs{page-break-inside:avoid;break-inside:avoid;}
+    body.imprimindo-epi #epiPaper h3{page-break-after:avoid;break-after:avoid;}
+  }
 </style>
 </head>
 <body>
@@ -382,20 +516,22 @@
     </div>
     
     <nav class="sidebar-nav">
+      <div class="side-sec" style="margin-top:0;">Visão geral</div>
       <button class="side-link active" data-view="painel">
         <span class="side-link-content">
           <span class="side-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-          </span> 
+          </span>
           Painel Geral
         </span>
       </button>
 
+      <div class="side-sec">Operação</div>
       <button class="side-link" data-view="colaboradores">
         <span class="side-link-content">
           <span class="side-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-          </span> 
+          </span>
           Colaboradores Ativos
         </span>
         <span class="side-badge" id="badgeAtivos">0</span>
@@ -405,17 +541,27 @@
         <span class="side-link-content">
           <span class="side-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="17" y1="11" x2="22" y2="16"/><line x1="22" y1="11" x2="17" y2="16"/></svg>
-          </span> 
+          </span>
           Inativos / Desligados
         </span>
         <span class="side-badge red" id="badgeInativos">0</span>
+      </button>
+
+      <div class="side-sec">Controles</div>
+      <button class="side-link" data-view="epi">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+          </span>
+          Controle de EPI
+        </span>
       </button>
 
       <button class="side-link" data-view="treinamentos">
         <span class="side-link-content">
           <span class="side-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          </span> 
+          </span>
           Treinamentos
         </span>
       </button>
@@ -434,6 +580,7 @@
   </aside>
 
   <main class="main-content">
+    <div class="crumb-bar" id="crumbBar"></div>
 
     <!-- VIEW: PAINEL -->
     <section id="viewPainel">
@@ -621,27 +768,76 @@
           <h3>VISÃO GERAL DE DOCUMENTAÇÃO POR COLABORADOR</h3>
         </div>
         <div class="table-scroll">
-          <table>
+          <table class="tbl-ativos">
             <thead>
               <tr>
                 <th></th>
                 <th>NOME COMPLETO</th>
-                <th>CPF</th>
-                <th>LOCAL DE TRABALHO</th>
-                <th>Ficha de Admissão</th>
-                <th>ASO</th>
-                <th>OS - Ordem de Serviço</th>
-                <th>Ficha de EPI</th>
-                <th>Certificado NR06</th>
+                <th class="col-cpf">CPF</th>
+                <th class="col-loc">LOCAL DE TRABALHO</th>
+                <th>SITUAÇÃO</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="10" class="loading">Carregando colaboradores...</td></tr>
+              <tr><td colspan="6" class="loading">Carregando colaboradores...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
+    </section>
+
+    <!-- VIEW: CONTROLE DE EPI -->
+    <section id="viewEpi" style="display:none;">
+      <div id="epiTelaLista">
+        <div class="view-header">
+          <div>
+            <h1>Controle de EPI</h1>
+            <div class="epi-sub">Uma ficha por colaborador, no modelo da empresa (SST-EPI-002). Abra a ficha para registrar entregas, coletar assinaturas e imprimir.</div>
+          </div>
+          <div class="toolbar">
+            <button class="btn primary" onclick="epiAbrirFicha('')">+ Nova ficha</button>
+          </div>
+        </div>
+
+        <div id="epiAviso"></div>
+
+        <div class="search-card">
+          <div class="search-input-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="epiBusca" placeholder="Buscar por Nome ou CPF...">
+          </div>
+          <div class="search-filter-wrap">
+            <select id="epiLocal" class="search-select"><option value="">Todos os Locais</option></select>
+            <div class="epi-chips" id="epiChips"></div>
+          </div>
+        </div>
+
+        <div class="table-panel">
+          <div class="table-header"><h3>FICHAS DE EPI POR COLABORADOR</h3></div>
+          <div class="table-scroll">
+            <table class="tbl-ativos">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>NOME COMPLETO</th>
+                  <th class="col-loc">LOCAL DE TRABALHO</th>
+                  <th>FUNÇÃO</th>
+                  <th>ITENS</th>
+                  <th>ÚLTIMA ENTREGA</th>
+                  <th>ASSINATURA</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="epiCorpo"><tr><td colspan="8" class="loading">Carregando fichas...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="epiTelaFicha" style="display:none;"></div>
+      <datalist id="epiDlColab"></datalist>
+      <datalist id="epiDlCat"></datalist>
     </section>
 
     <!-- VIEW: INATIVOS / DESLIGADOS -->
@@ -874,6 +1070,74 @@
   </div>
 </div>
 
+<!-- MODAL ASSINATURA DA FICHA DE EPI -->
+<div class="modal-overlay" id="modalEpiAssinOverlay" style="z-index:140;">
+  <div class="modal" style="max-width:560px;">
+    <h2 id="epiAssinTit">Assinar</h2>
+    <div class="epi-hint" id="epiAssinSub"></div>
+    <div class="assin-aviso" id="epiAssinAviso"></div>
+    <p id="epiAssinDecl" style="font-size:13px;color:var(--cinza-texto);margin:6px 0 10px;"></p>
+    <div id="epiAssinCpfG">
+      <label>CONFIRME OS 3 ÚLTIMOS DÍGITOS DO CPF</label>
+      <input type="text" id="epiAssinCpf" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="000" style="max-width:120px;">
+    </div>
+    <label>ASSINE COM O DEDO NO QUADRO ABAIXO</label>
+    <canvas id="epiAssinPad" class="assin-pad"></canvas>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      <button type="button" class="btn" id="epiAssinLimpar">Limpar</button>
+      <button type="button" class="btn" id="epiAssinCancelar">Cancelar</button>
+      <button type="button" class="btn primary" id="epiAssinOk">✔ Confirmar assinatura</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ASSINAR DOCUMENTO (OS e Certificado NR06) -->
+<div class="modal-overlay" id="modalAssinaturaOverlay" style="z-index:120;">
+  <div class="modal" style="max-width:880px;">
+    <h2 id="assinTitulo">Assinar documento</h2>
+
+    <!-- ETAPA 1: o responsável escolhe onde a assinatura vai ficar -->
+    <div id="assinEtapa1">
+      <p class="assin-dica" id="assinDica1"></p>
+      <div class="assin-toolbar">
+        <button type="button" class="btn" id="assinPagAnt">◀</button>
+        <span id="assinPagInfo">Página 1 de 1</span>
+        <button type="button" class="btn" id="assinPagProx">▶</button>
+        <span style="flex:1;"></span>
+        <button type="button" class="btn" id="assinMenos">− Menor</button>
+        <button type="button" class="btn" id="assinMais">+ Maior</button>
+      </div>
+      <div class="assin-pdf-wrap" id="assinPdfWrap">
+        <div class="assin-pdf-inner">
+          <canvas id="assinPdfCanvas"></canvas>
+          <div class="assin-box" id="assinBox">Assinatura aqui</div>
+        </div>
+      </div>
+      <div class="modal-actions" style="flex-wrap:wrap;">
+        <button type="button" class="btn" id="assinCancelar1">Cancelar</button>
+        <button type="button" class="btn primary" id="assinContinuar">Continuar → passar ao colaborador</button>
+      </div>
+    </div>
+
+    <!-- ETAPA 2: o colaborador assina -->
+    <div id="assinEtapa2" style="display:none;">
+      <div class="assin-aviso">Passe o aparelho para: <b id="assinNomeColab"></b></div>
+      <p id="assinDeclaracao" style="font-size:14px;"></p>
+      <div id="assinCpfGrupo">
+        <label>CONFIRME OS 3 ÚLTIMOS DÍGITOS DO SEU CPF</label>
+        <input type="text" id="assinCpf3" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="000" style="max-width:120px;">
+      </div>
+      <label>ASSINE COM O DEDO NO QUADRO ABAIXO</label>
+      <canvas id="assinPad" class="assin-pad"></canvas>
+      <div class="modal-actions" style="flex-wrap:wrap;">
+        <button type="button" class="btn" id="assinLimpar">Limpar</button>
+        <button type="button" class="btn" id="assinVoltar">Voltar</button>
+        <button type="button" class="btn primary" id="assinConfirmar">✔ Confirmar assinatura</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL ANEXAR DOCUMENTOS EM MASSA -->
 <div class="modal-overlay" id="modalAnexarOverlay">
   <div class="modal" style="max-width:640px;">
@@ -968,9 +1232,9 @@ let editandoId = null; // null = cadastro novo | id = edição em andamento
 const DOC_FIELDS = [
   { key: "admissao", label: "Ficha de Admissão", expira: false },
   { key: "aso",       label: "ASO",               expira: true  },
-  { key: "os",        label: "OS - Ordem de Serviço", expira: true  },
+  { key: "os",        label: "OS - Ordem de Serviço", expira: true, assinar: true  },
   { key: "epi",       label: "Ficha de EPI",       expira: true  },
-  { key: "nr06",      label: "Certificado NR06",   expira: true  }
+  { key: "nr06",      label: "Certificado NR06",   expira: true, assinar: true  }
 ];
 
 /* =========================================================
@@ -1054,33 +1318,47 @@ const VIEWS = {
   painel: document.getElementById('viewPainel'),
   colaboradores: document.getElementById('viewColaboradores'),
   inativos: document.getElementById('viewInativos'),
+  epi: document.getElementById('viewEpi'),
   treinamentos: document.getElementById('viewTreinamentos')
 };
+const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', treinamentos:'Treinamentos' };
+let viewAtual = 'painel';
+
+function atualizarMigalha(){
+  const el = document.getElementById('crumbBar');
+  if(!el) return;
+  let t = `Gestão de SST<i>›</i><b>${VIEW_NOMES[viewAtual]}</b>`;
+  if(viewAtual === 'epi' && typeof epiTela !== 'undefined' && epiTela === 'ficha') t = `Gestão de SST<i>›</i>Controle de EPI<i>›</i><b>Ficha de EPI</b>`;
+  el.innerHTML = t;
+}
+
+function mostrarView(alvo){
+  viewAtual = alvo;
+  document.querySelectorAll('.side-link').forEach(b => b.classList.toggle('active', b.dataset.view === alvo));
+  Object.keys(VIEWS).forEach(k => { VIEWS[k].style.display = (k === alvo) ? 'block' : 'none'; });
+  if(alvo === 'treinamentos' && !treinamentosCarregados){
+    treinamentosCarregados = true;
+    loadTreinamentos();
+  }
+  if(alvo === 'epi'){
+    if(typeof epiTela !== 'undefined' && epiTela === 'lista') loadEpi();
+  }
+  atualizarMigalha();
+}
 
 document.querySelectorAll('.side-link').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    const alvo = btn.dataset.view;
-
-    document.querySelectorAll('.side-link').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-
-    Object.keys(VIEWS).forEach(k=>{
-      VIEWS[k].style.display = (k === alvo) ? 'block' : 'none';
-    });
-
-    if(alvo === 'treinamentos' && !treinamentosCarregados){
-      treinamentosCarregados = true;
-      loadTreinamentos();
-    }
+    if(btn.dataset.view === 'epi' && typeof epiTela !== 'undefined' && epiTela === 'ficha') epiMostrarTela('lista');
+    mostrarView(btn.dataset.view);
   });
 });
 
 /* ---------- Utilidades ---------- */
-function toast(msg){
+function toast(msg, ms){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 3000);
+  setTimeout(()=>t.classList.remove('show'), ms || 3000);
 }
 
 function normalizarTexto(str){
@@ -1130,7 +1408,7 @@ async function loadColaboradores(){
 
   if(error){
     document.getElementById('tableBody').innerHTML =
-      `<tr><td colspan="10" class="empty">Erro ao carregar dados: ${error.message}</td></tr>`;
+      `<tr><td colspan="6" class="empty">Erro ao carregar dados: ${error.message}</td></tr>`;
     console.error(error);
     return;
   }
@@ -1298,8 +1576,10 @@ function renderTabelaAtivos(){
 
   document.getElementById('badgeAtivos').textContent = ativos.length;
   const tbody = document.getElementById('tableBody');
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="10" class="empty">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>'; return; }
-  tbody.innerHTML = filtrados.map(c => `<tr>
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>'; return; }
+  tbody.innerHTML = linhasAtivosHtml(filtrados);
+}
+function __antigoLinhasAtivos(filtrados){ return filtrados.map(c => `<tr>
     <td><div class="colab-avatar">${iniciais(c.nome)}</div></td><td><b>${c.nome}</b></td><td>${formatCPF(c.cpf)}</td><td>${c.local || '-'}</td>
     <td>${pillHtml('admissao', c)}</td><td>${pillHtml('aso', c)}</td><td>${pillHtml('os', c)}</td><td>${pillHtml('epi', c)}</td><td>${pillHtml('nr06', c)}</td>
     <td class="acoes"><span title="Ver documentos" onclick="abrirDocumentos('${c.id}')">👁️</span><span title="Editar colaborador" onclick="editarColaborador('${c.id}')">✏️</span><span class="btn-icon-desligar icon-desligar" role="button" tabindex="0" title="Desligar / Inativar colaborador" onclick="abrirModalDesligar('${c.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalDesligar('${c.id}');}">${ICON_PESSOA}</span></td>
@@ -1609,6 +1889,8 @@ function abrirDocumentos(id){
         <div onclick="event.stopPropagation()" style="margin-top:8px;">
           <label class="btn" for="${inputId}" style="font-size:11px;padding:4px 8px;margin:0;">📎 ${link ? 'Substituir' : 'Anexar'}</label>
           <input type="file" id="${inputId}" class="input-upload-doc-ver" data-campo="${d.key}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+          ${(d.assinar && link) ? `<button type="button" class="btn btn-assinar" onclick="iniciarAssinatura('${d.key}')">✍️ Assinar documento</button>` : ''}
+          <div id="assinInfo_${d.key}" class="assin-info"></div>
         </div>
       </div>`;
   }).join('');
@@ -1622,6 +1904,7 @@ function abrirDocumentos(id){
   empty.textContent = 'Selecione um documento à esquerda para visualizar.';
 
   modalDocsOverlay.classList.add('open');
+  marcarAssinados(c);
 }
 window.abrirDocumentos = abrirDocumentos;
 
@@ -1731,6 +2014,375 @@ document.getElementById('formNovo').addEventListener('submit', async (e)=>{
   fecharModal();
   loadColaboradores();
 });
+
+/* =========================================================
+   ASSINATURA ELETRÔNICA (OS e Certificado NR06)
+   Fluxo: o responsável abre o documento, toca onde a assinatura vai ficar,
+   passa o aparelho ao colaborador, que assina com o dedo. O sistema grava
+   a assinatura dentro do PDF, guarda SÓ a versão assinada e registra a trilha
+   de auditoria na tabela "assinaturas".
+   ========================================================= */
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+
+const ASSIN_TEXTOS = {
+  os:   { nome:'OS - Ordem de Serviço', campo:'campo de assinatura do colaborador', declaracao:'Declaro que recebi, li e estou ciente do conteúdo desta Ordem de Serviço.' },
+  nr06: { nome:'Certificado NR06',      campo:'campo "Participante"',               declaracao:'Declaro que participei do treinamento e que as informações deste certificado estão corretas.' }
+};
+
+let assin = null;     // assinatura em andamento
+let assinPad = null;  // quadro de desenho do colaborador
+
+const soDigitosGlobal = (v)=> (v||'').toString().replace(/\D/g,'');
+const semAcentos = (t)=> t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'');
+const extDoLink = (link)=> link.split('?')[0].split('.').pop().toLowerCase();
+
+function caminhoStorageDoLink(link){
+  const m = link.split('?')[0].match(/\/object\/public\/documentos\/(.+)$/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+async function sha256Hex(buf){
+  const h = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function dataUrlParaBytes(dataUrl){
+  const bin = atob(dataUrl.split(',')[1]);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+// Mostra "Assinado em ..." só se o arquivo atual ainda é a versão assinada.
+async function marcarAssinados(colab){
+  try{
+    const { data, error } = await supabaseClient
+      .from('assinaturas')
+      .select('tipo_doc, assinado_em, link_assinado')
+      .eq('colaborador_id', String(colab.id))
+      .order('assinado_em', { ascending:false });
+    if(error || !data) return;
+    const vistos = {};
+    data.forEach(a=>{
+      if(vistos[a.tipo_doc]) return;
+      vistos[a.tipo_doc] = true;
+      if(colab[`${a.tipo_doc}_link`] !== a.link_assinado) return;
+      const el = document.getElementById(`assinInfo_${a.tipo_doc}`);
+      if(!el) return;
+      const d = new Date(a.assinado_em);
+      el.textContent = `✍️ Assinado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+    });
+  }catch(e){ console.warn('Assinaturas:', e); }
+}
+
+async function imagemParaPdf(buf, ext){
+  const pdf = await PDFLib.PDFDocument.create();
+  const img = ext === 'png' ? await pdf.embedPng(buf) : await pdf.embedJpg(buf);
+  const k = 842 / Math.max(img.width, img.height);
+  const page = pdf.addPage([img.width * k, img.height * k]);
+  page.drawImage(img, { x:0, y:0, width: img.width * k, height: img.height * k });
+  return await pdf.save();
+}
+
+async function iniciarAssinatura(key){
+  const c = colaboradorDocsAtual;
+  if(!c) return;
+  const textos = ASSIN_TEXTOS[key];
+  const link = c[`${key}_link`];
+  if(!textos || !link){ toast('Anexe o documento antes de assinar.'); return; }
+
+  const ext = extDoLink(link);
+  if(!['pdf','jpg','jpeg','png'].includes(ext)){
+    toast('Só é possível assinar PDF, JPG ou PNG. Converta o arquivo (ex.: Word → PDF) e anexe de novo.', 6000);
+    return;
+  }
+  if(typeof PDFLib === 'undefined' || typeof pdfjsLib === 'undefined'){
+    toast('As bibliotecas de assinatura não carregaram. Recarregue a página.', 5000);
+    return;
+  }
+
+  toast('Carregando documento...');
+  try{
+    const resp = await fetch(link, { cache:'no-store' });
+    if(!resp.ok) throw new Error(`não foi possível baixar o documento (${resp.status})`);
+    const origBuf = await resp.arrayBuffer();
+    const hashOriginal = await sha256Hex(origBuf);
+    const pdfBytes = ext === 'pdf' ? new Uint8Array(origBuf.slice(0)) : await imagemParaPdf(origBuf, ext);
+    const jsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
+
+    // posição salva para este tipo de documento
+    let pos = { pagina:1, x:0.58, y:0.80, w:0.30 };
+    try{
+      const { data } = await supabaseClient.from('assinatura_posicoes').select('*').eq('tipo_doc', key).maybeSingle();
+      if(data) pos = { pagina: data.pagina, x: Number(data.x), y: Number(data.y), w: Number(data.largura) };
+    }catch(e){ /* sem posição salva: usa a padrão */ }
+    if(pos.pagina > jsDoc.numPages) pos.pagina = 1;
+
+    assin = { key, colab:c, link, hashOriginal, pdfBytes, jsDoc, total: jsDoc.numPages, pagina: pos.pagina,
+              box:{ x:pos.x, y:pos.y, w:pos.w }, cssW:1, cssH:1 };
+
+    document.getElementById('assinTitulo').textContent = `Assinar — ${textos.nome} — ${c.nome}`;
+    document.getElementById('assinDica1').textContent =
+      `Toque no documento onde a assinatura deve ficar (${textos.campo}). Use "Maior/Menor" para ajustar o tamanho. A posição fica salva para os próximos documentos deste tipo.`;
+    document.getElementById('assinEtapa1').style.display = 'block';
+    document.getElementById('assinEtapa2').style.display = 'none';
+    document.getElementById('modalAssinaturaOverlay').classList.add('open');
+    await renderPaginaAssinatura();
+  }catch(err){
+    console.error(err);
+    toast(`Erro ao abrir o documento: ${err.message}. Se ele estiver no OneDrive/SharePoint, baixe e anexe de novo pelo botão "Substituir".`, 7000);
+  }
+}
+window.iniciarAssinatura = iniciarAssinatura;
+
+async function renderPaginaAssinatura(){
+  if(!assin) return;
+  const page = await assin.jsDoc.getPage(assin.pagina);
+  if(page.rotate && page.rotate !== 0){
+    toast('Este PDF tem página rotacionada e ainda não é suportado. Salve-o sem rotação e anexe de novo.', 6000);
+    fecharAssinatura();
+    return;
+  }
+  const wrap = document.getElementById('assinPdfWrap');
+  const cssW = Math.max(260, Math.min((wrap.clientWidth || 600) - 16, 820));
+  const base = page.getViewport({ scale:1 });
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const vp = page.getViewport({ scale: (cssW / base.width) * dpr });
+  const canvas = document.getElementById('assinPdfCanvas');
+  canvas.width = Math.floor(vp.width);
+  canvas.height = Math.floor(vp.height);
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = (vp.height / dpr) + 'px';
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+  assin.cssW = cssW;
+  assin.cssH = vp.height / dpr;
+  document.getElementById('assinPagInfo').textContent = `Página ${assin.pagina} de ${assin.total}`;
+  posicionarCaixa();
+}
+
+function posicionarCaixa(){
+  const b = assin.box;
+  const hFrac = (b.w * assin.cssW / 3) / assin.cssH;
+  b.x = Math.min(Math.max(b.x, 0), 1 - b.w);
+  b.y = Math.min(Math.max(b.y, 0), 1 - hFrac);
+  const el = document.getElementById('assinBox');
+  el.style.left = (b.x * 100) + '%';
+  el.style.top = (b.y * 100) + '%';
+  el.style.width = (b.w * 100) + '%';
+}
+
+document.getElementById('assinPdfCanvas').addEventListener('click', (e)=>{
+  if(!assin) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  const fx = (e.clientX - r.left) / r.width;
+  const fy = (e.clientY - r.top) / r.height;
+  const hFrac = (assin.box.w * assin.cssW / 3) / assin.cssH;
+  assin.box.x = fx - assin.box.w / 2;
+  assin.box.y = fy - hFrac / 2;
+  posicionarCaixa();
+});
+document.getElementById('assinPagAnt').addEventListener('click', ()=>{ if(assin && assin.pagina > 1){ assin.pagina--; renderPaginaAssinatura(); } });
+document.getElementById('assinPagProx').addEventListener('click', ()=>{ if(assin && assin.pagina < assin.total){ assin.pagina++; renderPaginaAssinatura(); } });
+document.getElementById('assinMenos').addEventListener('click', ()=>{ if(assin){ assin.box.w = Math.max(0.12, assin.box.w - 0.04); posicionarCaixa(); } });
+document.getElementById('assinMais').addEventListener('click', ()=>{ if(assin){ assin.box.w = Math.min(0.60, assin.box.w + 0.04); posicionarCaixa(); } });
+
+function fecharAssinatura(){
+  document.getElementById('modalAssinaturaOverlay').classList.remove('open');
+  document.getElementById('assinEtapa1').style.display = 'block';
+  document.getElementById('assinEtapa2').style.display = 'none';
+  assin = null;
+  assinPad = null;
+}
+document.getElementById('assinCancelar1').addEventListener('click', fecharAssinatura);
+
+/* ----- Etapa 2: o colaborador assina ----- */
+document.getElementById('assinContinuar').addEventListener('click', ()=>{
+  if(!assin) return;
+  const c = assin.colab;
+  document.getElementById('assinNomeColab').textContent = c.nome;
+  document.getElementById('assinDeclaracao').textContent = ASSIN_TEXTOS[assin.key].declaracao;
+  document.getElementById('assinCpf3').value = '';
+  document.getElementById('assinCpfGrupo').style.display = soDigitosGlobal(c.cpf).length >= 3 ? 'block' : 'none';
+  document.getElementById('assinEtapa1').style.display = 'none';
+  document.getElementById('assinEtapa2').style.display = 'block';
+  requestAnimationFrame(inicializarPad);
+});
+
+document.getElementById('assinVoltar').addEventListener('click', ()=>{
+  document.getElementById('assinEtapa2').style.display = 'none';
+  document.getElementById('assinEtapa1').style.display = 'block';
+  assinPad = null;
+});
+
+function inicializarPad(){
+  const canvas = document.getElementById('assinPad');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.floor(rect.width * dpr);
+  canvas.height = Math.floor(rect.height * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#0b1f33';
+  assinPad = { canvas, ctx, dpr, desenhando:false, tem:false, bbox:{ minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 } };
+}
+
+function posNoPad(e){
+  const r = assinPad.canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function marcarBBox(p){
+  const b = assinPad.bbox;
+  b.minX = Math.min(b.minX, p.x); b.minY = Math.min(b.minY, p.y);
+  b.maxX = Math.max(b.maxX, p.x); b.maxY = Math.max(b.maxY, p.y);
+}
+
+const padEl = document.getElementById('assinPad');
+padEl.addEventListener('pointerdown', (e)=>{
+  if(!assinPad) return;
+  e.preventDefault();
+  padEl.setPointerCapture(e.pointerId);
+  assinPad.desenhando = true;
+  const p = posNoPad(e);
+  const ctx = assinPad.ctx;
+  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 0.01, p.y + 0.01); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  marcarBBox(p);
+  assinPad.tem = true;
+});
+padEl.addEventListener('pointermove', (e)=>{
+  if(!assinPad || !assinPad.desenhando) return;
+  e.preventDefault();
+  const p = posNoPad(e);
+  const ctx = assinPad.ctx;
+  ctx.lineTo(p.x, p.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  marcarBBox(p);
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>{
+  padEl.addEventListener(ev, ()=>{ if(assinPad) assinPad.desenhando = false; });
+});
+
+document.getElementById('assinLimpar').addEventListener('click', ()=>{
+  if(!assinPad) return;
+  const { canvas, ctx } = assinPad;
+  ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.restore();
+  assinPad.tem = false;
+  assinPad.bbox = { minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 };
+});
+
+// Recorta o desenho só na área riscada, para a assinatura caber bem na caixa.
+function recortarAssinatura(){
+  const { canvas, dpr, bbox } = assinPad;
+  const pad = 6;
+  const sx = Math.max(0, Math.floor((bbox.minX - pad) * dpr));
+  const sy = Math.max(0, Math.floor((bbox.minY - pad) * dpr));
+  const ex = Math.min(canvas.width,  Math.ceil((bbox.maxX + pad) * dpr));
+  const ey = Math.min(canvas.height, Math.ceil((bbox.maxY + pad) * dpr));
+  const sw = Math.max(1, ex - sx), sh = Math.max(1, ey - sy);
+  const tmp = document.createElement('canvas');
+  tmp.width = sw; tmp.height = sh;
+  tmp.getContext('2d').drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+  return { bytes: dataUrlParaBytes(tmp.toDataURL('image/png')), w: sw, h: sh };
+}
+
+async function confirmarAssinatura(){
+  if(!assin || !assinPad) return;
+  const c = assin.colab;
+  const cpfDig = soDigitosGlobal(c.cpf);
+
+  if(cpfDig.length >= 3){
+    const digitado = soDigitosGlobal(document.getElementById('assinCpf3').value);
+    if(digitado !== cpfDig.slice(-3)){ toast('Os 3 últimos dígitos do CPF não conferem.'); return; }
+  }
+  if(!assinPad.tem){ toast('Faça a assinatura no quadro.'); return; }
+
+  const btn = document.getElementById('assinConfirmar');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  try{
+    // 1) coloca a assinatura dentro do PDF
+    const sig = recortarAssinatura();
+    const pdfDoc = await PDFLib.PDFDocument.load(assin.pdfBytes, { ignoreEncryption:true });
+    const pagina = pdfDoc.getPage(assin.pagina - 1);
+    const { width: pw, height: ph } = pagina.getSize();
+    const boxW = assin.box.w * pw, boxH = boxW / 3;
+    const boxX = assin.box.x * pw;
+    const boxY = ph - (assin.box.y * ph) - boxH;
+
+    const png = await pdfDoc.embedPng(sig.bytes);
+    const esc = Math.min(boxW / sig.w, boxH / sig.h);
+    const dw = sig.w * esc, dh = sig.h * esc;
+    pagina.drawImage(png, { x: boxX + (boxW - dw) / 2, y: boxY + (boxH - dh) / 2, width: dw, height: dh });
+
+    // 2) carimbo discreto com quem assinou, quando e o código do documento original
+    const fonte = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    const agora = new Date();
+    const dataTxt = `${agora.toLocaleDateString('pt-BR')} ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+    const cpfTxt = cpfDig.length === 11 ? ` - CPF ***.${cpfDig.slice(3,6)}.${cpfDig.slice(6,9)}-**` : '';
+    let texto = `Assinado eletronicamente por ${c.nome}${cpfTxt} em ${dataTxt} - Cod. ${assin.hashOriginal.slice(0,10)}`;
+    let tam = 6, larg;
+    try{ larg = fonte.widthOfTextAtSize(texto, tam); }
+    catch(e){ texto = semAcentos(texto); larg = fonte.widthOfTextAtSize(texto, tam); }
+    while(larg > pw - 12 && tam > 3){ tam -= 0.5; larg = fonte.widthOfTextAtSize(texto, tam); }
+    const tx = Math.max(6, Math.min(boxX, pw - larg - 6));
+    let ty = boxY - 8;
+    if(ty < 4) ty = boxY + boxH + 3;
+    pagina.drawText(texto, { x: tx, y: ty, size: tam, font: fonte, color: PDFLib.rgb(0.25,0.25,0.25) });
+
+    const signedBytes = await pdfDoc.save();
+    const hashAssinado = await sha256Hex(signedBytes);
+
+    // 3) guarda SÓ a versão assinada (sobrescreve o arquivo anterior)
+    const caminho = `${assin.key}/${c.id}.pdf`;
+    const { error: errUp } = await supabaseClient.storage.from('documentos')
+      .upload(caminho, new Blob([signedBytes], { type:'application/pdf' }), { upsert:true, contentType:'application/pdf' });
+    if(errUp) throw errUp;
+
+    const { data: urlData } = supabaseClient.storage.from('documentos').getPublicUrl(caminho);
+    const novoLink = `${urlData.publicUrl}?v=${Date.now()}`;
+    const { error: errUpd } = await supabaseClient.from('colaboradores').update({ [`${assin.key}_link`]: novoLink }).eq('id', c.id);
+    if(errUpd) throw errUpd;
+
+    // apaga o arquivo anterior se ele estava em outro caminho (ex.: .jpg ou nome diferente)
+    const caminhoAntigo = caminhoStorageDoLink(assin.link);
+    if(caminhoAntigo && caminhoAntigo !== caminho){
+      const { error: errDel } = await supabaseClient.storage.from('documentos').remove([caminhoAntigo]);
+      if(errDel) console.warn('Não foi possível apagar o arquivo anterior:', errDel.message);
+    }
+
+    // 4) trilha de auditoria
+    const { error: errAud } = await supabaseClient.from('assinaturas').insert([{
+      colaborador_id: String(c.id),
+      tipo_doc: assin.key,
+      coletado_por: document.getElementById('usuarioLogadoEmail').textContent,
+      dispositivo: (navigator.userAgent || '').slice(0, 250),
+      hash_original: assin.hashOriginal,
+      hash_assinado: hashAssinado,
+      link_assinado: novoLink,
+      pagina: assin.pagina,
+      pos_x: assin.box.x, pos_y: assin.box.y, largura: assin.box.w
+    }]);
+    if(errAud) console.warn('Trilha de auditoria não gravada:', errAud.message);
+
+    // 5) lembra a posição para os próximos documentos deste tipo
+    await supabaseClient.from('assinatura_posicoes')
+      .upsert({ tipo_doc: assin.key, pagina: assin.pagina, x: assin.box.x, y: assin.box.y, largura: assin.box.w });
+
+    const colabId = c.id;
+    fecharAssinatura();
+    toast(errAud ? 'Documento assinado, mas a trilha de auditoria não foi gravada (rode o SQL no Supabase).' : 'Documento assinado e salvo.', errAud ? 6000 : 3000);
+    await loadColaboradores();
+    abrirDocumentos(colabId);
+  }catch(err){
+    console.error(err);
+    toast('Erro ao assinar: ' + (err.message || err), 6000);
+  }finally{
+    btn.disabled = false; btn.textContent = '✔ Confirmar assinatura';
+  }
+}
+document.getElementById('assinConfirmar').addEventListener('click', confirmarAssinatura);
 
 /* ---------- Anexar direto na tela "Ver Documentos" (já salva no colaborador) ---------- */
 document.addEventListener('change', async (e)=>{
@@ -2267,6 +2919,637 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
   toast(`${novos.length} novo(s) e ${atualizados.length} atualizado(s). Documentos já salvos foram mantidos.`);
   loadColaboradores();
 });
+
+/* =========================================================
+   COLABORADORES ATIVOS — situação + documentos abaixo do nome
+   ========================================================= */
+const ativosAbertos = new Set();
+
+function situacaoColab(c){
+  let bad = 0, outros = 0;
+  DOC_FIELDS.forEach(d=>{
+    const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+    if(s.chave === 'bad') bad++;
+    else if(s.chave !== 'ok') outros++;
+  });
+  return { bad, outros, total: bad + outros };
+}
+
+function situacaoPills(r){
+  if(!r.total) return '<span class="status-pill ok">✔ Em Dia</span>';
+  return (r.bad ? `<span class="status-pill bad">Vencido (${r.bad})</span>` : '')
+       + (r.outros ? `<span class="status-pill nodate">Pendente (${r.outros})</span>` : '');
+}
+
+function infoDocumento(d, c, s){
+  const data = c[`${d.key}_data`];
+  if(s.chave === 'nodate') return 'Sem data cadastrada';
+  if(!d.expira) return `Admitido em ${formatDataBR(data)}`;
+  const dias = diffDias(data);
+  if(dias < 0) return `Venceu em ${formatDataBR(data)}`;
+  if(dias <= 30) return `Vence em ${formatDataBR(data)} (${dias} dias)`;
+  return `Vence em ${formatDataBR(data)}`;
+}
+
+function detalheDocsHtml(c){
+  const r = situacaoColab(c);
+  const cab = r.total
+    ? `<b>${r.total} de ${DOC_FIELDS.length} documentos</b> precisam de atenção.`
+    : `<b>Todos os ${DOC_FIELDS.length} documentos</b> estão em dia.`;
+  const cards = DOC_FIELDS.map(d=>{
+    const link = c[`${d.key}_link`];
+    const s = statusDocumento(c[`${d.key}_data`], link, d.expira);
+    let botoes = '';
+    if(d.key === 'epi'){
+      botoes += `<button class="btn btn-sm primary" onclick="irParaEpi('${c.id}')">Abrir ficha de EPI</button>`;
+    } else {
+      botoes += s.chave === 'nodate'
+        ? `<button class="btn btn-sm primary" onclick="editarColaborador('${c.id}')">Cadastrar</button>`
+        : `<button class="btn btn-sm" onclick="abrirDocumentos('${c.id}')">Ver documento</button>`;
+      if(d.assinar && link) botoes += `<button class="btn btn-sm" onclick="assinarDireto('${c.id}','${d.key}')">✍️ Assinar</button>`;
+    }
+    return `<div class="at-doc"><div class="dn">${d.label}</div><div><span class="status-pill ${s.classe}">${s.icone} ${s.texto}</span></div><div class="di">${infoDocumento(d, c, s)}</div><div class="da">${botoes}</div></div>`;
+  }).join('');
+  return `<tr class="at-detalhe"><td></td><td colspan="5"><div class="at-dhead"><span>${cab}</span><span>${formatCPF(c.cpf)} · ${c.local || '-'}</span></div><div class="at-docs">${cards}</div></td></tr>`;
+}
+
+function toggleDocsAtivo(id){
+  id = String(id);
+  if(ativosAbertos.has(id)) ativosAbertos.delete(id); else ativosAbertos.add(id);
+  renderTabelaAtivos();
+}
+window.toggleDocsAtivo = toggleDocsAtivo;
+
+function assinarDireto(id, key){
+  abrirDocumentos(id);
+  iniciarAssinatura(key);
+}
+window.assinarDireto = assinarDireto;
+
+function linhasAtivosHtml(lista){
+  const chev = (aberto)=> `<svg class="at-chev${aberto ? ' open' : ''}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>`;
+  return lista.map(c=>{
+    const aberto = ativosAbertos.has(String(c.id));
+    const r = situacaoColab(c);
+    return `<tr class="${aberto ? 'at-aberta' : ''}">
+      <td style="width:48px"><div class="colab-avatar">${iniciais(c.nome)}</div></td>
+      <td><button class="at-namebtn" type="button" aria-expanded="${aberto}" onclick="toggleDocsAtivo('${c.id}')">${chev(aberto)}<span><span class="at-nm">${c.nome}</span><span class="sub-local">${c.local || '-'}</span></span></button></td>
+      <td class="col-cpf">${formatCPF(c.cpf)}</td><td class="col-loc">${c.local || '-'}</td>
+      <td class="at-sit"><button class="at-pillbtn" type="button" aria-label="Ver documentos de ${c.nome}" onclick="toggleDocsAtivo('${c.id}')">${situacaoPills(r)}</button></td>
+      <td class="acoes"><span title="Ver documentos" onclick="abrirDocumentos('${c.id}')">👁️</span><span title="Editar colaborador" onclick="editarColaborador('${c.id}')">✏️</span><span class="btn-icon-desligar icon-desligar" role="button" tabindex="0" title="Desligar / Inativar colaborador" onclick="abrirModalDesligar('${c.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalDesligar('${c.id}');}">${ICON_PESSOA}</span></td>
+    </tr>${aberto ? detalheDocsHtml(c) : ''}`;
+  }).join('');
+}
+
+/* =========================================================
+   CONTROLE DE EPI — Ficha de Controle e Entrega de EPI (SST-EPI-002)
+   ========================================================= */
+const EPI_DOC = { cod:'SST-EPI-002', rev:'01' };
+const EPI_LOGO = 'data:image/jpeg;base64,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';
+const EPI_CATALOGO = [
+  ['CAMISA','N/A','03'], ['CALÇA','N/A','03'], ['BLUSA DE FRIO','N/A','03'], ['MEIAS','N/A','03'],
+  ['BOTA DE SEGURANÇA','47234','01'], ['BOTA DE PVC/ CANO ALTO','44617','01'], ['LUVA LATEX','43301','01'], ['MÁSCARA RESPIRATÓRIA PFF2','38944','01']
+];
+const EPI_LINHAS_IMPRESSAO = 20;
+
+let epiResumo = {};
+let epiErro = null;
+let epiFiltro = 'todos';
+let epiFicha = null;
+let epiTela = 'lista';
+let epiAssin = null;
+let epiPad = null;
+
+const epiEsc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const epiHoje = ()=> new Date().toLocaleDateString('sv-SE');
+function epiDataBR(iso){
+  if(!iso) return '';
+  const p = String(iso).slice(0,10).split('-');
+  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
+}
+function epiDataHoraBR(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+function epiNomeUsuario(){
+  const el = document.querySelector('.sidebar-footer .user-name');
+  return el ? el.textContent.trim() : 'Usuário';
+}
+function epiLoginUsuario(){
+  const el = document.getElementById('usuarioLogadoEmail');
+  return el ? el.textContent.trim() : '';
+}
+function epiColab(id){ return colaboradores.find(c => String(c.id) === String(id)); }
+
+async function epiBuscarTudo(tabela, colunas){
+  const tudo = [];
+  const passo = 1000;
+  for(let ini = 0; ; ini += passo){
+    const { data, error } = await supabaseClient.from(tabela).select(colunas).order('id').range(ini, ini + passo - 1);
+    if(error) throw error;
+    tudo.push(...data);
+    if(data.length < passo) break;
+  }
+  return tudo;
+}
+
+/* ---------- lista ---------- */
+async function loadEpi(){
+  try{
+    const linhas = await epiBuscarTudo('epi_entregas', 'id,colaborador_id,data_entrega,assinado_em');
+    epiResumo = {};
+    linhas.forEach(l=>{
+      const r = epiResumo[l.colaborador_id] || (epiResumo[l.colaborador_id] = { n:0, ass:0, ultima:'' });
+      r.n++;
+      if(l.assinado_em) r.ass++;
+      if(l.data_entrega && l.data_entrega > r.ultima) r.ultima = l.data_entrega;
+    });
+    epiErro = null;
+  }catch(err){
+    epiResumo = {};
+    epiErro = err.message || String(err);
+    console.error(err);
+  }
+  epiPopularListas();
+  epiRenderLista();
+}
+
+function epiPopularListas(){
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  document.getElementById('epiDlColab').innerHTML = ativos.map(c => `<option value="${epiEsc(c.nome + ' — ' + (c.cpf || ''))}">`).join('');
+  document.getElementById('epiDlCat').innerHTML = EPI_CATALOGO.map(c => `<option value="${epiEsc(c[0])}">`).join('');
+  const sel = document.getElementById('epiLocal');
+  const atual = sel.value;
+  const locais = [...new Set(ativos.map(c => (c.local || '').trim()).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Todos os Locais</option>' + locais.map(l => `<option value="${epiEsc(l)}">${epiEsc(l)}</option>`).join('');
+  sel.value = atual;
+}
+
+function epiSituacao(id){
+  const r = epiResumo[String(id)];
+  if(!r || !r.n) return { k:'sem', html:'<span class="status-pill nodate">Sem ficha</span>', n:0, ultima:'' };
+  if(r.ass === r.n) return { k:'ok', html:'<span class="status-pill ok">✔ Assinada</span>', n:r.n, ultima:r.ultima };
+  if(r.ass === 0) return { k:'aguard', html:'<span class="status-pill warn">⚠ Aguardando assinatura</span>', n:r.n, ultima:r.ultima };
+  return { k:'aguard', html:`<span class="status-pill warn">⚠ Parcial (${r.ass} de ${r.n})</span>`, n:r.n, ultima:r.ultima };
+}
+
+function epiSetFiltro(f){ epiFiltro = f; epiRenderLista(); }
+window.epiSetFiltro = epiSetFiltro;
+
+function epiRenderLista(){
+  const aviso = document.getElementById('epiAviso');
+  aviso.innerHTML = epiErro
+    ? `<div class="epi-aviso"><b>Não foi possível carregar as fichas.</b> Se esta é a primeira vez, rode o arquivo <code>supabase_epi.sql</code> no SQL Editor do Supabase e recarregue a página.<br><small>Detalhe: ${epiEsc(epiErro)}</small></div>`
+    : '';
+
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  const cont = { todos: ativos.length, aguard:0, sem:0, ok:0 };
+  ativos.forEach(c => { cont[epiSituacao(c.id).k]++; });
+  const defs = [['todos','Todos'],['aguard','Aguardando assinatura'],['sem','Sem ficha'],['ok','Assinadas']];
+  document.getElementById('epiChips').innerHTML = defs.map(d =>
+    `<button class="epi-chip${epiFiltro === d[0] ? ' on' : ''}" type="button" onclick="epiSetFiltro('${d[0]}')">${d[1]}<b>${cont[d[0]]}</b></button>`).join('');
+
+  const termo = normalizarTexto(document.getElementById('epiBusca').value);
+  const termoNum = termo.replace(/\D/g, '');
+  const local = document.getElementById('epiLocal').value;
+  const lista = ativos.filter(c=>{
+    const s = epiSituacao(c.id);
+    if(epiFiltro !== 'todos' && s.k !== epiFiltro) return false;
+    if(local && (c.local || '').trim() !== local) return false;
+    return normalizarTexto(c.nome).includes(termo) || (termoNum && (c.cpf || '').replace(/\D/g, '').includes(termoNum));
+  });
+
+  const tbody = document.getElementById('epiCorpo');
+  if(!lista.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum colaborador encontrado.</td></tr>'; return; }
+  tbody.innerHTML = lista.map(c=>{
+    const s = epiSituacao(c.id);
+    return `<tr>
+      <td style="width:48px"><div class="colab-avatar">${iniciais(c.nome)}</div></td>
+      <td><b>${c.nome}</b><div class="sub-local" style="display:block;">${formatCPF(c.cpf)}</div></td>
+      <td class="col-loc">${c.local || '-'}</td><td>${c.funcao || '-'}</td>
+      <td>${s.n}</td><td>${s.ultima ? epiDataBR(s.ultima) : '—'}</td><td class="at-sit">${s.html}</td>
+      <td><button class="btn btn-sm${s.n ? '' : ' primary'}" onclick="epiAbrirFicha('${c.id}')">${s.n ? 'Abrir ficha' : 'Criar ficha'}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('epiBusca').addEventListener('input', epiRenderLista);
+document.getElementById('epiLocal').addEventListener('change', epiRenderLista);
+
+/* ---------- ficha ---------- */
+function epiMostrarTela(t){
+  epiTela = t;
+  document.getElementById('epiTelaLista').style.display = t === 'lista' ? 'block' : 'none';
+  document.getElementById('epiTelaFicha').style.display = t === 'ficha' ? 'block' : 'none';
+  atualizarMigalha();
+  window.scrollTo(0, 0);
+}
+
+function epiVoltar(){
+  epiFicha = null;
+  epiMostrarTela('lista');
+  loadEpi();
+}
+window.epiVoltar = epiVoltar;
+
+async function epiAbrirFicha(id){
+  const c = id ? epiColab(id) : null;
+  epiFicha = {
+    colabId: c ? String(c.id) : '', nome: c ? c.nome : '', cpf: c ? (c.cpf || '') : '',
+    adm: c ? epiDataBR(c.admissao_data) : '', funcao: c ? (c.funcao || '') : '', setor: c ? (c.setor || '') : '', cbo: c ? (c.cbo || '') : '',
+    rows: [], removidos: [], resp: null
+  };
+  if(c){
+    const ok = await epiCarregarFicha();
+    if(!ok){ epiFicha = null; return; }
+  }
+  epiMostrarTela('ficha');
+  epiRenderFicha();
+}
+window.epiAbrirFicha = epiAbrirFicha;
+
+async function epiCarregarFicha(){
+  const f = epiFicha;
+  const { data, error } = await supabaseClient.from('epi_entregas').select('*')
+    .eq('colaborador_id', f.colabId).order('ordem', { ascending:true }).order('data_entrega', { ascending:true });
+  if(error){ toast('Não foi possível abrir a ficha. Rode o arquivo supabase_epi.sql no Supabase. (' + error.message + ')', 8000); return false; }
+  f.rows = (data || []).map(r => ({
+    id: r.id, d: r.data_entrega || '', desc: r.descricao || '', ca: r.ca || '', qt: r.qtde || '', tp: r.tipo || 'E',
+    sig: r.assinado_em ? { img: r.assinatura_img || null, at: r.assinado_em, por: r.assinado_por || '' } : null,
+    visto: r.visto || ''
+  }));
+  const { data: fi } = await supabaseClient.from('epi_fichas').select('*').eq('colaborador_id', f.colabId).maybeSingle();
+  if(fi && fi.resp_em) f.resp = { img: fi.resp_img || null, at: fi.resp_em, nome: fi.resp_nome || '' };
+  return true;
+}
+
+function epiLinhaHtml(r, i){
+  const bloq = !!r.sig;
+  const ro = bloq ? ' readonly' : '';
+  const sigCell = r.sig
+    ? ((r.sig.img ? `<img src="${r.sig.img}" alt="Assinatura do trabalhador">` : '<span class="okm">✍️ Assinado</span>')
+       + `<div class="at">${epiDataHoraBR(r.sig.at)}</div><button class="pbtn lk epi-np" type="button" onclick="epiCancelarAssinatura(${i})">cancelar assinatura</button>`)
+    : `<button class="pbtn epi-np" type="button" onclick="epiAssinarLinha(${i})">✍️ Assinar</button>`;
+  const vistoCell = r.visto ? epiEsc(r.visto) : `<button class="pbtn epi-np" type="button" onclick="epiVisar(${i})">Visar</button>`;
+  return `<tr>
+    <td class="dt"><input type="date" data-r="${i}" data-c="d" value="${epiEsc(r.d)}" aria-label="Data"${ro} oninput="epiLinha(${i},'d',this)"></td>
+    <td><input list="epiDlCat" data-r="${i}" data-c="desc" value="${epiEsc(r.desc)}" aria-label="Descrição do EPI"${ro} oninput="epiLinha(${i},'desc',this)"></td>
+    <td><input data-r="${i}" data-c="ca" value="${epiEsc(r.ca)}" aria-label="Número do C.A."${ro} oninput="epiLinha(${i},'ca',this)"></td>
+    <td><input data-r="${i}" data-c="qt" value="${epiEsc(r.qt)}" inputmode="numeric" aria-label="Quantidade"${ro} oninput="epiLinha(${i},'qt',this)"></td>
+    <td><select aria-label="Tipo"${bloq ? ' disabled' : ''} onchange="epiLinha(${i},'tp',this)"><option${r.tp === 'E' ? ' selected' : ''}>E</option><option${r.tp === 'S' ? ' selected' : ''}>S</option><option${r.tp === 'D' ? ' selected' : ''}>D</option></select></td>
+    <td class="c">${sigCell}</td>
+    <td class="c">${vistoCell}</td>
+    <td class="xx epi-np">${bloq ? '' : `<button class="pbtn x" type="button" onclick="epiRemoverLinha(${i})" aria-label="Remover linha">×</button>`}</td>
+  </tr>`;
+}
+
+function epiRenderFicha(){
+  const f = epiFicha;
+  if(!f) return;
+  const pend = f.rows.filter(r => !r.sig).length;
+  const cs = f.rows.filter(r => r.sig && r.sig.img)[0];
+  const travaColab = f.colabId ? ' readonly' : '';
+  const tabela = f.rows.map(epiLinhaHtml).join('');
+  const aviso = f.rows.length ? '' : '<div class="vazio epi-np">Nenhuma entrega registrada. Use “+ Adicionar linha” ou “Aplicar kit do cargo”.</div>';
+
+  document.getElementById('epiTelaFicha').innerHTML = `
+    <div class="view-header epi-np" style="margin-bottom:12px;">
+      <div><h1>Ficha de EPI</h1><div class="epi-sub">${f.nome ? epiEsc(f.nome) : 'Escolha o colaborador para começar.'}</div></div>
+    </div>
+    <div class="epi-bar epi-np">
+      <button class="btn" onclick="epiVoltar()">← Voltar à lista</button><span class="sp"></span>
+      <button class="btn" onclick="epiKit()">Aplicar kit do cargo</button>
+      <button class="btn" onclick="epiAddLinha()">+ Adicionar linha</button>
+      <button class="btn" onclick="epiImprimir()">🖨 Imprimir ficha</button>
+      <button class="btn primary" id="epiBtnSalvar" onclick="epiSalvarFicha()">Salvar ficha</button>
+    </div>
+    <div class="epi-hint epi-np">A folha abaixo é o modelo que será impresso. Os botões azuis dentro dela aparecem só na tela. Assinaturas já coletadas ficam travadas; para corrigir uma linha, cancele a assinatura dela.</div>
+    <div class="epi-paper-wrap"><div id="epiPaper">
+      <table class="hd"><tr><td class="logo"><img src="${EPI_LOGO}" alt="Grupo Global"></td>
+        <td class="tt"><b>FICHA DE CONTROLE E ENTREGA DE EPI</b><i>Sistema de Gestão de Segurança e Saúde no Trabalho — Norma Regulamentadora NR-6</i></td>
+        <td class="cd">CÓD: ${EPI_DOC.cod}<br>REVISÃO: ${EPI_DOC.rev}</td></tr></table>
+      <h3>1. Identificação do trabalhador</h3>
+      <table class="idt">
+        <tr><td class="lb">Nome Completo:</td><td><input id="epiNome" list="epiDlColab" value="${epiEsc(f.nome)}" placeholder="Digite o nome ou CPF do colaborador" aria-label="Nome completo"${travaColab} onchange="epiEscolherColab(this)"></td><td class="lb s">CPF:</td><td><input value="${epiEsc(f.cpf)}" readonly aria-label="CPF"></td></tr>
+        <tr><td class="lb">Função / Cargo:</td><td><input value="${epiEsc(f.funcao)}" aria-label="Função ou cargo" oninput="epiCampo('funcao',this)"></td><td class="lb s">Setor:</td><td><input value="${epiEsc(f.setor)}" aria-label="Setor" oninput="epiCampo('setor',this)"></td></tr>
+        <tr><td class="lb">Data de Admissão:</td><td><input value="${epiEsc(f.adm)}" readonly aria-label="Data de admissão"></td><td class="lb s">CBO:</td><td><input value="${epiEsc(f.cbo)}" aria-label="CBO" oninput="epiCampo('cbo',this)"></td></tr>
+      </table>
+      <h3>2. Declaração de responsabilidade e compromisso</h3>
+      <div class="decl"><p>Em cumprimento ao disposto na Norma Regulamentadora NR-6 do Ministério do Trabalho e Emprego, declaro para os devidos fins que recebi gratuitamente os Equipamentos de Proteção Individual (EPIs) abaixo listados, estando novos, higienizados e em perfeitas condições operacionais. Assumo o compromisso formal de:</p>
+        <p>a) Utilizá-los obrigatoriamente apenas para as finalidades a que se destinam durante toda a minha jornada laboral;</p>
+        <p>b) Responsabilizar-me pela guarda, higienização diária e conservação adequada de cada item;</p>
+        <p>c) Comunicar imediatamente ao SESMT ou à chefia direta qualquer dano, extravio ou alteração que os torne impróprios para o uso;</p>
+        <p>d) Estar ciente de que a não utilização intencional constitui ato de insubordinação, sujeito às sanções previstas no Art. 482 da CLT, e que danos decorrentes de uso negligente ou extravio intencional poderão gerar coparticipação financeira, conforme Art. 462 da CLT.</p></div>
+      <h3>3. Registo individual de entrega, substituição e devolução</h3>
+      <table class="et"><colgroup><col style="width:16%"><col style="width:26%"><col style="width:11%"><col style="width:8%"><col style="width:8%"><col style="width:20%"><col style="width:11%"><col class="xx" style="width:26px"></colgroup>
+        <thead><tr><th>Data</th><th>Descrição do EPI</th><th>Nº C.A.</th><th>Qtde</th><th>Tipo*</th><th>Assinatura do trabalhador</th><th>Visto</th><th class="xx"></th></tr></thead>
+        <tbody>${tabela}</tbody></table>
+      ${aviso}
+      <div class="legend">*Legenda Tipo: [E] Entrega inicial &nbsp;|&nbsp; [S] Substituição por desgaste &nbsp;|&nbsp; [D] Devolução / Desligamento</div>
+      <div class="sigs">
+        <div><div class="sigline">${cs ? `<img src="${cs.sig.img}" alt="Assinatura do colaborador">` : ''}</div><div class="lab">Assinatura do Colaborador</div>
+          <div class="ctl epi-np"><button class="pbtn" type="button" onclick="epiAssinarTodas()"${pend ? '' : ' disabled'}>✍️ Assinar neste aparelho (${pend})</button></div></div>
+        <div><div class="sigline">${f.resp && f.resp.img ? `<img src="${f.resp.img}" alt="Assinatura do responsável">` : ''}</div><div class="lab">Responsável Legal pela Entrega</div>
+          ${f.resp ? `<div class="nm">${epiEsc(f.resp.nome)} — ${epiDataHoraBR(f.resp.at)}</div>` : ''}
+          <div class="ctl epi-np"><button class="pbtn" type="button" onclick="epiAssinarResp()">${f.resp ? '✍️ Assinar novamente' : '✍️ Assinar como responsável'}</button></div></div>
+      </div>
+    </div></div>`;
+}
+
+function epiCampo(chave, el){ epiFicha[chave] = el.value; }
+window.epiCampo = epiCampo;
+
+function epiLinha(i, c, el){
+  const r = epiFicha.rows[i];
+  r[c] = el.value;
+  if(c === 'desc'){
+    const item = EPI_CATALOGO.find(x => x[0] === el.value);
+    if(item){
+      r.ca = item[1]; r.qt = item[2];
+      const caEl = document.querySelector(`#epiPaper input[data-r="${i}"][data-c="ca"]`);
+      const qtEl = document.querySelector(`#epiPaper input[data-r="${i}"][data-c="qt"]`);
+      if(caEl) caEl.value = r.ca;
+      if(qtEl) qtEl.value = r.qt;
+    }
+  }
+}
+window.epiLinha = epiLinha;
+
+function epiEscolherColab(el){
+  const v = el.value.trim();
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  const c = ativos.find(x => v === `${x.nome} — ${x.cpf || ''}` || v === x.nome || v === x.cpf);
+  if(!c){ toast('Colaborador não encontrado. Escolha um da lista.'); return; }
+  epiAbrirFicha(String(c.id));
+}
+window.epiEscolherColab = epiEscolherColab;
+
+function epiAddLinha(){
+  if(!epiFicha) return;
+  epiFicha.rows.push({ d: epiHoje(), desc:'', ca:'', qt:'01', tp:'E', sig:null, visto:'' });
+  epiRenderFicha();
+}
+window.epiAddLinha = epiAddLinha;
+
+function epiKit(){
+  const f = epiFicha;
+  if(!f.colabId){ toast('Escolha o colaborador primeiro.'); return; }
+  EPI_CATALOGO.forEach(c => f.rows.push({ d: epiHoje(), desc:c[0], ca:c[1], qt:c[2], tp:'E', sig:null, visto:'' }));
+  epiRenderFicha();
+}
+window.epiKit = epiKit;
+
+function epiRemoverLinha(i){
+  const r = epiFicha.rows[i];
+  if(r.id) epiFicha.removidos.push(r.id);
+  epiFicha.rows.splice(i, 1);
+  epiRenderFicha();
+}
+window.epiRemoverLinha = epiRemoverLinha;
+
+function epiVisar(i){
+  const ini = epiNomeUsuario().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase();
+  epiFicha.rows[i].visto = ini || 'OK';
+  epiRenderFicha();
+}
+window.epiVisar = epiVisar;
+
+function epiCancelarAssinatura(i){
+  if(!confirm('Cancelar a assinatura desta linha? Ela poderá ser editada e assinada de novo.')) return;
+  epiFicha.rows[i].sig = null;
+  epiRenderFicha();
+  toast('Assinatura cancelada. Clique em Salvar ficha para confirmar.');
+}
+window.epiCancelarAssinatura = epiCancelarAssinatura;
+
+async function epiSalvarFicha(silencioso){
+  const f = epiFicha;
+  if(!f || !f.colabId){ toast('Escolha o colaborador.'); return false; }
+  const btn = document.getElementById('epiBtnSalvar');
+  if(btn){ btn.disabled = true; btn.textContent = 'Salvando...'; }
+  try{
+    // linhas em branco, sem descrição, não são gravadas
+    f.rows = f.rows.filter(r => r.id || (r.desc || '').trim());
+
+    let { error } = await supabaseClient.from('colaboradores')
+      .update({ funcao: f.funcao || null, setor: f.setor || null, cbo: f.cbo || null }).eq('id', f.colabId);
+    if(error) throw new Error('dados do colaborador (rode o supabase_epi.sql): ' + error.message);
+
+    if(f.removidos.length){
+      ({ error } = await supabaseClient.from('epi_entregas').delete().in('id', f.removidos));
+      if(error) throw error;
+      f.removidos = [];
+    }
+
+    const disp = (navigator.userAgent || '').slice(0, 250);
+    const montar = (r, i)=> ({
+      colaborador_id: f.colabId, data_entrega: r.d || null, descricao: r.desc, ca: r.ca, qtde: r.qt, tipo: r.tp,
+      assinatura_img: r.sig ? r.sig.img : null, assinado_em: r.sig ? r.sig.at : null,
+      assinado_por: r.sig ? (r.sig.por || null) : null, assinado_disp: r.sig ? disp : null,
+      visto: r.visto || null, ordem: i
+    });
+    const existentes = [], novas = [];
+    f.rows.forEach((r, i)=>{
+      const p = montar(r, i);
+      if(r.id){ p.id = r.id; existentes.push(p); } else novas.push({ p, i });
+    });
+    if(existentes.length){
+      ({ error } = await supabaseClient.from('epi_entregas').upsert(existentes, { onConflict:'id' }));
+      if(error) throw error;
+    }
+    if(novas.length){
+      const res = await supabaseClient.from('epi_entregas').insert(novas.map(x => x.p)).select('id');
+      if(res.error) throw res.error;
+      (res.data || []).forEach((d, k)=>{ f.rows[novas[k].i].id = d.id; });
+    }
+
+    if(f.resp){
+      ({ error } = await supabaseClient.from('epi_fichas').upsert(
+        { colaborador_id: f.colabId, resp_img: f.resp.img, resp_nome: f.resp.nome, resp_em: f.resp.at }, { onConflict:'colaborador_id' }));
+      if(error) throw error;
+    }
+
+    const c = epiColab(f.colabId);
+    if(c){ c.funcao = f.funcao; c.setor = f.setor; c.cbo = f.cbo; }
+    epiResumo[f.colabId] = {
+      n: f.rows.length, ass: f.rows.filter(r => r.sig).length,
+      ultima: f.rows.reduce((m, r) => (r.d && r.d > m ? r.d : m), '')
+    };
+    if(!silencioso) toast('Ficha salva.');
+    epiRenderFicha();
+    return true;
+  }catch(err){
+    console.error(err);
+    toast('Erro ao salvar a ficha: ' + (err.message || err), 8000);
+    return false;
+  }finally{
+    const b = document.getElementById('epiBtnSalvar');
+    if(b){ b.disabled = false; b.textContent = 'Salvar ficha'; }
+  }
+}
+window.epiSalvarFicha = epiSalvarFicha;
+
+/* ---------- impressão ---------- */
+function epiPrepararImpressao(){
+  if(epiTela !== 'ficha' || !epiFicha) return;
+  const tb = document.querySelector('#epiPaper .et tbody');
+  if(!tb) return;
+  for(let i = tb.querySelectorAll('tr').length; i < EPI_LINHAS_IMPRESSAO; i++){
+    const tr = document.createElement('tr');
+    tr.className = 'epi-vazia';
+    tr.innerHTML = '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="xx"></td>';
+    tb.appendChild(tr);
+  }
+  document.body.classList.add('imprimindo-epi');
+}
+function epiLimparImpressao(){
+  document.querySelectorAll('#epiPaper tr.epi-vazia').forEach(r => r.remove());
+  document.body.classList.remove('imprimindo-epi');
+}
+window.addEventListener('beforeprint', epiPrepararImpressao);
+window.addEventListener('afterprint', epiLimparImpressao);
+function epiImprimir(){ window.print(); }
+window.epiImprimir = epiImprimir;
+
+/* ---------- assinatura desenhada (colaborador e responsável) ---------- */
+function epiAssinarLinha(i){
+  const r = epiFicha.rows[i];
+  if(!(r.desc || '').trim()){ toast('Preencha a descrição do EPI antes de assinar.'); return; }
+  epiAbrirAssin([i], 'colab');
+}
+window.epiAssinarLinha = epiAssinarLinha;
+
+function epiAssinarTodas(){
+  const alvo = [];
+  epiFicha.rows.forEach((r, i)=>{ if(!r.sig && (r.desc || '').trim()) alvo.push(i); });
+  if(!alvo.length){ toast('Não há itens com descrição para assinar.'); return; }
+  epiAbrirAssin(alvo, 'colab');
+}
+window.epiAssinarTodas = epiAssinarTodas;
+
+function epiAssinarResp(){
+  if(!epiFicha.colabId){ toast('Escolha o colaborador primeiro.'); return; }
+  epiAbrirAssin([], 'resp');
+}
+window.epiAssinarResp = epiAssinarResp;
+
+function epiAbrirAssin(alvo, quem){
+  const f = epiFicha;
+  epiAssin = { alvo, quem };
+  if(quem === 'colab'){
+    document.getElementById('epiAssinTit').textContent = 'Assinar como colaborador';
+    document.getElementById('epiAssinSub').textContent = `Assinando ${alvo.length} ${alvo.length === 1 ? 'item' : 'itens'} da ficha`;
+    document.getElementById('epiAssinAviso').innerHTML = `Passe o aparelho para: <b>${epiEsc(f.nome)}</b>`;
+    document.getElementById('epiAssinDecl').textContent = 'Declaro que recebi os equipamentos listados e estou ciente dos compromissos desta ficha.';
+    document.getElementById('epiAssinCpfG').style.display = (f.cpf || '').replace(/\D/g, '').length >= 3 ? 'block' : 'none';
+  } else {
+    document.getElementById('epiAssinTit').textContent = 'Assinar como responsável';
+    document.getElementById('epiAssinSub').textContent = 'Responsável legal pela entrega';
+    document.getElementById('epiAssinAviso').innerHTML = `Assinando como: <b>${epiEsc(epiNomeUsuario())}</b>`;
+    document.getElementById('epiAssinDecl').textContent = 'Confirmo a entrega dos equipamentos listados nesta ficha.';
+    document.getElementById('epiAssinCpfG').style.display = 'none';
+  }
+  document.getElementById('epiAssinCpf').value = '';
+  document.getElementById('modalEpiAssinOverlay').classList.add('open');
+  requestAnimationFrame(epiIniciaPad);
+}
+
+function epiFecharAssin(){
+  document.getElementById('modalEpiAssinOverlay').classList.remove('open');
+  epiPad = null;
+  epiAssin = null;
+}
+
+function epiIniciaPad(){
+  const c = document.getElementById('epiAssinPad');
+  const dpr = window.devicePixelRatio || 1;
+  const r = c.getBoundingClientRect();
+  c.width = Math.floor(r.width * dpr);
+  c.height = Math.floor(r.height * dpr);
+  const x = c.getContext('2d');
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.lineWidth = 2.6; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0b1f33';
+  epiPad = { c, x, dpr, on:false, tem:false, b:{ minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 } };
+}
+function epiPos(e){ const r = epiPad.c.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function epiBox(p){
+  const b = epiPad.b;
+  b.minX = Math.min(b.minX, p.x); b.minY = Math.min(b.minY, p.y);
+  b.maxX = Math.max(b.maxX, p.x); b.maxY = Math.max(b.maxY, p.y);
+}
+const epiPadEl = document.getElementById('epiAssinPad');
+epiPadEl.addEventListener('pointerdown', (e)=>{
+  if(!epiPad) return;
+  e.preventDefault();
+  epiPadEl.setPointerCapture(e.pointerId);
+  epiPad.on = true;
+  const p = epiPos(e), x = epiPad.x;
+  x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p.x + 0.01, p.y + 0.01); x.stroke();
+  x.beginPath(); x.moveTo(p.x, p.y);
+  epiBox(p); epiPad.tem = true;
+});
+epiPadEl.addEventListener('pointermove', (e)=>{
+  if(!epiPad || !epiPad.on) return;
+  e.preventDefault();
+  const p = epiPos(e), x = epiPad.x;
+  x.lineTo(p.x, p.y); x.stroke(); x.beginPath(); x.moveTo(p.x, p.y);
+  epiBox(p);
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev => epiPadEl.addEventListener(ev, ()=>{ if(epiPad) epiPad.on = false; }));
+
+document.getElementById('epiAssinLimpar').addEventListener('click', ()=>{
+  if(!epiPad) return;
+  const { c, x } = epiPad;
+  x.save(); x.setTransform(1,0,0,1,0,0); x.clearRect(0, 0, c.width, c.height); x.restore();
+  epiPad.tem = false;
+  epiPad.b = { minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 };
+});
+document.getElementById('epiAssinCancelar').addEventListener('click', epiFecharAssin);
+
+function epiRecortaAssinatura(){
+  const k = 6, d = epiPad.dpr, b = epiPad.b;
+  const sx = Math.max(0, Math.floor((b.minX - k) * d)), sy = Math.max(0, Math.floor((b.minY - k) * d));
+  const ex = Math.min(epiPad.c.width, Math.ceil((b.maxX + k) * d)), ey = Math.min(epiPad.c.height, Math.ceil((b.maxY + k) * d));
+  const t = document.createElement('canvas');
+  t.width = Math.max(1, ex - sx); t.height = Math.max(1, ey - sy);
+  t.getContext('2d').drawImage(epiPad.c, sx, sy, t.width, t.height, 0, 0, t.width, t.height);
+  return t.toDataURL('image/png');
+}
+
+document.getElementById('epiAssinOk').addEventListener('click', async ()=>{
+  if(!epiPad || !epiAssin) return;
+  const f = epiFicha;
+  if(epiAssin.quem === 'colab'){
+    const dig = (f.cpf || '').replace(/\D/g, '');
+    if(dig.length >= 3 && document.getElementById('epiAssinCpf').value.replace(/\D/g, '') !== dig.slice(-3)){
+      toast('Os 3 últimos dígitos do CPF não conferem.'); return;
+    }
+  }
+  if(!epiPad.tem){ toast('Faça a assinatura no quadro.'); return; }
+
+  const img = epiRecortaAssinatura();
+  const agora = new Date().toISOString();
+  const por = `${epiNomeUsuario()} (${epiLoginUsuario()})`;
+  if(epiAssin.quem === 'colab'){
+    epiAssin.alvo.forEach(i => { f.rows[i].sig = { img, at: agora, por }; });
+  } else {
+    f.resp = { img, at: agora, nome: epiNomeUsuario() };
+  }
+  epiFecharAssin();
+  epiRenderFicha();
+  const ok = await epiSalvarFicha(true);
+  if(ok) toast('Assinatura registrada e ficha salva.');
+});
+
+/* ---------- ir para o Controle de EPI a partir de Colaboradores Ativos ---------- */
+function irParaEpi(id){
+  mostrarView('epi');
+  epiAbrirFicha(String(id));
+}
+window.irParaEpi = irParaEpi;
+
+atualizarMigalha();
 </script>
 
 </body>
