@@ -13,6 +13,7 @@
 <!-- Assinatura eletrônica: pdf-lib (escreve a assinatura no PDF) e pdf.js (mostra o PDF na tela) -->
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
   :root{
@@ -3239,7 +3240,11 @@ function epiPopularListas(){
 
 function epiSituacao(id){
   const r = epiResumo[String(id)];
-  if(!r || !r.n) return { k:'sem', html:'<span class="status-pill nodate">Sem ficha</span>', n:0, ultima:'' };
+  if(!r || !r.n){
+    const c = epiColab(id);
+    if(c && c.epi_link) return { k:'anexo', html:'<span class="status-pill warn">📎 Anexo (importar)</span>', n:0, ultima:'' };
+    return { k:'sem', html:'<span class="status-pill nodate">Sem ficha</span>', n:0, ultima:'' };
+  }
   if(r.ass === r.n) return { k:'ok', html:'<span class="status-pill ok">✔ Assinada</span>', n:r.n, ultima:r.ultima };
   if(r.ass === 0) return { k:'aguard', html:'<span class="status-pill warn">⚠ Aguardando assinatura</span>', n:r.n, ultima:r.ultima };
   return { k:'aguard', html:`<span class="status-pill warn">⚠ Parcial (${r.ass} de ${r.n})</span>`, n:r.n, ultima:r.ultima };
@@ -3255,9 +3260,9 @@ function epiRenderLista(){
     : '';
 
   const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
-  const cont = { todos: ativos.length, aguard:0, sem:0, ok:0 };
+  const cont = { todos: ativos.length, aguard:0, anexo:0, sem:0, ok:0 };
   ativos.forEach(c => { cont[epiSituacao(c.id).k]++; });
-  const defs = [['todos','Todos'],['aguard','Aguardando assinatura'],['sem','Sem ficha'],['ok','Assinadas']];
+  const defs = [['todos','Todos'],['aguard','Aguardando assinatura'],['anexo','Com anexo (importar)'],['sem','Sem ficha'],['ok','Assinadas']];
   document.getElementById('epiChips').innerHTML = defs.map(d =>
     `<button class="epi-chip${epiFiltro === d[0] ? ' on' : ''}" type="button" onclick="epiSetFiltro('${d[0]}')">${d[1]}<b>${cont[d[0]]}</b></button>`).join('');
 
@@ -3280,7 +3285,7 @@ function epiRenderLista(){
       <td><b>${c.nome}</b><div class="sub-local" style="display:block;">${formatCPF(c.cpf)}</div></td>
       <td class="col-loc">${c.local || '-'}</td><td>${c.funcao || '-'}</td>
       <td>${s.n}</td><td>${s.ultima ? epiDataBR(s.ultima) : '—'}</td><td class="at-sit">${s.html}</td>
-      <td><button class="btn btn-sm${s.n ? '' : ' primary'}" onclick="epiAbrirFicha('${c.id}')">${s.n ? 'Abrir ficha' : 'Criar ficha'}</button></td>
+      <td><button class="btn btn-sm${s.n ? '' : ' primary'}" onclick="epiAbrirFicha('${c.id}')">${s.n ? 'Abrir ficha' : (s.k === 'anexo' ? 'Importar e abrir' : 'Criar ficha')}</button></td>
     </tr>`;
   }).join('');
 }
@@ -3304,6 +3309,61 @@ function epiVoltar(){
 }
 window.epiVoltar = epiVoltar;
 
+/* lê a ficha de EPI anexada em Word (.docx) e extrai identificação + itens entregues */
+async function epiLerDocx(url){
+  if(typeof JSZip === 'undefined') throw new Error('a biblioteca de leitura de Word não carregou');
+  const resp = await fetch(url, { cache:'no-store' });
+  if(!resp.ok) throw new Error('não foi possível baixar o anexo (' + resp.status + ')');
+  const zip = await JSZip.loadAsync(await resp.arrayBuffer());
+  const arq = zip.file('word/document.xml');
+  if(!arq) throw new Error('arquivo Word inválido');
+  const xml = new DOMParser().parseFromString(await arq.async('string'), 'application/xml');
+  const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const txt = (el)=> Array.from(el.getElementsByTagNameNS(W, 't')).map(t => t.textContent).join('').replace(/\s+/g, ' ').trim();
+  const N = (t)=> normalizarTexto(t).toUpperCase();
+  const filhos = (el, nome)=> Array.from(el.childNodes).filter(n => n.localName === nome);
+  const res = { itens:[], funcao:'', setor:'', cbo:'' };
+  const dataISO = (t)=>{
+    const m = (t || '').match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);
+    if(!m) return '';
+    const a = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${a}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  };
+  Array.from(xml.getElementsByTagNameNS(W, 'tbl')).forEach(tbl=>{
+    const linhas = filhos(tbl, 'tr').map(tr => filhos(tr, 'tc').map(txt));
+    // identificação: rótulo numa célula, valor na seguinte
+    linhas.forEach(cel => cel.forEach((c, i)=>{
+      const v = cel[i + 1] || '';
+      if(!v) return;
+      const n = N(c);
+      if(!res.funcao && n.includes('FUNCAO')) res.funcao = v;
+      else if(!res.setor && n.startsWith('SETOR')) res.setor = v;
+      else if(!res.cbo && n.startsWith('CBO')) res.cbo = v;
+    }));
+    // tabela de itens: cabeçalho com DATA e DESCRIÇÃO
+    const h = linhas.findIndex(cel => cel.some(c => N(c).includes('DESCRICAO')) && cel.some(c => N(c).startsWith('DATA')));
+    if(h < 0) return;
+    const cab = linhas[h].map(N);
+    const col = (teste, padrao)=>{ const i = cab.findIndex(teste); return i >= 0 ? i : padrao; };
+    const iD = col(c => c.startsWith('DATA'), 0), iDesc = col(c => c.includes('DESCRICAO'), 1),
+          iCa = col(c => /(^|\s)(N.\s*)?C\.?A\.?/.test(c) && !c.includes('DESCRICAO'), 2),
+          iQt = col(c => c.includes('QTDE') || c.includes('QUANT'), 3), iTp = col(c => c.startsWith('TIPO'), 4),
+          iVi = col(c => c.includes('VISTO'), 6);
+    linhas.slice(h + 1).forEach(cel=>{
+      const desc = (cel[iDesc] || '').trim();
+      if(!desc || N(desc).startsWith('LEGENDA')) return;
+      const tp = ((cel[iTp] || '').toUpperCase().match(/[ESD]/) || ['E'])[0];
+      res.itens.push({ d: dataISO(cel[iD]), desc: desc.toUpperCase(), ca: (cel[iCa] || '').trim(), qt: (cel[iQt] || '').trim() || '01', tp, visto: (cel[iVi] || '').trim() });
+    });
+  });
+  return res;
+}
+
+function epiVerAnexo(){
+  if(epiFicha && epiFicha.anexo) window.open(epiFicha.anexo, '_blank', 'noopener');
+}
+window.epiVerAnexo = epiVerAnexo;
+
 async function epiAbrirFicha(id){
   const c = id ? epiColab(id) : null;
   epiFicha = {
@@ -3314,6 +3374,27 @@ async function epiAbrirFicha(id){
   if(c){
     const ok = await epiCarregarFicha();
     if(!ok){ epiFicha = null; return; }
+    epiFicha.anexo = c.epi_link || '';
+    // sem ficha digital, mas com ficha anexada: importa os itens do Word para conferência
+    if(!epiFicha.rows.length && c.epi_link){
+      if(/\.docx(\?|$)/i.test(c.epi_link)){
+        try{
+          const r = await epiLerDocx(c.epi_link);
+          if(r.itens.length){
+            epiFicha.rows = r.itens.map(i => ({ d:i.d, desc:i.desc, ca:i.ca, qt:i.qt, tp:i.tp, sig:null, visto:i.visto }));
+            if(!epiFicha.funcao) epiFicha.funcao = r.funcao;
+            if(!epiFicha.setor) epiFicha.setor = r.setor;
+            if(!epiFicha.cbo) epiFicha.cbo = r.cbo;
+            epiFicha.importado = r.itens.length;
+          } else epiFicha.avisoAnexo = 'Não encontrei a tabela de entregas no documento Word anexado. Abra o anexo para conferir e registre os itens abaixo.';
+        }catch(e){
+          console.warn(e);
+          epiFicha.avisoAnexo = 'Não foi possível ler o documento Word anexado (' + (e.message || e) + '). Abra o anexo e registre os itens abaixo.';
+        }
+      } else {
+        epiFicha.avisoAnexo = 'O anexo desta ficha não está em formato Word (.docx), por isso não foi importado. Abra o anexo e registre os itens abaixo.';
+      }
+    }
   }
   epiMostrarTela('ficha');
   epiRenderFicha();
@@ -3370,12 +3451,15 @@ function epiRenderFicha(){
     </div>
     <div class="epi-bar epi-np">
       <button class="btn" onclick="epiVoltar()">← Voltar à lista</button><span class="sp"></span>
+      ${f.anexo ? '<button class="btn" onclick="epiVerAnexo()">📎 Ver anexo</button>' : ''}
       <button class="btn" onclick="epiKit()">Aplicar kit do cargo</button>
       <button class="btn" onclick="epiAddLinha()">+ Adicionar linha</button>
       <button class="btn" onclick="epiImprimir()">🖨 Imprimir ficha</button>
       <button class="btn" onclick="epiGerarLink()">🔗 Link de assinatura</button>
       <button class="btn primary" id="epiBtnSalvar" onclick="epiSalvarFicha()">Salvar ficha</button>
     </div>
+    ${f.importado ? `<div class="epi-aviso epi-np" style="background:#eefaf2;border-color:#b7e4c7;color:#166534;">✔ ${f.importado} ${f.importado === 1 ? 'item importado' : 'itens importados'} do documento Word anexado. Confira os dados e clique em <b>Salvar ficha</b>; depois já é possível assinar ou enviar o link ao colaborador.</div>` : ''}
+    ${f.avisoAnexo ? `<div class="epi-aviso epi-np">${epiEsc(f.avisoAnexo)}</div>` : ''}
     <div class="epi-hint epi-np">A folha abaixo é o modelo que será impresso. Os botões azuis dentro dela aparecem só na tela. Assinaturas já coletadas ficam travadas; para corrigir uma linha, cancele a assinatura dela.</div>
     <div class="epi-paper-wrap"><div id="epiPaper">
       <table class="hd"><tr><td class="logo"><img src="${EPI_LOGO}" alt="Grupo Global"></td>
