@@ -486,8 +486,7 @@
   }
   .assin-box .pbtn{pointer-events:auto;font-size:12px;padding:4px 12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);}
   .assin-box.na-linha{border-style:solid;border-bottom:3px solid #16a34a;}
-  .btn-desfazer{margin-top:6px;width:100%;justify-content:center;font-size:12px;padding:5px 8px;color:#b42318;border-color:#f0b4ae;}
-  .btn-desfazer:hover{background:#fef3f2;}
+  .btn-linkass{margin-top:6px;width:100%;justify-content:center;font-size:12px;padding:5px 8px;}
 </style>
 </head>
 <body>
@@ -1070,6 +1069,22 @@
     </div>
     <div class="modal-actions">
       <button type="button" class="btn" id="btnFecharDocs">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LINK DE ASSINATURA -->
+<div class="modal-overlay" id="modalLinkOverlay" style="z-index:150;">
+  <div class="modal" style="max-width:520px;">
+    <h2>Link de assinatura</h2>
+    <div class="epi-hint" id="linkSub"></div>
+    <input type="text" id="linkUrl" readonly style="width:100%;font-size:13px;" onclick="this.select()">
+    <p class="epi-hint" style="margin-top:10px;">Vale por <b>24 horas</b> e só pode ser usado <b>uma vez</b>. O colaborador confirma os 3 últimos dígitos do CPF antes de assinar. Gerar um novo link cancela o anterior.</p>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      <button type="button" class="btn" id="linkFechar">Fechar</button>
+      <button type="button" class="btn" id="linkCopiar">Copiar link</button>
+      <button type="button" class="btn" id="linkCompartilhar">Compartilhar</button>
+      <a class="btn primary" id="linkWhats" target="_blank" rel="noopener">Enviar por WhatsApp</a>
     </div>
   </div>
 </div>
@@ -1894,7 +1909,7 @@ function abrirDocumentos(id){
         <div onclick="event.stopPropagation()" style="margin-top:8px;">
           <label class="btn" for="${inputId}" style="font-size:11px;padding:4px 8px;margin:0;">📎 ${link ? 'Substituir' : 'Anexar'}</label>
           <input type="file" id="${inputId}" class="input-upload-doc-ver" data-campo="${d.key}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-          ${(d.assinar && link) ? `<button type="button" class="btn btn-assinar" onclick="iniciarAssinatura('${d.key}')">✍️ Assinar documento</button>` : ''}
+          ${(d.assinar && link) ? `<button type="button" class="btn btn-assinar" onclick="iniciarAssinatura('${d.key}')">✍️ Assinar documento</button><button type="button" class="btn btn-linkass" onclick="gerarLinkAssinatura('${d.key}','${c.id}')">🔗 Enviar link ao colaborador</button>` : ''}
           <div id="assinInfo_${d.key}" class="assin-info"></div>
         </div>
       </div>`;
@@ -2078,15 +2093,6 @@ async function marcarAssinados(colab){
       if(!el) return;
       const d = new Date(a.assinado_em);
       el.textContent = `✍️ Assinado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
-      const bAss = el.parentElement.querySelector('.btn-assinar');
-      if(bAss) bAss.style.display = 'none';
-      if(!el.parentElement.querySelector('.btn-desfazer')){
-        const bd = document.createElement('button');
-        bd.type = 'button'; bd.className = 'btn btn-desfazer';
-        bd.textContent = '↩ Desfazer assinatura';
-        bd.addEventListener('click', ()=> desfazerAssinatura(a.tipo_doc));
-        el.after(bd);
-      }
     });
   }catch(e){ console.warn('Assinaturas:', e); }
 }
@@ -2116,16 +2122,6 @@ async function iniciarAssinatura(key){
     toast('As bibliotecas de assinatura não carregaram. Recarregue a página.', 5000);
     return;
   }
-
-  // documento já assinado: precisa desfazer antes, para não carimbar duas assinaturas
-  try{
-    const { data: ult } = await supabaseClient.from('assinaturas').select('link_assinado')
-      .eq('colaborador_id', String(c.id)).eq('tipo_doc', key).order('assinado_em', { ascending:false }).limit(1);
-    if(ult && ult[0] && ult[0].link_assinado === link){
-      toast('Este documento já está assinado. Use "↩ Desfazer assinatura" para assinar de novo.', 6000);
-      return;
-    }
-  }catch(e){ /* sem a tabela de assinaturas: segue normalmente */ }
 
   toast('Carregando documento...');
   try{
@@ -2426,33 +2422,35 @@ async function confirmarAssinatura(){
     const boxX = assin.box.x * pw;
     const boxY = ph - (assin.box.y * ph) - boxH;
 
-    const png = await pdfDoc.embedPng(sig.bytes);
-    const esc = Math.min(boxW / sig.w, boxH / sig.h);
-    const dw = sig.w * esc, dh = sig.h * esc;
-    pagina.drawImage(png, { x: boxX + (boxW - dw) / 2, y: assin.naLinha ? boxY + 2 : boxY + (boxH - dh) / 2, width: dw, height: dh });
-
-    // 2) carimbo discreto com quem assinou, quando e o código do documento original
+    // carimbo "Assinado eletronicamente por ..." posicionado sobre a linha de assinatura (sem a assinatura desenhada)
     const fonte = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    const fonteN = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
     const agora = new Date();
     const dataTxt = `${agora.toLocaleDateString('pt-BR')} ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
-    const cpfTxt = cpfDig.length === 11 ? ` - CPF ***.${cpfDig.slice(3,6)}.${cpfDig.slice(6,9)}-**` : '';
-    let texto = `Assinado eletronicamente por ${c.nome}${cpfTxt} em ${dataTxt} - Cod. ${assin.hashOriginal.slice(0,10)}`;
-    let tam = 6, larg;
-    try{ larg = fonte.widthOfTextAtSize(texto, tam); }
-    catch(e){ texto = semAcentos(texto); larg = fonte.widthOfTextAtSize(texto, tam); }
-    while(larg > pw - 12 && tam > 3){ tam -= 0.5; larg = fonte.widthOfTextAtSize(texto, tam); }
-    const tx = Math.max(6, Math.min(boxX, pw - larg - 6));
-    let ty = boxY - 8;
-    if(ty < 4) ty = boxY + boxH + 3;
-    pagina.drawText(texto, { x: tx, y: ty, size: tam, font: fonte, color: PDFLib.rgb(0.25,0.25,0.25) });
+    const cpfTxt = cpfDig.length === 11 ? `CPF ***.${cpfDig.slice(3,6)}.${cpfDig.slice(6,9)}-**` : '';
+    const limpa = (t)=>{ try{ fonte.widthOfTextAtSize(t, 8); return t; }catch(e){ return semAcentos(t); } };
+    const linhasCarimbo = [
+      { t: limpa('Assinado eletronicamente por'), f: fonte },
+      { t: limpa(String(c.nome).toUpperCase()), f: fonteN },
+      { t: limpa(`${cpfTxt ? cpfTxt + ' - ' : ''}${dataTxt}`), f: fonte },
+      { t: `Cod. ${assin.hashOriginal.slice(0,10)}`, f: fonte }
+    ];
+    let tam = 9;
+    const larguraMax = Math.max(boxW, 150);
+    const larg = (tm)=> Math.max(...linhasCarimbo.map(l => l.f.widthOfTextAtSize(l.t, tm)));
+    while(larg(tam) > larguraMax && tam > 4) tam -= 0.5;
+    const alturaLinha = tam * 1.25;
+    const alturaTotal = alturaLinha * linhasCarimbo.length;
+    const centroX = boxX + boxW / 2;
+    let baseY = assin.naLinha ? boxY + 3 : boxY + (boxH - alturaTotal) / 2;
+    if(baseY < 4) baseY = 4;
+    linhasCarimbo.slice().reverse().forEach((l, i)=>{
+      const w = l.f.widthOfTextAtSize(l.t, tam);
+      pagina.drawText(l.t, { x: centroX - w / 2, y: baseY + i * alturaLinha, size: tam, font: l.f, color: PDFLib.rgb(0.07, 0.2, 0.45) });
+    });
 
     const signedBytes = await pdfDoc.save();
     const hashAssinado = await sha256Hex(signedBytes);
-
-    // 2b) guarda uma cópia do original sem assinatura, para permitir "Desfazer assinatura"
-    const { error: errBk } = await supabaseClient.storage.from('documentos')
-      .upload(`original/${assin.key}/${c.id}.pdf`, new Blob([assin.pdfBytes], { type:'application/pdf' }), { upsert:true, contentType:'application/pdf' });
-    if(errBk) throw new Error('não foi possível guardar a cópia do original: ' + errBk.message);
 
     // 3) guarda SÓ a versão assinada (sobrescreve o arquivo anterior)
     const caminho = `${assin.key}/${c.id}.pdf`;
@@ -2503,43 +2501,6 @@ async function confirmarAssinatura(){
   }
 }
 document.getElementById('assinConfirmar').addEventListener('click', confirmarAssinatura);
-
-/* ----- Desfazer assinatura: volta o documento original (sem assinatura) ----- */
-async function desfazerAssinatura(key){
-  const c = colaboradorDocsAtual;
-  if(!c) return;
-  const nomeDoc = (ASSIN_TEXTOS[key] && ASSIN_TEXTOS[key].nome) || key;
-  if(!confirm(`Desfazer a assinatura de ${c.nome} em "${nomeDoc}"?\n\nO documento volta para a versão sem assinatura e poderá ser assinado de novo.`)) return;
-  try{
-    const base = supabaseClient.storage.from('documentos').getPublicUrl(`original/${key}/${c.id}.pdf`).data.publicUrl;
-    const resp = await fetch(base + '?t=' + Date.now(), { cache:'no-store' });
-    if(!resp.ok){
-      toast('Não há cópia do original deste documento (ele foi assinado antes desta atualização). Use "Substituir" e anexe o original de novo.', 8000);
-      return;
-    }
-    const bytes = await resp.arrayBuffer();
-    const caminho = `${key}/${c.id}.pdf`;
-    const { error: errUp } = await supabaseClient.storage.from('documentos')
-      .upload(caminho, new Blob([bytes], { type:'application/pdf' }), { upsert:true, contentType:'application/pdf' });
-    if(errUp) throw errUp;
-    const novoLink = `${supabaseClient.storage.from('documentos').getPublicUrl(caminho).data.publicUrl}?v=${Date.now()}`;
-    const { error: errUpd } = await supabaseClient.from('colaboradores').update({ [`${key}_link`]: novoLink }).eq('id', c.id);
-    if(errUpd) throw errUpd;
-    // registra na trilha que a assinatura foi desfeita (se as colunas existirem)
-    try{
-      await supabaseClient.from('assinaturas').update({ desfeita_em: new Date().toISOString(), desfeita_por: document.getElementById('usuarioLogadoEmail').textContent })
-        .eq('colaborador_id', String(c.id)).eq('tipo_doc', key).is('desfeita_em', null);
-    }catch(e){ /* colunas ainda não criadas */ }
-    toast('Assinatura desfeita. O documento voltou sem assinatura.');
-    const id = c.id;
-    await loadColaboradores();
-    abrirDocumentos(id);
-  }catch(err){
-    console.error(err);
-    toast('Erro ao desfazer: ' + (err.message || err), 6000);
-  }
-}
-window.desfazerAssinatura = desfazerAssinatura;
 
 /* ---------- Anexar direto na tela "Ver Documentos" (já salva no colaborador) ---------- */
 document.addEventListener('change', async (e)=>{
@@ -3140,6 +3101,7 @@ function detalheDocsHtml(c){
         ? `<button class="btn btn-sm primary" onclick="editarColaborador('${c.id}')">Cadastrar</button>`
         : `<button class="btn btn-sm" onclick="abrirDocumentos('${c.id}')">Ver documento</button>`;
       if(d.assinar && link) botoes += `<button class="btn btn-sm" onclick="assinarDireto('${c.id}','${d.key}')">✍️ Assinar</button>`;
+      if(d.assinar && link) botoes += `<button class="btn btn-sm" onclick="gerarLinkAssinatura('${d.key}','${c.id}')">🔗 Link</button>`;
     }
     return `<div class="at-doc"><div class="dn">${d.label}</div><div><span class="status-pill ${s.classe}">${s.icone} ${s.texto}</span></div><div class="di">${infoDocumento(d, c, s)}</div><div class="da">${botoes}</div></div>`;
   }).join('');
@@ -3411,6 +3373,7 @@ function epiRenderFicha(){
       <button class="btn" onclick="epiKit()">Aplicar kit do cargo</button>
       <button class="btn" onclick="epiAddLinha()">+ Adicionar linha</button>
       <button class="btn" onclick="epiImprimir()">🖨 Imprimir ficha</button>
+      <button class="btn" onclick="epiGerarLink()">🔗 Link de assinatura</button>
       <button class="btn primary" id="epiBtnSalvar" onclick="epiSalvarFicha()">Salvar ficha</button>
     </div>
     <div class="epi-hint epi-np">A folha abaixo é o modelo que será impresso. Os botões azuis dentro dela aparecem só na tela. Assinaturas já coletadas ficam travadas; para corrigir uma linha, cancele a assinatura dela.</div>
@@ -3738,6 +3701,49 @@ function irParaEpi(id){
   epiAbrirFicha(String(id));
 }
 window.irParaEpi = irParaEpi;
+
+/* ---------- Link de assinatura para o colaborador (OS, NR06 e Ficha de EPI) ---------- */
+const LINK_NOMES = { os:'a OS - Ordem de Serviço', nr06:'o Certificado NR06', epi:'a Ficha de EPI' };
+let linkMsgAtual = '';
+
+async function gerarLinkAssinatura(tipo, colabId){
+  const c = epiColab(colabId);
+  if(!c){ toast('Colaborador não encontrado.'); return; }
+  if(tipo === 'epi'){
+    const ok = await epiSalvarFicha(true);       // grava as linhas antes de gerar o link
+    if(!ok) return;
+  }
+  const { data, error } = await supabaseClient.rpc('criar_link_assinatura', { p_colab: String(colabId), p_tipo: tipo });
+  if(error){ toast('Não foi possível gerar o link: ' + (error.message || error) + ' (se for a primeira vez, rode o supabase_links.sql no Supabase)', 9000); return; }
+  const url = new URL('assinar.html', location.href); url.search = ''; url.hash = data;
+  const primeiro = (c.nome || '').split(' ')[0];
+  const nomeDoc = LINK_NOMES[tipo];
+  linkMsgAtual = `Olá ${primeiro}, segue o link para assinar ${nomeDoc} (vale por 24 horas): ${url.href}`;
+  document.getElementById('linkSub').textContent = `Para ${c.nome} — ${nomeDoc.replace(/^(a|o) /, '')}`;
+  document.getElementById('linkUrl').value = url.href;
+  document.getElementById('linkWhats').href = 'https://wa.me/?text=' + encodeURIComponent(linkMsgAtual);
+  document.getElementById('linkCompartilhar').style.display = navigator.share ? '' : 'none';
+  document.getElementById('modalLinkOverlay').classList.add('open');
+}
+window.gerarLinkAssinatura = gerarLinkAssinatura;
+
+function epiGerarLink(){
+  if(!epiFicha || !epiFicha.colabId){ toast('Escolha o colaborador primeiro.'); return; }
+  if(!epiFicha.rows.some(r => !r.sig && (r.desc || '').trim())){ toast('Não há itens pendentes de assinatura nesta ficha.'); return; }
+  gerarLinkAssinatura('epi', epiFicha.colabId);
+}
+window.epiGerarLink = epiGerarLink;
+
+document.getElementById('linkFechar').addEventListener('click', ()=> document.getElementById('modalLinkOverlay').classList.remove('open'));
+document.getElementById('linkCopiar').addEventListener('click', async ()=>{
+  const inp = document.getElementById('linkUrl');
+  try{ await navigator.clipboard.writeText(inp.value); }
+  catch(e){ inp.select(); document.execCommand('copy'); }
+  toast('Link copiado.');
+});
+document.getElementById('linkCompartilhar').addEventListener('click', ()=>{
+  if(navigator.share) navigator.share({ text: linkMsgAtual }).catch(()=>{});
+});
 
 atualizarMigalha();
 </script>
