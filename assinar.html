@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Assinatura de documento</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<style>
+  :root{--azul:#0f2b3c;--azul2:#115266;--verde:#16a34a;--borda:#dbe4ea;--texto:#14212b;--cinza:#5d6e7b;--fundo:#f1f5f8;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--fundo);color:var(--texto);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:1.45;}
+  header{background:var(--azul);color:#fff;padding:14px 16px;}
+  header b{display:block;font-size:12px;letter-spacing:.8px;color:#4ade80;text-transform:uppercase;}
+  header span{font-size:15px;font-weight:600;}
+  main{max-width:640px;margin:0 auto;padding:16px;}
+  .card{background:#fff;border:1px solid var(--borda);border-radius:14px;padding:18px;margin-bottom:14px;}
+  h1{font-size:20px;margin:0 0 6px;}
+  p{margin:8px 0;}
+  .muted{color:var(--cinza);font-size:14px;}
+  label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px;}
+  input[type=text]{width:100%;font-size:26px;letter-spacing:8px;text-align:center;padding:12px;border:2px solid var(--borda);border-radius:10px;}
+  input[type=text]:focus{outline:none;border-color:var(--azul2);}
+  button{font:inherit;font-weight:700;border-radius:10px;padding:13px 16px;border:2px solid var(--azul2);background:#fff;color:var(--azul2);cursor:pointer;}
+  button.p{background:var(--azul2);color:#fff;width:100%;margin-top:14px;}
+  button:disabled{opacity:.5;}
+  .erro{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:14px;}
+  .ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:10px;padding:14px;font-size:16px;}
+  .wrap{position:relative;border:1px solid var(--borda);border-radius:10px;overflow:hidden;background:#e5e7eb;}
+  .wrap canvas{display:block;width:100%;height:auto;}
+  .box{position:absolute;border:2px dashed #dc2626;background:rgba(220,38,38,.12);pointer-events:none;aspect-ratio:3/1;}
+  .box.na-linha{border-style:solid;border-bottom:3px solid var(--verde);}
+  .pad{width:100%;height:190px;background:#fff;border:2px dashed #94a3b8;border-radius:10px;touch-action:none;display:block;}
+  .linhas{width:100%;border-collapse:collapse;font-size:14px;}
+  .linhas th{background:var(--azul2);color:#fff;text-align:left;padding:7px 8px;font-size:12px;text-transform:uppercase;}
+  .linhas td{border-bottom:1px solid var(--borda);padding:8px;vertical-align:top;}
+  .acoes{display:flex;gap:10px;}
+  .acoes button{flex:1;}
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+<header><b>Gestão de Segurança do Trabalho</b><span id="tituloDoc">Assinatura de documento</span></header>
+<main>
+  <div class="card" id="telaMsg" hidden><h1 id="msgTit"></h1><p id="msgTxt"></p></div>
+
+  <div class="card" id="telaCpf" hidden>
+    <h1 id="olaNome"></h1>
+    <p id="descDoc" class="muted"></p>
+    <div id="grpCpf">
+      <label for="cpf3">Para sua segurança, digite os 3 últimos dígitos do seu CPF</label>
+      <input type="text" id="cpf3" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="000">
+    </div>
+    <div class="erro" id="erroCpf" hidden></div>
+    <button class="p" id="btnCpf">Continuar</button>
+  </div>
+
+  <div id="telaAssinar" hidden>
+    <div class="card" id="blocoPdf" hidden>
+      <h1 id="tituloPdf"></h1>
+      <p class="muted">Confira o documento. A caixa tracejada mostra onde ficará a sua assinatura eletrônica.</p>
+      <div class="wrap" id="wrapPdf"><canvas id="pdfCanvas"></canvas><div class="box" id="boxPdf"></div></div>
+    </div>
+    <div class="card" id="blocoEpi" hidden>
+      <h1>Ficha de controle e entrega de EPI</h1>
+      <p class="muted">Itens recebidos, pendentes da sua assinatura:</p>
+      <table class="linhas"><thead><tr><th>Data</th><th>EPI</th><th>C.A.</th><th>Qtde</th><th>Tipo</th></tr></thead><tbody id="linhasEpi"></tbody></table>
+      <p class="muted" style="margin-top:12px;font-size:13px;">Tipo: E = entrega inicial, S = substituição, D = devolução.</p>
+    </div>
+    <div class="card">
+      <p id="declaracao"></p>
+      <label>Assine com o dedo no quadro abaixo</label>
+      <canvas class="pad" id="pad"></canvas>
+      <div class="erro" id="erroAss" hidden></div>
+      <div class="acoes" style="margin-top:12px;"><button id="btnLimpar">Limpar</button></div>
+      <button class="p" id="btnAssinar">✔ Confirmar assinatura</button>
+    </div>
+  </div>
+
+  <div class="card" id="telaFim" hidden><div class="ok"><b>Assinatura registrada com sucesso.</b><br>Você já pode fechar esta página.</div></div>
+</main>
+
+<script>
+const SUPABASE_URL = "https://nnzqwkhwtphkijlgtwxm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uenF3a2h3dHBoa2lqbGd0d3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTc5NTgsImV4cCI6MjEwMjIzMzk1OH0.nYOD0jnxyyxBTptQRsFrwfQO8haD0-ejMcujQ6IOsQQ";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:false, autoRefreshToken:false } });
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+const $ = (id)=> document.getElementById(id);
+const token = (location.hash || '').replace('#', '').trim();
+const NOMES = { os:'OS - Ordem de Serviço', nr06:'Certificado NR06', epi:'Ficha de EPI' };
+const DECL = {
+  os:'Declaro que recebi, li e estou ciente do conteúdo desta Ordem de Serviço.',
+  nr06:'Declaro que participei do treinamento e que as informações deste certificado estão corretas.',
+  epi:'Declaro que recebi os equipamentos de proteção individual listados e estou ciente dos compromissos da ficha (NR-6).'
+};
+const MOTIVOS = {
+  invalido:'Este link não é válido. Peça um novo link ao seu responsável.',
+  usado:'Este link já foi usado: a assinatura já foi registrada. Se precisar assinar de novo, peça um novo link ao seu responsável.',
+  expirado:'Este link expirou (ele vale por 24 horas). Peça um novo link ao seu responsável.',
+  bloqueado:'Este link foi bloqueado por tentativas incorretas. Peça um novo link ao seu responsável.',
+  arquivo:'Não foi possível confirmar o envio do documento. Tente novamente.',
+  imagem:'A assinatura não pôde ser salva. Tente novamente.'
+};
+
+let info = null, dados = null, cpf3 = '';
+let pad = null;
+let box = { x:.58, y:.80, w:.30 }, pag = 1, naLinha = false, pdfBytes = null, hashOriginal = '';
+
+function tela(id){
+  ['telaMsg','telaCpf','telaAssinar','telaFim'].forEach(t => { $(t).hidden = (t !== id); });
+  window.scrollTo(0, 0);
+}
+function mensagem(tit, txt){ $('msgTit').textContent = tit; $('msgTxt').textContent = txt; tela('telaMsg'); }
+const soDig = (v)=> (v || '').toString().replace(/\D/g, '');
+const semAcentos = (t)=> t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7E]/g, '');
+async function sha256Hex(buf){
+  const h = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const escHtml = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const dataBR = (iso)=>{ if(!iso) return ''; const p = String(iso).slice(0,10).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso; };
+
+/* ---------------- início ---------------- */
+async function iniciar(){
+  if(!/^[0-9a-f-]{36}$/i.test(token)){ mensagem('Link inválido', MOTIVOS.invalido); return; }
+  const { data, error } = await sb.rpc('link_info', { p_token: token });
+  if(error){ mensagem('Não foi possível abrir', 'Verifique sua conexão e tente de novo. (' + error.message + ')'); return; }
+  if(!data || !data.ok){ mensagem('Link indisponível', MOTIVOS[(data && data.motivo) || 'invalido']); return; }
+  info = data;
+  $('tituloDoc').textContent = NOMES[data.tipo] || 'Assinatura';
+  $('olaNome').textContent = 'Olá, ' + data.nome;
+  $('descDoc').textContent = 'Você vai assinar: ' + (NOMES[data.tipo] || '') + '.';
+  $('grpCpf').hidden = !data.exige_cpf;
+  tela('telaCpf');
+}
+
+$('btnCpf').addEventListener('click', async ()=>{
+  const erro = $('erroCpf'); erro.hidden = true;
+  cpf3 = soDig($('cpf3').value);
+  if(info.exige_cpf && cpf3.length !== 3){ erro.textContent = 'Digite os 3 últimos dígitos do CPF.'; erro.hidden = false; return; }
+  const b = $('btnCpf'); b.disabled = true; b.textContent = 'Verificando...';
+  try{
+    const { data, error } = await sb.rpc('link_validar', { p_token: token, p_cpf3: cpf3 });
+    if(error) throw error;
+    if(!data.ok){
+      if(data.motivo === 'cpf'){
+        erro.textContent = data.restantes > 0 ? `Dígitos incorretos. Você ainda tem ${data.restantes} tentativa(s).` : MOTIVOS.bloqueado;
+        erro.hidden = false;
+      } else { mensagem('Link indisponível', MOTIVOS[data.motivo] || MOTIVOS.invalido); }
+      return;
+    }
+    dados = data;
+    await prepararAssinatura();
+  }catch(e){
+    console.error(e);
+    erro.textContent = 'Erro: ' + (e.message || e); erro.hidden = false;
+  }finally{ b.disabled = false; b.textContent = 'Continuar'; }
+});
+
+/* ---------------- quadro de assinatura ---------------- */
+function iniciaPad(){
+  const c = $('pad'), dpr = window.devicePixelRatio || 1, r = c.getBoundingClientRect();
+  c.width = Math.floor(r.width * dpr); c.height = Math.floor(r.height * dpr);
+  const x = c.getContext('2d');
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.lineWidth = 2.6; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0b1f33';
+  pad = { c, x, dpr, on:false, tem:false, b:{ minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 } };
+}
+const padPos = (e)=>{ const r = pad.c.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+const padBox = (p)=>{ const b = pad.b; b.minX = Math.min(b.minX, p.x); b.minY = Math.min(b.minY, p.y); b.maxX = Math.max(b.maxX, p.x); b.maxY = Math.max(b.maxY, p.y); };
+$('pad').addEventListener('pointerdown', (e)=>{
+  if(!pad) return; e.preventDefault(); $('pad').setPointerCapture(e.pointerId);
+  pad.on = true; const p = padPos(e), x = pad.x;
+  x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p.x + .01, p.y + .01); x.stroke(); x.beginPath(); x.moveTo(p.x, p.y);
+  padBox(p); pad.tem = true;
+});
+$('pad').addEventListener('pointermove', (e)=>{
+  if(!pad || !pad.on) return; e.preventDefault();
+  const p = padPos(e), x = pad.x; x.lineTo(p.x, p.y); x.stroke(); x.beginPath(); x.moveTo(p.x, p.y); padBox(p);
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev => $('pad').addEventListener(ev, ()=>{ if(pad) pad.on = false; }));
+$('btnLimpar').addEventListener('click', ()=>{
+  if(!pad) return;
+  pad.x.save(); pad.x.setTransform(1,0,0,1,0,0); pad.x.clearRect(0, 0, pad.c.width, pad.c.height); pad.x.restore();
+  pad.tem = false; pad.b = { minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 };
+});
+function assinaturaPng(){
+  const k = 6, d = pad.dpr, b = pad.b;
+  const sx = Math.max(0, Math.floor((b.minX - k) * d)), sy = Math.max(0, Math.floor((b.minY - k) * d));
+  const ex = Math.min(pad.c.width, Math.ceil((b.maxX + k) * d)), ey = Math.min(pad.c.height, Math.ceil((b.maxY + k) * d));
+  const t = document.createElement('canvas'); t.width = Math.max(1, ex - sx); t.height = Math.max(1, ey - sy);
+  t.getContext('2d').drawImage(pad.c, sx, sy, t.width, t.height, 0, 0, t.width, t.height);
+  return t.toDataURL('image/png');
+}
+
+/* ---------------- PDF: localizar o campo e posicionar a caixa ---------------- */
+const TERMOS = { nr06:['PARTICIPANTE'], os:['COLABORADOR','FUNCIONARIO','TRABALHADOR','PARTICIPANTE'] };
+
+async function acharCampo(jsDoc, tipo){
+  const norm = (t)=> (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  for(const termo of (TERMOS[tipo] || ['COLABORADOR','PARTICIPANTE'])){
+    let melhor = null;
+    for(let n = 1; n <= jsDoc.numPages; n++){
+      const page = await jsDoc.getPage(n);
+      if(page.rotate) continue;
+      const vp = page.getViewport({ scale:1 });
+      const tc = await page.getTextContent();
+      tc.items.forEach(it=>{
+        const s = norm(it.str).trim();
+        if(!s || s.length > 40 || !s.includes(termo)) return;
+        const alt = it.height || Math.abs(it.transform[3]) || 10;
+        const cand = { pagina:n, pw:vp.width, ph:vp.height, cx:(it.transform[4] + (it.width || 0) / 2) / vp.width,
+                       topoTexto:(vp.height - (it.transform[5] + alt)) / vp.height, alt };
+        if(!melhor || cand.pagina > melhor.pagina || (cand.pagina === melhor.pagina && cand.topoTexto > melhor.topoTexto)) melhor = cand;
+      });
+    }
+    if(melhor){ melhor.base = melhor.topoTexto - (melhor.alt * 0.45) / melhor.ph; return melhor; }
+  }
+  return null;
+}
+
+function achaLinha(){
+  try{
+    const c = $('pdfCanvas'), W = c.width, H = c.height;
+    const boxW = box.w * W, boxH = boxW / 3;
+    const x0 = Math.floor(box.x * W + boxW * 0.2), x1 = Math.ceil(box.x * W + boxW * 0.8);
+    const yb = box.y * H + boxH;
+    const ya = Math.max(0, Math.floor(yb - boxH * 1.3)), yz = Math.min(H - 1, Math.ceil(yb + boxH * 1.0));
+    if(x1 - x0 < 10 || yz <= ya) return null;
+    const ctx = c.getContext('2d');
+    const d = ctx.getImageData(x0, ya, x1 - x0, yz - ya + 1).data;
+    const w = x1 - x0;
+    let melhor = null;
+    for(const limite of [150, 215]){
+      const linhas = [];
+      for(let r = 0; r <= yz - ya; r++){
+        let esc = 0;
+        for(let i = 0; i < w; i++){
+          const k = (r * w + i) * 4;
+          if(d[k + 3] > 0 && (d[k] * 0.3 + d[k + 1] * 0.59 + d[k + 2] * 0.11) < limite) esc++;
+        }
+        linhas.push(esc / w >= (limite < 200 ? 0.85 : 0.9));
+      }
+      for(let r = 0; r < linhas.length; r++){
+        if(linhas[r] && (r === 0 || !linhas[r - 1])){
+          const topo = ya + r;
+          const lin = ctx.getImageData(0, Math.min(H - 1, topo + 1), W, 1).data;
+          let ini = Math.floor((x0 + x1) / 2), fim = ini;
+          const escuro = (i)=> lin[i * 4 + 3] > 0 && (lin[i * 4] * 0.3 + lin[i * 4 + 1] * 0.59 + lin[i * 4 + 2] * 0.11) < limite;
+          while(ini > 0 && escuro(ini - 1)) ini--;
+          while(fim < W - 1 && escuro(fim + 1)) fim++;
+          if((fim - ini) > W * 0.6) continue;
+          const alvo = box.y * H + boxH * 0.75;
+          if(melhor === null || Math.abs(topo - alvo) < Math.abs(melhor - alvo)) melhor = topo;
+        }
+      }
+      if(melhor !== null) break;
+    }
+    return melhor === null ? null : melhor / H;
+  }catch(e){ return null; }
+}
+
+async function imagemParaPdf(buf, ext){
+  const pdf = await PDFLib.PDFDocument.create();
+  const img = ext === 'png' ? await pdf.embedPng(buf) : await pdf.embedJpg(buf);
+  const k = 842 / Math.max(img.width, img.height);
+  const page = pdf.addPage([img.width * k, img.height * k]);
+  page.drawImage(img, { x:0, y:0, width: img.width * k, height: img.height * k });
+  return await pdf.save();
+}
+
+async function prepararAssinatura(){
+  $('declaracao').textContent = DECL[dados.tipo] || '';
+  if(dados.tipo === 'epi'){
+    const itens = dados.itens || [];
+    if(!itens.length){ mensagem('Nada para assinar', 'Não há itens pendentes de assinatura nesta ficha.'); return; }
+    $('linhasEpi').innerHTML = itens.map(i => `<tr><td>${escHtml(dataBR(i.data))}</td><td>${escHtml(i.descricao)}</td><td>${escHtml(i.ca)}</td><td>${escHtml(i.qtde)}</td><td>${escHtml(i.tipo)}</td></tr>`).join('');
+    $('blocoEpi').hidden = false; $('blocoPdf').hidden = true;
+    tela('telaAssinar'); requestAnimationFrame(iniciaPad);
+    return;
+  }
+  // OS / NR06: baixa o PDF e posiciona o campo
+  const link = dados.doc_link;
+  if(!link){ mensagem('Documento indisponível', 'O documento não está anexado. Peça ao seu responsável.'); return; }
+  const ext = link.split('?')[0].split('.').pop().toLowerCase();
+  if(!['pdf','jpg','jpeg','png'].includes(ext)){ mensagem('Formato não suportado', 'O documento precisa ser PDF, JPG ou PNG. Peça ao seu responsável.'); return; }
+  const resp = await fetch(link, { cache:'no-store' });
+  if(!resp.ok) throw new Error('não foi possível baixar o documento (' + resp.status + ')');
+  const origBuf = await resp.arrayBuffer();
+  hashOriginal = await sha256Hex(origBuf);
+  pdfBytes = ext === 'pdf' ? new Uint8Array(origBuf.slice(0)) : await imagemParaPdf(origBuf, ext);
+  const jsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
+
+  const pos = dados.pos || { pagina:1, x:.58, y:.80, largura:.30 };
+  box = { x:Number(pos.x), y:Number(pos.y), w:Number(pos.largura) || .30 };
+  pag = Math.min(pos.pagina || 1, jsDoc.numPages);
+  const ach = await acharCampo(jsDoc, dados.tipo);
+  if(ach){
+    pag = ach.pagina;
+    box.x = ach.cx - box.w / 2;
+    box.y = ach.base - (box.w * ach.pw / 3) / ach.ph;
+  }
+  const page = await jsDoc.getPage(pag);
+  if(page.rotate){ mensagem('Documento não suportado', 'Este PDF tem página rotacionada. Peça ao seu responsável.'); return; }
+
+  $('tituloPdf').textContent = NOMES[dados.tipo];
+  $('blocoPdf').hidden = false; $('blocoEpi').hidden = true;
+  tela('telaAssinar');
+  const wrap = $('wrapPdf');
+  const cssW = Math.max(260, Math.min(wrap.clientWidth || 360, 820));
+  const base = page.getViewport({ scale:1 });
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const vp = page.getViewport({ scale: (cssW / base.width) * dpr });
+  const cv = $('pdfCanvas'); cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+  await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+  const cssH = vp.height / dpr;
+  const hFrac = (box.w * cssW / 3) / cssH;
+  box.x = Math.min(Math.max(box.x, 0), 1 - box.w);
+  box.y = Math.min(Math.max(box.y, 0), 1 - hFrac);
+  const yl = achaLinha();
+  naLinha = yl !== null;
+  if(naLinha) box.y = Math.min(Math.max(yl - hFrac, 0), 1 - hFrac);
+  const el = $('boxPdf');
+  el.style.left = (box.x * 100) + '%'; el.style.top = (box.y * 100) + '%'; el.style.width = (box.w * 100) + '%';
+  el.classList.toggle('na-linha', naLinha);
+  requestAnimationFrame(iniciaPad);
+}
+
+/* ---------------- confirmar ---------------- */
+$('btnAssinar').addEventListener('click', async ()=>{
+  const erro = $('erroAss'); erro.hidden = true;
+  if(!pad || !pad.tem){ erro.textContent = 'Faça a sua assinatura no quadro.'; erro.hidden = false; return; }
+  const b = $('btnAssinar'); b.disabled = true; b.textContent = 'Salvando...';
+  try{
+    const disp = (navigator.userAgent || '').slice(0, 250);
+    if(dados.tipo === 'epi'){
+      const { data, error } = await sb.rpc('link_concluir_epi', { p_token: token, p_cpf3: cpf3, p_img: assinaturaPng(), p_disp: disp });
+      if(error) throw error;
+      if(!data.ok){ mensagem('Não foi possível concluir', MOTIVOS[data.motivo] || MOTIVOS.invalido); return; }
+    } else {
+      const { bytes, hashAss } = await carimbarPdf();
+      const caminho = `assinar/${token}.pdf`;
+      const { error: eUp } = await sb.storage.from('documentos').upload(caminho, new Blob([bytes], { type:'application/pdf' }), { upsert:true, contentType:'application/pdf' });
+      if(eUp) throw new Error('não foi possível enviar o documento: ' + eUp.message);
+      const { data, error } = await sb.rpc('link_concluir_pdf', {
+        p_token: token, p_cpf3: cpf3, p_hash_original: hashOriginal, p_hash_assinado: hashAss,
+        p_pagina: pag, p_x: box.x, p_y: box.y, p_w: box.w, p_disp: disp });
+      if(error) throw error;
+      if(!data.ok){ mensagem('Não foi possível concluir', MOTIVOS[data.motivo] || MOTIVOS.invalido); return; }
+    }
+    tela('telaFim');
+  }catch(e){
+    console.error(e);
+    erro.textContent = 'Erro ao salvar: ' + (e.message || e); erro.hidden = false;
+  }finally{ b.disabled = false; b.textContent = '✔ Confirmar assinatura'; }
+});
+
+async function carimbarPdf(){
+  const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes, { ignoreEncryption:true });
+  const pagina = pdfDoc.getPage(pag - 1);
+  const { width: pw, height: ph } = pagina.getSize();
+  const boxW = box.w * pw, boxH = boxW / 3, boxX = box.x * pw;
+  const boxY = ph - (box.y * ph) - boxH;
+
+  const fonte = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+  const fonteN = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const agora = new Date();
+  const dataTxt = `${agora.toLocaleDateString('pt-BR')} ${agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}`;
+  const cpfTxt = dados.cpf_mask ? `CPF ${dados.cpf_mask}` : '';
+  const limpa = (t)=>{ try{ fonte.widthOfTextAtSize(t, 8); return t; }catch(e){ return semAcentos(t); } };
+  const linhas = [
+    { t: limpa('Assinado eletronicamente por'), f: fonte },
+    { t: limpa(String(dados.nome).toUpperCase()), f: fonteN },
+    { t: limpa(`${cpfTxt ? cpfTxt + ' - ' : ''}${dataTxt}`), f: fonte },
+    { t: `Cod. ${hashOriginal.slice(0, 10)}`, f: fonte }
+  ];
+  let tam = 9;
+  const larguraMax = Math.max(boxW, 150);
+  const larg = (tm)=> Math.max(...linhas.map(l => l.f.widthOfTextAtSize(l.t, tm)));
+  while(larg(tam) > larguraMax && tam > 4) tam -= 0.5;
+  const alturaLinha = tam * 1.25, alturaTotal = alturaLinha * linhas.length, centroX = boxX + boxW / 2;
+  let baseY = naLinha ? boxY + 3 : boxY + (boxH - alturaTotal) / 2;
+  if(baseY < 4) baseY = 4;
+  linhas.slice().reverse().forEach((l, i)=>{
+    const w = l.f.widthOfTextAtSize(l.t, tam);
+    pagina.drawText(l.t, { x: centroX - w / 2, y: baseY + i * alturaLinha, size: tam, font: l.f, color: PDFLib.rgb(0.07, 0.2, 0.45) });
+  });
+  const bytes = await pdfDoc.save();
+  return { bytes, hashAss: await sha256Hex(bytes) };
+}
+
+iniciar();
+</script>
+</body>
+</html>
