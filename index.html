@@ -363,7 +363,7 @@
   .assin-pdf-wrap{max-height:58vh;overflow:auto;background:#2b2b2b;border-radius:8px;padding:8px;text-align:center;}
   .assin-pdf-inner{position:relative;display:inline-block;line-height:0;}
   .assin-pdf-inner canvas{display:block;background:#fff;cursor:crosshair;}
-  .assin-box{position:absolute;border:2px dashed #dc2626;background:rgba(220,38,38,0.12);color:#dc2626;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;aspect-ratio:3/1;pointer-events:none;line-height:1.1;}
+  .assin-box{flex-direction:column;gap:4px;position:absolute;border:2px dashed #dc2626;background:rgba(220,38,38,0.12);color:#dc2626;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;aspect-ratio:3/1;pointer-events:none;line-height:1.1;}
   .assin-aviso{background:#eaf3f5;border:1px solid #1a5266;color:#0f2b3c;padding:12px 14px;border-radius:10px;font-size:14px;margin:8px 0 12px;}
   .assin-pad{display:block;width:100%;height:200px;background:#fff;border:2px dashed #94a3b8;border-radius:8px;touch-action:none;}
 
@@ -484,6 +484,10 @@
     body.imprimindo-epi #epiPaper .sigs{page-break-inside:avoid;break-inside:avoid;}
     body.imprimindo-epi #epiPaper h3{page-break-after:avoid;break-after:avoid;}
   }
+  .assin-box .pbtn{pointer-events:auto;font-size:12px;padding:4px 12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);}
+  .assin-box.na-linha{border-style:solid;border-bottom:3px solid #16a34a;}
+  .btn-desfazer{margin-top:6px;width:100%;justify-content:center;font-size:12px;padding:5px 8px;color:#b42318;border-color:#f0b4ae;}
+  .btn-desfazer:hover{background:#fef3f2;}
 </style>
 </head>
 <body>
@@ -1110,7 +1114,7 @@
       <div class="assin-pdf-wrap" id="assinPdfWrap">
         <div class="assin-pdf-inner">
           <canvas id="assinPdfCanvas"></canvas>
-          <div class="assin-box" id="assinBox">Assinatura aqui</div>
+          <div class="assin-box" id="assinBox"><span>Assinatura aqui</span><button type="button" class="pbtn" id="assinBoxBtn">✍️ Assinar</button></div>
         </div>
       </div>
       <div class="modal-actions" style="flex-wrap:wrap;">
@@ -1417,6 +1421,7 @@ async function loadColaboradores(){
   popularFiltroLocais();
   popularFiltroPainel();
   renderTudo();
+  epiCarregarResumo();
 }
 
 /* ---------- Renderização geral ---------- */
@@ -1476,7 +1481,7 @@ function renderListaLocal(ativos, localSel){
     let pend = 0, venc = 0, vcdo = 0;
     const chips = [];
     DOC_FIELDS.forEach(d=>{
-      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      const s = statusDoc(d, c);
       if(s.chave === 'nodate') pend++;
       else if(s.chave === 'warn') venc++;
       else if(s.chave === 'bad') vcdo++;
@@ -1513,7 +1518,7 @@ document.getElementById('btnLimparFiltroPainel').addEventListener('click', ()=>{
 
 function pillHtml(campo, colaborador){
   const doc = DOC_FIELDS.find(d=>d.key===campo);
-  const status = statusDocumento(colaborador[`${campo}_data`], colaborador[`${campo}_link`], doc ? doc.expira : true);
+  const status = statusDocCampo(campo, colaborador, doc);
   return `<span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span>`;
 }
 
@@ -1563,7 +1568,7 @@ function renderTabelaAtivos(){
     let statusOk = true;
     if(statusSel){
       const docs = docSel ? DOC_FIELDS.filter(d => d.key === docSel) : DOC_FIELDS;
-      const statusDe = d => statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira).chave;
+      const statusDe = d => statusDoc(d, c).chave;
       // "Em Dia" sem documento escolhido = TODOS os documentos em dia.
       // Os demais status = pelo menos um documento naquele status.
       statusOk = (statusSel === 'ok' && !docSel)
@@ -1612,7 +1617,7 @@ function renderKpis(ativos, inativos){
   ativos.forEach(c=>{
     let problema=false;
     DOC_FIELDS.forEach(d=>{
-      const s=statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira);
+      const s=statusDoc(d, c);
       if(s.chave==='bad'){docsVencidos++;problema=true;}
       if(s.chave==='warn'){docsVencendo++;problema=true;}
       if(s.chave==='nodate'){docsSemData++;problema=true;}
@@ -1648,7 +1653,7 @@ function renderBarraDocumentos(localSel){
   const dados = DOC_FIELDS.map(d=>{
     const v = { regular:0, vencendo:0, vencido:0, semdata:0 };
     ativosGrafico.forEach(c=>{
-      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      const s = statusDoc(d, c);
       v[s.chave==='ok' ? 'regular' : s.chave==='warn' ? 'vencendo' : s.chave==='nodate' ? 'semdata' : 'vencido']++;
     });
     return { nome:d.label, ...v };
@@ -1700,7 +1705,7 @@ function renderBarraSetores(){
     const setor = (c.local || 'Não informado').trim();
     if(!mapa[setor]) mapa[setor] = { regular:0, vencendo:0, vencido:0, semdata:0 };
     DOC_FIELDS.forEach(d=>{
-      const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+      const s = statusDoc(d, c);
       mapa[setor][s.chave==='ok' ? 'regular' : s.chave==='warn' ? 'vencendo' : s.chave==='nodate' ? 'semdata' : 'vencido']++;
     });
   });
@@ -1787,7 +1792,7 @@ function renderGraficos(ativos, inativos){
   const cores={admissao:'#2b6777',aso:'#2ecc71',os:'#3498db',epi:'#f5c518',nr06:'#e74c3c'};
   const pendentes=DOC_FIELDS.map(d=>({
     label:d.label,
-    valor:ativos.filter(c=>statusDocumento(c[`${d.key}_data`],c[`${d.key}_link`],d.expira).chave!=='ok').length,
+    valor:ativos.filter(c=>statusDoc(d, c).chave!=='ok').length,
     cor:cores[d.key]
   }));
   if(pieChartInstance)pieChartInstance.destroy();
@@ -1879,7 +1884,7 @@ function abrirDocumentos(id){
   const listEl = document.getElementById('docsList');
   listEl.innerHTML = DOC_FIELDS.map(d=>{
     const link = c[`${d.key}_link`] || '';
-    const status = statusDocumento(c[`${d.key}_data`], link, d.expira);
+    const status = statusDoc(d, c);
     const inputId = `anexoVer_${d.key}`;
     return `
       <div class="doc-item" data-link="${link.replace(/"/g,'&quot;')}" onclick="selecionarDocumento(this)">
@@ -2073,6 +2078,15 @@ async function marcarAssinados(colab){
       if(!el) return;
       const d = new Date(a.assinado_em);
       el.textContent = `✍️ Assinado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+      const bAss = el.parentElement.querySelector('.btn-assinar');
+      if(bAss) bAss.style.display = 'none';
+      if(!el.parentElement.querySelector('.btn-desfazer')){
+        const bd = document.createElement('button');
+        bd.type = 'button'; bd.className = 'btn btn-desfazer';
+        bd.textContent = '↩ Desfazer assinatura';
+        bd.addEventListener('click', ()=> desfazerAssinatura(a.tipo_doc));
+        el.after(bd);
+      }
     });
   }catch(e){ console.warn('Assinaturas:', e); }
 }
@@ -2103,6 +2117,16 @@ async function iniciarAssinatura(key){
     return;
   }
 
+  // documento já assinado: precisa desfazer antes, para não carimbar duas assinaturas
+  try{
+    const { data: ult } = await supabaseClient.from('assinaturas').select('link_assinado')
+      .eq('colaborador_id', String(c.id)).eq('tipo_doc', key).order('assinado_em', { ascending:false }).limit(1);
+    if(ult && ult[0] && ult[0].link_assinado === link){
+      toast('Este documento já está assinado. Use "↩ Desfazer assinatura" para assinar de novo.', 6000);
+      return;
+    }
+  }catch(e){ /* sem a tabela de assinaturas: segue normalmente */ }
+
   toast('Carregando documento...');
   try{
     const resp = await fetch(link, { cache:'no-store' });
@@ -2123,9 +2147,20 @@ async function iniciarAssinatura(key){
     assin = { key, colab:c, link, hashOriginal, pdfBytes, jsDoc, total: jsDoc.numPages, pagina: pos.pagina,
               box:{ x:pos.x, y:pos.y, w:pos.w }, cssW:1, cssH:1 };
 
+    // localiza automaticamente o texto PARTICIPANTE / COLABORADOR e posiciona a caixa logo acima dele
+    try{
+      const ach = await acharCampoAssinatura(jsDoc, key);
+      if(ach){
+        assin.pagina = ach.pagina;
+        assin.box.x = ach.cx - assin.box.w / 2;
+        assin.box.y = ach.base - (assin.box.w * ach.pw / 3) / ach.ph;
+        assin.achouTexto = true;
+      }
+    }catch(e){ console.warn('Não foi possível localizar o campo de assinatura:', e); }
+
     document.getElementById('assinTitulo').textContent = `Assinar — ${textos.nome} — ${c.nome}`;
     document.getElementById('assinDica1').textContent =
-      `Toque no documento onde a assinatura deve ficar (${textos.campo}). Use "Maior/Menor" para ajustar o tamanho. A posição fica salva para os próximos documentos deste tipo.`;
+      `${assin.achouTexto ? "A caixa foi posicionada automaticamente acima do nome do campo. " : ""}Toque em "✍️ Assinar" no campo (${textos.campo}) para passar ao colaborador. Se o campo estiver fora do lugar, toque no documento para mover; use "Maior/Menor" para ajustar. A posição fica salva para os próximos documentos deste tipo.`;
     document.getElementById('assinEtapa1').style.display = 'block';
     document.getElementById('assinEtapa2').style.display = 'none';
     document.getElementById('modalAssinaturaOverlay').classList.add('open');
@@ -2136,6 +2171,38 @@ async function iniciarAssinatura(key){
   }
 }
 window.iniciarAssinatura = iniciarAssinatura;
+
+const ASSIN_TERMOS = { nr06:['PARTICIPANTE'], os:['COLABORADOR','FUNCIONARIO','TRABALHADOR','PARTICIPANTE'] };
+
+/* procura no PDF o rótulo do campo (ex.: PARTICIPANTE) e devolve onde fica a linha logo acima dele */
+async function acharCampoAssinatura(jsDoc, key){
+  const termos = ASSIN_TERMOS[key] || ['COLABORADOR','PARTICIPANTE'];
+  const norm = (t)=> (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  for(const termo of termos){
+    let melhor = null;
+    for(let n = 1; n <= jsDoc.numPages; n++){
+      const page = await jsDoc.getPage(n);
+      if(page.rotate) continue;
+      const vp = page.getViewport({ scale:1 });
+      const tc = await page.getTextContent();
+      tc.items.forEach(it=>{
+        const s = norm(it.str).trim();
+        if(!s || s.length > 40 || !s.includes(termo)) return;
+        const alt = it.height || Math.abs(it.transform[3]) || 10;
+        const cand = { pagina:n, pw:vp.width, ph:vp.height, cx:(it.transform[4] + (it.width || 0) / 2) / vp.width,
+                       topoTexto:(vp.height - (it.transform[5] + alt)) / vp.height, alt };
+        // vale o que está mais embaixo, na última página
+        if(!melhor || cand.pagina > melhor.pagina || (cand.pagina === melhor.pagina && cand.topoTexto > melhor.topoTexto)) melhor = cand;
+      });
+    }
+    if(melhor){
+      // a linha fica um pouco acima do texto: a base da caixa começa ~0,45 da altura da letra acima dele
+      melhor.base = melhor.topoTexto - (melhor.alt * 0.45) / melhor.ph;
+      return melhor;
+    }
+  }
+  return null;
+}
 
 async function renderPaginaAssinatura(){
   if(!assin) return;
@@ -2162,15 +2229,62 @@ async function renderPaginaAssinatura(){
   posicionarCaixa();
 }
 
+/* procura, no desenho do PDF, a linha horizontal de assinatura mais próxima da caixa */
+function achaLinhaAssinatura(){
+  try{
+    const c = document.getElementById('assinPdfCanvas');
+    const W = c.width, H = c.height, b = assin.box;
+    const boxW = b.w * W, boxH = boxW / 3;
+    const x0 = Math.floor(b.x * W + boxW * 0.2), x1 = Math.ceil(b.x * W + boxW * 0.8);
+    const yb = b.y * H + boxH;
+    const ya = Math.max(0, Math.floor(yb - boxH * 1.3)), yz = Math.min(H - 1, Math.ceil(yb + boxH * 1.0));
+    if(x1 - x0 < 10 || yz <= ya) return null;
+    const d = c.getContext('2d').getImageData(x0, ya, x1 - x0, yz - ya + 1).data;
+    const w = x1 - x0;
+    let melhor = null;
+    for(const limite of [150, 215]){          // 1º linha bem escura; 2º linha fina/clara
+      const linhas = [];
+      for(let r = 0; r <= yz - ya; r++){
+        let esc = 0;
+        for(let i = 0; i < w; i++){
+          const k = (r * w + i) * 4;
+          if(d[k + 3] > 0 && (d[k] * 0.3 + d[k + 1] * 0.59 + d[k + 2] * 0.11) < limite) esc++;
+        }
+        linhas.push(esc / w >= (limite < 200 ? 0.85 : 0.9));
+      }
+      for(let r = 0; r < linhas.length; r++){
+        if(linhas[r] && (r === 0 || !linhas[r - 1])){
+          const topo = ya + r;
+          // descarta linhas que cruzam quase a página inteira (moldura/borda do certificado)
+          const lin = c.getContext('2d').getImageData(0, Math.min(H - 1, topo + 1), W, 1).data;
+          let ini = Math.floor((x0 + x1) / 2), fim = ini;
+          const escuro = (i)=> lin[i * 4 + 3] > 0 && (lin[i * 4] * 0.3 + lin[i * 4 + 1] * 0.59 + lin[i * 4 + 2] * 0.11) < limite;
+          while(ini > 0 && escuro(ini - 1)) ini--;
+          while(fim < W - 1 && escuro(fim + 1)) fim++;
+          if((fim - ini) > W * 0.6) continue;
+          const alvo = b.y * H + boxH * 0.75;
+          if(melhor === null || Math.abs(topo - alvo) < Math.abs(melhor - alvo)) melhor = topo;
+        }
+      }
+      if(melhor !== null) break;
+    }
+    return melhor === null ? null : melhor / H;
+  }catch(e){ return null; }
+}
+
 function posicionarCaixa(){
   const b = assin.box;
   const hFrac = (b.w * assin.cssW / 3) / assin.cssH;
   b.x = Math.min(Math.max(b.x, 0), 1 - b.w);
   b.y = Math.min(Math.max(b.y, 0), 1 - hFrac);
+  const yLinha = achaLinhaAssinatura();
+  assin.naLinha = yLinha !== null;
+  if(assin.naLinha) b.y = Math.min(Math.max(yLinha - hFrac, 0), 1 - hFrac);
   const el = document.getElementById('assinBox');
   el.style.left = (b.x * 100) + '%';
   el.style.top = (b.y * 100) + '%';
   el.style.width = (b.w * 100) + '%';
+  el.classList.toggle('na-linha', !!assin.naLinha);
 }
 
 document.getElementById('assinPdfCanvas').addEventListener('click', (e)=>{
@@ -2210,6 +2324,7 @@ document.getElementById('assinContinuar').addEventListener('click', ()=>{
   requestAnimationFrame(inicializarPad);
 });
 
+document.getElementById('assinBoxBtn').addEventListener('click', (e)=>{ e.stopPropagation(); document.getElementById('assinContinuar').click(); });
 document.getElementById('assinVoltar').addEventListener('click', ()=>{
   document.getElementById('assinEtapa2').style.display = 'none';
   document.getElementById('assinEtapa1').style.display = 'block';
@@ -2314,7 +2429,7 @@ async function confirmarAssinatura(){
     const png = await pdfDoc.embedPng(sig.bytes);
     const esc = Math.min(boxW / sig.w, boxH / sig.h);
     const dw = sig.w * esc, dh = sig.h * esc;
-    pagina.drawImage(png, { x: boxX + (boxW - dw) / 2, y: boxY + (boxH - dh) / 2, width: dw, height: dh });
+    pagina.drawImage(png, { x: boxX + (boxW - dw) / 2, y: assin.naLinha ? boxY + 2 : boxY + (boxH - dh) / 2, width: dw, height: dh });
 
     // 2) carimbo discreto com quem assinou, quando e o código do documento original
     const fonte = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
@@ -2333,6 +2448,11 @@ async function confirmarAssinatura(){
 
     const signedBytes = await pdfDoc.save();
     const hashAssinado = await sha256Hex(signedBytes);
+
+    // 2b) guarda uma cópia do original sem assinatura, para permitir "Desfazer assinatura"
+    const { error: errBk } = await supabaseClient.storage.from('documentos')
+      .upload(`original/${assin.key}/${c.id}.pdf`, new Blob([assin.pdfBytes], { type:'application/pdf' }), { upsert:true, contentType:'application/pdf' });
+    if(errBk) throw new Error('não foi possível guardar a cópia do original: ' + errBk.message);
 
     // 3) guarda SÓ a versão assinada (sobrescreve o arquivo anterior)
     const caminho = `${assin.key}/${c.id}.pdf`;
@@ -2383,6 +2503,43 @@ async function confirmarAssinatura(){
   }
 }
 document.getElementById('assinConfirmar').addEventListener('click', confirmarAssinatura);
+
+/* ----- Desfazer assinatura: volta o documento original (sem assinatura) ----- */
+async function desfazerAssinatura(key){
+  const c = colaboradorDocsAtual;
+  if(!c) return;
+  const nomeDoc = (ASSIN_TEXTOS[key] && ASSIN_TEXTOS[key].nome) || key;
+  if(!confirm(`Desfazer a assinatura de ${c.nome} em "${nomeDoc}"?\n\nO documento volta para a versão sem assinatura e poderá ser assinado de novo.`)) return;
+  try{
+    const base = supabaseClient.storage.from('documentos').getPublicUrl(`original/${key}/${c.id}.pdf`).data.publicUrl;
+    const resp = await fetch(base + '?t=' + Date.now(), { cache:'no-store' });
+    if(!resp.ok){
+      toast('Não há cópia do original deste documento (ele foi assinado antes desta atualização). Use "Substituir" e anexe o original de novo.', 8000);
+      return;
+    }
+    const bytes = await resp.arrayBuffer();
+    const caminho = `${key}/${c.id}.pdf`;
+    const { error: errUp } = await supabaseClient.storage.from('documentos')
+      .upload(caminho, new Blob([bytes], { type:'application/pdf' }), { upsert:true, contentType:'application/pdf' });
+    if(errUp) throw errUp;
+    const novoLink = `${supabaseClient.storage.from('documentos').getPublicUrl(caminho).data.publicUrl}?v=${Date.now()}`;
+    const { error: errUpd } = await supabaseClient.from('colaboradores').update({ [`${key}_link`]: novoLink }).eq('id', c.id);
+    if(errUpd) throw errUpd;
+    // registra na trilha que a assinatura foi desfeita (se as colunas existirem)
+    try{
+      await supabaseClient.from('assinaturas').update({ desfeita_em: new Date().toISOString(), desfeita_por: document.getElementById('usuarioLogadoEmail').textContent })
+        .eq('colaborador_id', String(c.id)).eq('tipo_doc', key).is('desfeita_em', null);
+    }catch(e){ /* colunas ainda não criadas */ }
+    toast('Assinatura desfeita. O documento voltou sem assinatura.');
+    const id = c.id;
+    await loadColaboradores();
+    abrirDocumentos(id);
+  }catch(err){
+    console.error(err);
+    toast('Erro ao desfazer: ' + (err.message || err), 6000);
+  }
+}
+window.desfazerAssinatura = desfazerAssinatura;
 
 /* ---------- Anexar direto na tela "Ver Documentos" (já salva no colaborador) ---------- */
 document.addEventListener('change', async (e)=>{
@@ -2715,7 +2872,7 @@ document.getElementById('btnExportExcel').addEventListener('click', ()=>{
   if(ativos.length === 0){ toast('Não há colaboradores ativos para exportar.'); return; }
 
   const linhas = ativos.map(c => {
-    const statusOf = (campo, expira) => statusDocumento(c[`${campo}_data`], c[`${campo}_link`], expira).texto;
+    const statusOf = (campo, expira) => statusDocCampo(campo, c, { expira }).texto;
     return {
       'Nome Completo': c.nome,
       'CPF': c.cpf,
@@ -2778,7 +2935,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
   doc.text('Gestão de Segurança do Trabalho - Visão Geral por Colaborador', 14, 15);
 
   const linhas = ativos.map(c => {
-    const status = (campo, expira) => statusDocumento(c[`${campo}_data`], c[`${campo}_link`], expira).texto;
+    const status = (campo, expira) => statusDocCampo(campo, c, { expira }).texto;
     return [
       c.nome,
       c.cpf || '-',
@@ -2925,10 +3082,21 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
    ========================================================= */
 const ativosAbertos = new Set();
 
+/* status de um documento; a Ficha de EPI assinada no Controle de EPI conta como Em Dia */
+function statusDocCampo(campo, c, d){
+  if(campo === 'epi'){
+    const r = epiResumo[String(c.id)];
+    if(r && r.n && r.ass === r.n) return { chave:'ok', texto:'Assinado', classe:'ok', icone:'✔' };
+  }
+  const doc = d || DOC_FIELDS.find(x => x.key === campo);
+  return statusDocumento(c[campo + '_data'], c[campo + '_link'], doc ? doc.expira : true);
+}
+function statusDoc(d, c){ return statusDocCampo(d.key, c, d); }
+
 function situacaoColab(c){
   let bad = 0, outros = 0;
   DOC_FIELDS.forEach(d=>{
-    const s = statusDocumento(c[`${d.key}_data`], c[`${d.key}_link`], d.expira);
+    const s = statusDoc(d, c);
     if(s.chave === 'bad') bad++;
     else if(s.chave !== 'ok') outros++;
   });
@@ -2943,6 +3111,11 @@ function situacaoPills(r){
 
 function infoDocumento(d, c, s){
   const data = c[`${d.key}_data`];
+  if(d.key === 'epi'){
+    const r = epiResumo[String(c.id)];
+    if(r && r.n && r.ass === r.n) return `Ficha assinada · ${r.n} ${r.n === 1 ? 'item' : 'itens'}`;
+    if(r && r.n) return `Aguardando assinatura (${r.ass} de ${r.n} itens)`;
+  }
   if(s.chave === 'nodate') return 'Sem data cadastrada';
   if(!d.expira) return `Admitido em ${formatDataBR(data)}`;
   const dias = diffDias(data);
@@ -2958,10 +3131,10 @@ function detalheDocsHtml(c){
     : `<b>Todos os ${DOC_FIELDS.length} documentos</b> estão em dia.`;
   const cards = DOC_FIELDS.map(d=>{
     const link = c[`${d.key}_link`];
-    const s = statusDocumento(c[`${d.key}_data`], link, d.expira);
+    const s = statusDoc(d, c);
     let botoes = '';
     if(d.key === 'epi'){
-      botoes += `<button class="btn btn-sm primary" onclick="irParaEpi('${c.id}')">Abrir ficha de EPI</button>`;
+      botoes += `<button class="btn btn-sm primary" onclick="irParaEpi('${c.id}')">Abrir</button>`;
     } else {
       botoes += s.chave === 'nodate'
         ? `<button class="btn btn-sm primary" onclick="editarColaborador('${c.id}')">Cadastrar</button>`
@@ -3055,6 +3228,21 @@ async function epiBuscarTudo(tabela, colunas){
 }
 
 /* ---------- lista ---------- */
+/* carrega só o resumo das fichas (para a situação em Colaboradores Ativos e no Painel) */
+async function epiCarregarResumo(){
+  try{
+    const linhas = await epiBuscarTudo('epi_entregas', 'id,colaborador_id,data_entrega,assinado_em');
+    epiResumo = {};
+    linhas.forEach(l=>{
+      const r = epiResumo[l.colaborador_id] || (epiResumo[l.colaborador_id] = { n:0, ass:0, ultima:'' });
+      r.n++;
+      if(l.assinado_em) r.ass++;
+      if(l.data_entrega && l.data_entrega > r.ultima) r.ultima = l.data_entrega;
+    });
+    renderTudo();
+  }catch(err){ console.warn('Resumo de EPI indisponível:', err.message || err); }
+}
+
 async function loadEpi(){
   try{
     const linhas = await epiBuscarTudo('epi_entregas', 'id,colaborador_id,data_entrega,assinado_em');
@@ -3066,6 +3254,7 @@ async function loadEpi(){
       if(l.data_entrega && l.data_entrega > r.ultima) r.ultima = l.data_entrega;
     });
     epiErro = null;
+    renderTudo();
   }catch(err){
     epiResumo = {};
     epiErro = err.message || String(err);
@@ -3376,6 +3565,7 @@ async function epiSalvarFicha(silencioso){
       n: f.rows.length, ass: f.rows.filter(r => r.sig).length,
       ultima: f.rows.reduce((m, r) => (r.d && r.d > m ? r.d : m), '')
     };
+    renderTudo();
     if(!silencioso) toast('Ficha salva.');
     epiRenderFicha();
     return true;
