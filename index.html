@@ -3799,7 +3799,9 @@ async function gerarLinkAssinatura(tipo, colabId){
   }
   const { data, error } = await supabaseClient.rpc('criar_link_assinatura', { p_colab: String(colabId), p_tipo: tipo });
   if(error){ toast('Não foi possível gerar o link: ' + (error.message || error) + ' (se for a primeira vez, rode o supabase_links.sql no Supabase)', 9000); return; }
-  const url = new URL('assinar.html', location.href); url.search = ''; url.hash = data;
+  const slug = (t)=> (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const url = new URL('assinar.html', location.href); url.search = '';
+  url.hash = slug(c.nome).slice(0, 60) + '-' + { os:'os', nr06:'nr06', epi:'ficha-epi' }[tipo] + '_' + data;   // nome e documento só para leitura; o que vale é o código final
   const primeiro = (c.nome || '').split(' ')[0];
   const nomeDoc = LINK_NOMES[tipo];
   linkMsgAtual = `Olá ${primeiro}, segue o link para assinar ${nomeDoc} (vale por 24 horas): ${url.href}`;
