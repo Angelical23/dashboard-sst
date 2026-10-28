@@ -488,6 +488,7 @@
   .assin-box .pbtn{pointer-events:auto;font-size:12px;padding:4px 12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);}
   .assin-box.na-linha{border-style:solid;border-bottom:3px solid #16a34a;}
   .btn-linkass{margin-top:6px;width:100%;justify-content:center;font-size:12px;padding:5px 8px;}
+  .at-pills{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;}
   .kpi-icon.purple{background:#ede9fe;color:#6d28d9;}
   .kpi-value.purple{color:#6d28d9;}
   .kpi-sub{font-size:11.5px;color:#94a3b8;margin-top:3px;}
@@ -1080,6 +1081,19 @@
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR EXCLUSÃO -->
+<div class="modal-overlay" id="modalExcluirOverlay" style="z-index:160;">
+  <div class="modal" style="max-width:460px;">
+    <h2>Excluir colaborador</h2>
+    <p style="margin:10px 0;">Deseja realmente excluir <b id="excluirNome"></b> definitivamente?</p>
+    <p class="epi-hint">Essa ação não pode ser desfeita: o cadastro, os documentos anexados e as assinaturas dele serão apagados.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="excluirNao">Não</button>
+      <button type="button" class="btn" id="excluirSim" style="background:#dc2626;border-color:#dc2626;color:#fff;">Sim, excluir</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL ASSINATURA DA FICHA DE EPI -->
 <div class="modal-overlay" id="modalEpiAssinOverlay" style="z-index:140;">
   <div class="modal" style="max-width:560px;">
@@ -1580,7 +1594,7 @@ function renderTabelaInativos(){
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum colaborador inativo encontrado.</td></tr>'; return; }
   tbody.innerHTML = filtrados.map(c => `<tr>
     <td><div class="colab-avatar">${iniciais(c.nome)}</div></td><td><div class="nome-riscado">${c.nome}</div><div class="sub-inativo">Inativo</div></td><td>${formatCPF(c.cpf)}</td><td>${c.local || '-'}</td><td>${formatDataBR(c.data_desligamento)}</td><td><span class="status-pill inactive">${c.motivo_desligamento || 'Não informado'}</span></td>
-    <td><button class="pill-arquivado" onclick="abrirDocumentos('${c.id}')">📦 Arquivado</button></td><td class="acoes"><button class="btn-reativar-outline" onclick="reativarColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">↻ Reativar</button><span title="Excluir definitivamente" onclick="excluirColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">🗑️</span></td>
+    <td><button class="pill-arquivado" onclick="abrirDocumentos('${c.id}')">📦 Arquivado</button></td><td class="acoes"><span title="Excluir definitivamente" onclick="excluirColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">🗑️</span></td>
   </tr>`).join('');
 }
 
@@ -1818,13 +1832,45 @@ async function reativarColaborador(id,nome){
 window.reativarColaborador=reativarColaborador;
 
 /* ---------- Excluir colaborador ---------- */
-async function excluirColaborador(id, nome){
-  if(!confirm(`Excluir "${nome}" definitivamente? Essa ação não pode ser desfeita.`)) return;
-  const { error } = await supabaseClient.from('colaboradores').delete().eq('id', id);
-  if(error){ toast('Erro ao excluir: ' + error.message); return; }
-  toast('Colaborador excluído.');
-  loadColaboradores();
+let excluirPendente = null;
+
+/* abre a confirmação (Sim / Não); a exclusão só acontece no "Sim" */
+function excluirColaborador(id, nome){
+  excluirPendente = { id, nome };
+  document.getElementById('excluirNome').textContent = nome;
+  document.getElementById('modalExcluirOverlay').classList.add('open');
 }
+function fecharExcluir(){
+  document.getElementById('modalExcluirOverlay').classList.remove('open');
+  excluirPendente = null;
+}
+document.getElementById('excluirNao').addEventListener('click', fecharExcluir);
+document.getElementById('modalExcluirOverlay').addEventListener('click', (e)=>{ if(e.target.id === 'modalExcluirOverlay') fecharExcluir(); });
+document.getElementById('excluirSim').addEventListener('click', async ()=>{
+  if(!excluirPendente) return;
+  const { id } = excluirPendente;
+  const btn = document.getElementById('excluirSim');
+  btn.disabled = true; btn.textContent = 'Excluindo...';
+  try{
+    const c = colaboradores.find(x => String(x.id) === String(id));
+    // arquivos anexados (best effort): apaga do Storage junto com o cadastro
+    if(c){
+      const caminhos = DOC_FIELDS.map(d => c[`${d.key}_link`]).filter(Boolean).map(caminhoStorageDoLink).filter(Boolean);
+      if(caminhos.length){ try{ await supabaseClient.storage.from('documentos').remove(caminhos); }catch(e){ console.warn(e); } }
+    }
+    // dados ligados ao colaborador (fichas de EPI, assinaturas e links): best effort
+    for(const t of ['epi_entregas', 'epi_fichas', 'assinaturas', 'assinatura_links']){
+      try{ await supabaseClient.from(t).delete().eq('colaborador_id', String(id)); }catch(e){ console.warn(e); }
+    }
+    const { error } = await supabaseClient.from('colaboradores').delete().eq('id', id);
+    if(error){ toast('Erro ao excluir: ' + error.message); return; }
+    toast('Colaborador excluído.');
+    fecharExcluir();
+    loadColaboradores();
+  }finally{
+    btn.disabled = false; btn.textContent = 'Sim, excluir';
+  }
+});
 window.excluirColaborador = excluirColaborador;
 
 /* ---------- Editar colaborador ---------- */
@@ -3017,19 +3063,24 @@ function statusDocCampo(campo, c, d){
 function statusDoc(d, c){ return statusDocCampo(d.key, c, d); }
 
 function situacaoColab(c){
-  let bad = 0, outros = 0;
+  const r = { ok:0, warn:0, bad:0, nodate:0 };
   DOC_FIELDS.forEach(d=>{
     const s = statusDoc(d, c);
-    if(s.chave === 'bad') bad++;
-    else if(s.chave !== 'ok') outros++;
+    r[s.chave]++;
   });
-  return { bad, outros, total: bad + outros };
+  r.total = r.warn + r.bad + r.nodate;      // documentos que precisam de atenção
+  r.outros = r.warn + r.nodate;
+  return r;
 }
 
+/* um selo por situação, um embaixo do outro, com a quantidade de documentos */
 function situacaoPills(r){
-  if(!r.total) return '<span class="status-pill ok">✔ Em Dia</span>';
-  return (r.bad ? `<span class="status-pill bad">Vencido (${r.bad})</span>` : '')
-       + (r.outros ? `<span class="status-pill nodate">Pendente (${r.outros})</span>` : '');
+  const p = [];
+  if(r.ok)     p.push(`<span class="status-pill ok">✔ Em Dia (${r.ok})</span>`);
+  if(r.warn)   p.push(`<span class="status-pill warn">⚠ Vencendo (${r.warn})</span>`);
+  if(r.bad)    p.push(`<span class="status-pill bad">⛔ Vencido (${r.bad})</span>`);
+  if(r.nodate) p.push(`<span class="status-pill nodate">⏳ Pendente (${r.nodate})</span>`);
+  return `<span class="at-pills">${p.join('')}</span>`;
 }
 
 function infoDocumento(d, c, s){
