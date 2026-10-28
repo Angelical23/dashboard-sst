@@ -90,7 +90,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persi
 if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
 const $ = (id)=> document.getElementById(id);
-const token = (location.hash || '').replace('#', '').trim();
+const _m = (location.hash || '').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);   // o link traz o nome antes do código
+const token = _m ? _m[0].toLowerCase() : '';
 const NOMES = { os:'OS - Ordem de Serviço', nr06:'Certificado NR06', epi:'Ficha de EPI' };
 const DECL = {
   os:'Declaro que recebi, li e estou ciente do conteúdo desta Ordem de Serviço.',
