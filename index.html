@@ -150,7 +150,7 @@
     padding:0;
   }
 
-  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:20px;}
+  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
   .kpi-card{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;}
   .kpi-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
   .kpi-icon.blue{background:#e3edf1;color:var(--azul-header);}
@@ -488,6 +488,14 @@
   .assin-box .pbtn{pointer-events:auto;font-size:12px;padding:4px 12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);}
   .assin-box.na-linha{border-style:solid;border-bottom:3px solid #16a34a;}
   .btn-linkass{margin-top:6px;width:100%;justify-content:center;font-size:12px;padding:5px 8px;}
+  .kpi-icon.purple{background:#ede9fe;color:#6d28d9;}
+  .kpi-value.purple{color:#6d28d9;}
+  .kpi-sub{font-size:11.5px;color:#94a3b8;margin-top:3px;}
+  .kpi-card.kpi-destaque{border:2px solid #115266;background:#eaf5f8;box-shadow:0 2px 10px rgba(17,82,102,.18);}
+  .kpi-card.kpi-destaque .kpi-value{color:#115266;font-size:30px;}
+  .pill-ativos{display:none;background:#115266;color:#fff;font-weight:700;font-size:15px;padding:7px 16px;border-radius:999px;white-space:nowrap;}
+  .pill-ativos b{font-size:19px;margin-right:4px;}
+  .num-dest{background:#115266;color:#fff;font-weight:700;padding:1px 8px;border-radius:999px;font-size:12.5px;}
 </style>
 </head>
 <body>
@@ -597,6 +605,7 @@
             <option value="">Todos os locais</option>
           </select>
           <button class="btn-limpar-filtro" id="btnLimparFiltroPainel">Limpar filtro</button>
+          <span class="pill-ativos" id="painelPillAtivos"></span>
         </div>
         <div class="chart-info" id="painelFiltroInfo" style="margin:0;"></div>
       </div>
@@ -621,6 +630,10 @@
         <div class="kpi-card">
           <div class="kpi-icon gray">📝</div>
           <div><div class="kpi-label">Documentos Pendentes (sem data)</div><div class="kpi-value gray" id="kpiSemData">–</div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon purple">✍️</div>
+          <div><div class="kpi-label">Aguardando Assinatura</div><div class="kpi-value purple" id="kpiAguardando">–</div><div class="kpi-sub" id="kpiAguardandoSub"></div></div>
         </div>
       </div>
 
@@ -658,29 +671,6 @@
             <div class="pie-canvas-holder"><canvas id="pieChart"></canvas></div>
             <div class="legend" id="pieLegend"></div>
           </div>
-        </div>
-      </div>
-
-      <!-- Lista de colaboradores com pendência (aparece só quando um local está selecionado) -->
-      <div class="table-panel" id="painelListaLocal" style="display:none;margin-top:16px;">
-        <div class="table-header">
-          <h3 id="painelListaTitulo">Colaboradores com pendência</h3>
-          <span class="header-sub" id="painelListaSub"></span>
-        </div>
-        <div class="table-scroll">
-          <table style="min-width:900px;">
-            <thead>
-              <tr>
-                <th>COLABORADOR</th>
-                <th>CPF</th>
-                <th style="text-align:center;">Pendentes</th>
-                <th style="text-align:center;">Vencidos</th>
-                <th style="text-align:center;">Vencendo</th>
-                <th>Documentos com problema</th>
-              </tr>
-            </thead>
-            <tbody id="painelListaBody"></tbody>
-          </table>
         </div>
       </div>
 
@@ -1479,52 +1469,20 @@ function renderPainel(){
   const ativos = colaboradores.filter(c => c.status !== 'INATIVO' && doLocal(c));
   const inativos = colaboradores.filter(c => c.status === 'INATIVO' && doLocal(c));
 
-  document.getElementById('painelFiltroInfo').textContent = localSel
-    ? `Exibindo apenas "${localSel}" — ${ativos.length} ativo(s) e ${inativos.length} desligado(s)`
+  document.getElementById('painelFiltroInfo').innerHTML = localSel
+    ? `Exibindo apenas "${localSel}" — <span class="num-dest">${ativos.length} ativo(s)</span> e ${inativos.length} desligado(s)`
     : `Exibindo todos os locais — ${ativos.length} ativos e ${inativos.length} desligados`;
+  const pill = document.getElementById('painelPillAtivos');
+  pill.style.display = localSel ? 'inline-block' : 'none';
+  pill.innerHTML = `👥 <b>${ativos.length}</b> ${ativos.length === 1 ? 'ativo' : 'ativos'} neste local`;
+  document.getElementById('kpiTotal').closest('.kpi-card').classList.toggle('kpi-destaque', !!localSel);
 
   renderKpis(ativos, inativos);
   renderGraficos(ativos, inativos);
   renderListaLocal(ativos, localSel);
 }
 
-function renderListaLocal(ativos, localSel){
-  const painel = document.getElementById('painelListaLocal');
-  if(!localSel){ painel.style.display = 'none'; return; }
-  painel.style.display = 'block';
-
-  const linhas = ativos.map(c=>{
-    let pend = 0, venc = 0, vcdo = 0;
-    const chips = [];
-    DOC_FIELDS.forEach(d=>{
-      const s = statusDoc(d, c);
-      if(s.chave === 'nodate') pend++;
-      else if(s.chave === 'warn') venc++;
-      else if(s.chave === 'bad') vcdo++;
-      if(s.chave !== 'ok') chips.push(`<span class="doc-chip ${s.classe}">${d.label}: ${s.texto}</span>`);
-    });
-    return { c, pend, venc, vcdo, chips };
-  })
-  .filter(x => x.chips.length)
-  .sort((a,b)=> (b.vcdo*3 + b.venc*2 + b.pend) - (a.vcdo*3 + a.venc*2 + a.pend) || a.c.nome.localeCompare(b.c.nome,'pt-BR'));
-
-  document.getElementById('painelListaTitulo').textContent = `Colaboradores com pendência — ${localSel}`;
-  document.getElementById('painelListaSub').textContent = `${linhas.length} de ${ativos.length} colaboradores ativos • clique no nome para ver os documentos`;
-
-  const tbody = document.getElementById('painelListaBody');
-  if(!linhas.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum colaborador com pendência neste local. 🎉</td></tr>';
-    return;
-  }
-  tbody.innerHTML = linhas.map(x=>`<tr>
-    <td><span class="link-colab" onclick="abrirDocumentos('${x.c.id}')">${x.c.nome}</span></td>
-    <td>${formatCPF(x.c.cpf)}</td>
-    <td class="num-col" style="color:#64748b;">${x.pend}</td>
-    <td class="num-col" style="color:#dc2626;">${x.vcdo}</td>
-    <td class="num-col" style="color:#d97706;">${x.venc}</td>
-    <td style="white-space:normal;">${x.chips.join('')}</td>
-  </tr>`).join('');
-}
+function renderListaLocal(){ /* a lista de colaboradores com pendência foi retirada do Painel Geral */ }
 
 document.getElementById('painelFiltroLocal').addEventListener('change', renderPainel);
 document.getElementById('btnLimparFiltroPainel').addEventListener('click', ()=>{
@@ -1646,6 +1604,9 @@ function renderKpis(ativos, inativos){
   document.getElementById('kpiVencendo').textContent = pctDocs(docsVencendo);
   document.getElementById('kpiVencidos').textContent = pctDocs(docsVencidos);
   document.getElementById('kpiSemData').textContent = pctDocs(docsSemData);
+  const ag = contaAguardandoAssinatura(ativos);
+  document.getElementById('kpiAguardando').textContent = ag.total;
+  document.getElementById('kpiAguardandoSub').textContent = `OS ${ag.os} · NR06 ${ag.nr06} · Ficha de EPI ${ag.epi}`;
 
   const agora=new Date(), ano=agora.getFullYear(), mes=agora.getMonth();
   const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -3202,6 +3163,7 @@ async function epiCarregarResumo(){
       if(l.assinado_em) r.ass++;
       if(l.data_entrega && l.data_entrega > r.ultima) r.ultima = l.data_entrega;
     });
+    await painelCarregarAssinaturas();
     renderTudo();
   }catch(err){ console.warn('Resumo de EPI indisponível:', err.message || err); }
 }
@@ -3801,7 +3763,7 @@ async function gerarLinkAssinatura(tipo, colabId){
   if(error){ toast('Não foi possível gerar o link: ' + (error.message || error) + ' (se for a primeira vez, rode o supabase_links.sql no Supabase)', 9000); return; }
   const slug = (t)=> (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const url = new URL('assinar.html', location.href); url.search = '';
-  url.hash = slug(c.nome).slice(0, 60) + '-' + { os:'os', nr06:'nr06', epi:'ficha-epi' }[tipo] + '_' + data;   // nome e documento só para leitura; o que vale é o código final
+  url.hash = slug(c.nome).slice(0, 60) + '-' + data;      // nome do colaborador + código curto
   const primeiro = (c.nome || '').split(' ')[0];
   const nomeDoc = LINK_NOMES[tipo];
   linkMsgAtual = `Olá ${primeiro}, segue o link para assinar ${nomeDoc} (vale por 24 horas): ${url.href}`;
@@ -3830,6 +3792,35 @@ document.getElementById('linkCopiar').addEventListener('click', async ()=>{
 document.getElementById('linkCompartilhar').addEventListener('click', ()=>{
   if(navigator.share) navigator.share({ text: linkMsgAtual }).catch(()=>{});
 });
+
+
+/* =========================================================
+   PAINEL — documentos aguardando assinatura
+   ========================================================= */
+let assinadosSet = new Set();
+
+/* guarda quais documentos (OS / NR06) já têm assinatura registrada para o arquivo atual */
+async function painelCarregarAssinaturas(){
+  try{
+    const linhas = await epiBuscarTudo('assinaturas', 'colaborador_id,tipo_doc,link_assinado');
+    assinadosSet = new Set(linhas.map(a => `${a.colaborador_id}|${a.tipo_doc}|${a.link_assinado}`));
+  }catch(e){ assinadosSet = new Set(); console.warn('Assinaturas indisponíveis:', e.message || e); }
+}
+
+function contaAguardandoAssinatura(lista){
+  const r = { os:0, nr06:0, epi:0, total:0 };
+  lista.forEach(c=>{
+    ['os', 'nr06'].forEach(k=>{
+      const link = c[`${k}_link`];
+      if(link && !assinadosSet.has(`${c.id}|${k}|${link}`)) r[k]++;
+    });
+    const f = epiResumo[String(c.id)];
+    if(f && f.n){ if(f.ass < f.n) r.epi++; }
+    else if(c.epi_link) r.epi++;          // ficha anexada (Word/PDF) que ainda não foi assinada no sistema
+  });
+  r.total = r.os + r.nr06 + r.epi;
+  return r;
+}
 
 atualizarMigalha();
 </script>
