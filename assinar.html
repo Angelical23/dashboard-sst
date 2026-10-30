@@ -90,8 +90,10 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persi
 if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
 const $ = (id)=> document.getElementById(id);
-const _m = (location.hash || '').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);   // o link traz o nome antes do código
-const token = _m ? _m[0].toLowerCase() : '';
+const _h = (location.hash || '').replace('#', '').trim();
+const _mUuid = _h.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);   // links antigos (código comprido)
+const _mCurto = _h.match(/(?:^|-)([0-9a-f]{10})$/i);                                        // nome-do-colaborador-codigo
+let token = _mUuid ? _mUuid[0].toLowerCase() : '';
 const NOMES = { os:'OS - Ordem de Serviço', nr06:'Certificado NR06', epi:'Ficha de EPI' };
 const DECL = {
   os:'Declaro que recebi, li e estou ciente do conteúdo desta Ordem de Serviço.',
@@ -127,6 +129,11 @@ const dataBR = (iso)=>{ if(!iso) return ''; const p = String(iso).slice(0,10).sp
 
 /* ---------------- início ---------------- */
 async function iniciar(){
+  if(!token && _mCurto){
+    const { data: t, error: eR } = await sb.rpc('link_resolver', { p_codigo: _mCurto[1] });
+    if(eR){ mensagem('Não foi possível abrir', 'Verifique sua conexão e tente de novo. (' + eR.message + ')'); return; }
+    if(t) token = t;
+  }
   if(!/^[0-9a-f-]{36}$/i.test(token)){ mensagem('Link inválido', MOTIVOS.invalido); return; }
   const { data, error } = await sb.rpc('link_info', { p_token: token });
   if(error){ mensagem('Não foi possível abrir', 'Verifique sua conexão e tente de novo. (' + error.message + ')'); return; }
@@ -289,9 +296,17 @@ async function prepararAssinatura(){
   if(!link){ mensagem('Documento indisponível', 'O documento não está anexado. Peça ao seu responsável.'); return; }
   const ext = link.split('?')[0].split('.').pop().toLowerCase();
   if(!['pdf','jpg','jpeg','png'].includes(ext)){ mensagem('Formato não suportado', 'O documento precisa ser PDF, JPG ou PNG. Peça ao seu responsável.'); return; }
-  const resp = await fetch(link, { cache:'no-store' });
-  if(!resp.ok) throw new Error('não foi possível baixar o documento (' + resp.status + ')');
-  const origBuf = await resp.arrayBuffer();
+  const mCam = link.split('?')[0].match(/\/object\/public\/documentos\/(.+)$/);
+  let origBuf;
+  if(mCam){
+    const { data: blob, error: eDown } = await sb.storage.from('documentos').download(decodeURIComponent(mCam[1]));
+    if(eDown || !blob) throw new Error('não foi possível baixar o documento');
+    origBuf = await blob.arrayBuffer();
+  } else {
+    const resp = await fetch(link, { cache:'no-store' });
+    if(!resp.ok) throw new Error('não foi possível baixar o documento (' + resp.status + ')');
+    origBuf = await resp.arrayBuffer();
+  }
   hashOriginal = await sha256Hex(origBuf);
   pdfBytes = ext === 'pdf' ? new Uint8Array(origBuf.slice(0)) : await imagemParaPdf(origBuf, ext);
   const jsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
