@@ -503,6 +503,18 @@
   .pill-ativos{display:none;background:#115266;color:#fff;font-weight:700;font-size:15px;padding:7px 16px;border-radius:999px;white-space:nowrap;}
   .pill-ativos b{font-size:19px;margin-right:4px;}
   .num-dest{background:#115266;color:#fff;font-weight:700;padding:1px 8px;border-radius:999px;font-size:12.5px;}
+
+  /* ---------- Perfil Líder: somente consulta ---------- */
+  body.lider #btnAbrirNovo, body.lider #btnAbrirAnexar, body.lider label[for="inputImport"], body.lider #btnNovoTreinamento,
+  body.lider [onclick^="assinarDireto"], body.lider [onclick^="gerarLinkAssinatura"], body.lider [onclick^="editarColaborador"],
+  body.lider [onclick^="abrirModalDesligar"], body.lider [onclick^="excluirColaborador"], body.lider [onclick^="reativarColaborador"],
+  body.lider [onclick^="editarTreinamento"], body.lider [onclick^="excluirTreinamento"], body.lider [onclick^="iniciarAssinatura"],
+  body.lider [onclick^="epiAbrirFicha('')"], body.lider label[for^="anexoVer_"], body.lider .btn-assinar, body.lider .btn-linkass,
+  body.lider .epi-bar button:not([onclick^="epiVoltar"]):not([onclick^="epiImprimir"]):not([onclick^="epiVerAnexo"]),
+  body.lider #epiPaper .pbtn, body.lider #epiPaper .epi-np, body.lider #epiPaper .xx{display:none !important;}
+  body.lider #epiPaper input, body.lider #epiPaper select{pointer-events:none;}
+  .perfil-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;padding:1px 7px;border-radius:999px;background:#0e3342;color:#7dd3fc;margin-left:6px;vertical-align:middle;}
+  .acessos-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--cinza-texto);margin-bottom:14px;line-height:1.55;}
 </style>
 </head>
 <body>
@@ -582,6 +594,15 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
           </span>
           Treinamentos
+        </span>
+      </button>
+
+      <button class="side-link" data-view="acessos" id="navAcessos" style="display:none;">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          Acessos e perfis
         </span>
       </button>
     </nav>
@@ -788,6 +809,22 @@
       </div>
     </section>
 
+    <!-- VIEW: ACESSOS E PERFIS -->
+    <section id="viewAcessos" style="display:none;">
+      <div class="view-header"><div><h1>Acessos e perfis</h1>
+        <div class="epi-sub">Defina quem é Administrador e quem é Líder.</div></div></div>
+      <div class="acessos-box">
+        <b>Administrador:</b> vê e edita tudo (inclusive CPF e arquivo do ASO).<br>
+        <b>Líder:</b> somente consulta. Não vê o CPF nem abre/baixa o arquivo do ASO (vê apenas o status) e não altera nada.<br>
+        <b>Criar um login novo:</b> no Supabase, vá em Authentication &gt; Users &gt; Add user. O novo usuário entra como <b>Líder</b>; depois ajuste o perfil aqui.
+      </div>
+      <div class="table-panel">
+        <div class="table-header"><h3>USUÁRIOS</h3></div>
+        <div class="table-scroll"><table class="tbl-ativos"><thead><tr><th>USUÁRIO (E-MAIL)</th><th>PERFIL</th><th>ÚLTIMO ACESSO</th></tr></thead>
+          <tbody id="acessosBody"><tr><td colspan="3" class="empty">Carregando...</td></tr></tbody></table></div>
+      </div>
+    </section>
+
     <!-- VIEW: CONTROLE DE EPI -->
     <section id="viewEpi" style="display:none;">
       <div id="epiTelaLista">
@@ -827,10 +864,11 @@
                   <th>ITENS</th>
                   <th>ÚLTIMA ENTREGA</th>
                   <th>ASSINATURA</th>
+                  <th>LINK DE ASSINATURA</th>
                   <th>Ações</th>
                 </tr>
               </thead>
-              <tbody id="epiCorpo"><tr><td colspan="8" class="loading">Carregando fichas...</td></tr></tbody>
+              <tbody id="epiCorpo"><tr><td colspan="9" class="loading">Carregando fichas...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1277,8 +1315,46 @@ function mostrarApp(session){
   loginScreen.style.display = 'none';
   appContainer.style.display = 'block';
   document.getElementById('usuarioLogadoEmail').textContent = session.user.email.split('@')[0];
-  loadColaboradores();
+  carregarPerfil(session).then(()=> loadColaboradores());
 }
+
+/* ===== Perfis: administrador x líder (a proteção de verdade está no banco; aqui só ajustamos a tela) ===== */
+let perfilAtual = 'lider';
+const ehAdmin = ()=> perfilAtual === 'admin';
+async function carregarPerfil(session){
+  let papel = 'lider';
+  try{
+    const { data, error } = await supabaseClient.from('perfis').select('papel').eq('user_id', session.user.id).maybeSingle();
+    if(error){
+      // tabela ainda não criada (SQL dos perfis não rodou): mantém o comportamento antigo
+      if(/does not exist|PGRST205|42P01/i.test((error.code || '') + ' ' + (error.message || ''))) papel = 'admin';
+      else console.warn('Perfil indisponível:', error.message);
+    } else if(data && data.papel) papel = data.papel;
+  }catch(e){ console.warn(e); }
+  perfilAtual = papel;
+  document.body.classList.toggle('lider', papel !== 'admin');
+  const nav = document.getElementById('navAcessos');
+  if(nav) nav.style.display = papel === 'admin' ? '' : 'none';
+  const el = document.getElementById('usuarioLogadoEmail');
+  if(el && !el.querySelector('.perfil-tag')) el.insertAdjacentHTML('beforeend', `<span class="perfil-tag">${papel === 'admin' ? 'ADMIN' : 'LÍDER'}</span>`);
+  if(papel !== 'admin' && viewAtual === 'acessos') mostrarView('painel');
+}
+
+async function carregarAcessos(){
+  const tb = document.getElementById('acessosBody');
+  const { data, error } = await supabaseClient.rpc('listar_acessos');
+  if(error){ tb.innerHTML = `<tr><td colspan="3" class="empty">Não foi possível listar (${error.message}). Rode o arquivo supabase_perfis.sql no Supabase.</td></tr>`; return; }
+  const esc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  tb.innerHTML = (data || []).map(u => `<tr><td><b>${esc(u.email)}</b></td>
+    <td><select onchange="mudarPapel('${u.user_id}', this)"><option value="admin"${u.papel === 'admin' ? ' selected' : ''}>Administrador</option><option value="lider"${u.papel === 'lider' ? ' selected' : ''}>Líder</option></select></td>
+    <td>${u.ultimo_acesso ? new Date(u.ultimo_acesso).toLocaleString('pt-BR') : 'nunca entrou'}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">Nenhum usuário.</td></tr>';
+}
+async function mudarPapel(id, sel){
+  const { error } = await supabaseClient.rpc('definir_papel', { p_user: id, p_papel: sel.value });
+  if(error){ toast('Não foi possível alterar: ' + error.message, 6000); carregarAcessos(); return; }
+  toast('Perfil atualizado.');
+}
+window.mudarPapel = mudarPapel;
 
 function mostrarLogin(){
   appContainer.style.display = 'none';
@@ -1349,9 +1425,10 @@ const VIEWS = {
   colaboradores: document.getElementById('viewColaboradores'),
   inativos: document.getElementById('viewInativos'),
   epi: document.getElementById('viewEpi'),
-  treinamentos: document.getElementById('viewTreinamentos')
+  treinamentos: document.getElementById('viewTreinamentos'),
+  acessos: document.getElementById('viewAcessos')
 };
-const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', treinamentos:'Treinamentos' };
+const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', treinamentos:'Treinamentos', acessos:'Acessos e perfis' };
 let viewAtual = 'painel';
 
 function atualizarMigalha(){
@@ -1370,6 +1447,7 @@ function mostrarView(alvo){
     treinamentosCarregados = true;
     loadTreinamentos();
   }
+  if(alvo === 'acessos') carregarAcessos();
   if(alvo === 'epi'){
     if(typeof epiTela !== 'undefined' && epiTela === 'lista') loadEpi();
   }
@@ -1427,14 +1505,17 @@ function iniciais(nome){
   return nome.split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase();
 }
 
-function formatCPF(cpf){ return cpf || "-"; }
+function formatCPF(cpf){ return cpf || (perfilAtual !== "admin" ? "•••.•••.•••-••" : "-"); }
 
 /* ---------- Carregar dados do Supabase ---------- */
 async function loadColaboradores(){
-  const { data, error } = await supabaseClient
-    .from('colaboradores')
+  let { data, error } = await supabaseClient
+    .from('colaboradores_v')
     .select('*')
     .order('nome', { ascending: true });
+  if(error && /does not exist|PGRST205|42P01/i.test((error.code || '') + ' ' + (error.message || ''))){
+    ({ data, error } = await supabaseClient.from('colaboradores').select('*').order('nome', { ascending: true }));
+  }
 
   if(error){
     document.getElementById('tableBody').innerHTML =
@@ -1981,6 +2062,12 @@ async function selecionarDocumento(el){
   const linkBtn = document.getElementById('docsPreviewLink');
   const downloadBtn = document.getElementById('docsDownloadLink');
   downloadBtn.setAttribute('download', ''); downloadBtn.textContent = '⬇ Baixar para editar';
+  if(link === 'protegido'){
+    frame.style.display = 'none'; frame.src = ''; linkBtn.style.display = 'none'; downloadBtn.style.display = 'none';
+    empty.style.display = 'block';
+    empty.textContent = '🔒 Documento de saúde: o arquivo é restrito a administradores. O status acima continua visível.';
+    return;
+  }
   if(link === '__epi_digital__') return epiPreviewDigital(el);
 
   if(!link){
@@ -3048,7 +3135,7 @@ document.getElementById('btnExportExcel').addEventListener('click', ()=>{
 
       'Status ASO': statusOf('aso', true),
       'Data Vencimento ASO': c.aso_data || '',
-      'Link ASO': c.aso_link || '',
+      'Link ASO': (c.aso_link && c.aso_link !== 'protegido') ? c.aso_link : '',
 
       'Status OS - Ordem de Serviço': statusOf('os', true),
       'Data OS': c.os_data || '',
@@ -3485,15 +3572,18 @@ function epiRenderLista(){
   });
 
   const tbody = document.getElementById('epiCorpo');
-  if(!lista.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum colaborador encontrado.</td></tr>'; return; }
+  if(!lista.length){ tbody.innerHTML = '<tr><td colspan="9" class="empty">Nenhum colaborador encontrado.</td></tr>'; return; }
   tbody.innerHTML = lista.map(c=>{
     const s = epiSituacao(c.id);
+    const rs = epiResumo[String(c.id)] || {};
+    const pend = (rs.n || 0) - (rs.ass || 0);
     return `<tr>
       <td style="width:48px"><div class="colab-avatar">${iniciais(c.nome)}</div></td>
       <td><b>${c.nome}</b><div class="sub-local" style="display:block;">${formatCPF(c.cpf)}</div></td>
       <td class="col-loc">${c.local || '-'}</td><td>${c.funcao || '-'}</td>
       <td>${s.n}</td><td>${s.ultima ? epiDataBR(s.ultima) : '—'}</td><td class="at-sit">${s.html}</td>
-      <td><button class="btn btn-sm${s.n ? '' : ' primary'}" onclick="epiAbrirFicha('${c.id}')">${s.n ? 'Abrir ficha' : (s.k === 'anexo' ? 'Importar e abrir' : 'Criar ficha')}</button></td>
+      <td>${pend > 0 ? `<button class="btn btn-sm" onclick="epiEnviarLink('${c.id}')">🔗 Enviar link (${pend})</button>` : '<span style="color:#94a3b8;">—</span>'}</td>
+      <td>${(!ehAdmin() && !s.n) ? '<span style="color:#94a3b8;">—</span>' : `<button class="btn btn-sm${s.n ? '' : ' primary'}" onclick="epiAbrirFicha('${c.id}')">${s.n ? 'Abrir ficha' : (s.k === 'anexo' ? 'Importar e abrir' : 'Criar ficha')}</button>`}</td>
     </tr>`;
   }).join('');
 }
@@ -4026,10 +4116,10 @@ window.irParaEpi = irParaEpi;
 const LINK_NOMES = { os:'a OS - Ordem de Serviço', nr06:'o Certificado NR06', epi:'a Ficha de EPI' };
 let linkMsgAtual = '';
 
-async function gerarLinkAssinatura(tipo, colabId){
+async function gerarLinkAssinatura(tipo, colabId, semSalvar){
   const c = epiColab(colabId);
   if(!c){ toast('Colaborador não encontrado.'); return; }
-  if(tipo === 'epi'){
+  if(tipo === 'epi' && !semSalvar){
     const ok = await epiSalvarFicha(true);       // grava as linhas antes de gerar o link
     if(!ok) return;
   }
@@ -4049,6 +4139,8 @@ async function gerarLinkAssinatura(tipo, colabId){
   document.getElementById('modalLinkOverlay').classList.add('open');
 }
 window.gerarLinkAssinatura = gerarLinkAssinatura;
+function epiEnviarLink(id){ return gerarLinkAssinatura('epi', id, true); }
+window.epiEnviarLink = epiEnviarLink;
 
 function epiGerarLink(){
   if(!epiFicha || !epiFicha.colabId){ toast('Escolha o colaborador primeiro.'); return; }
