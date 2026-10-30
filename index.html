@@ -485,6 +485,12 @@
     body.imprimindo-epi #epiPaper .sigs{page-break-inside:avoid;break-inside:avoid;}
     body.imprimindo-epi #epiPaper h3{page-break-after:avoid;break-after:avoid;}
   }
+
+  /* coluna Ações alinhada com a linha do nome */
+  td.acoes{display:table-cell !important;vertical-align:middle;white-space:nowrap;}
+  td.acoes>span,td.acoes>button{display:inline-flex;align-items:center;vertical-align:middle;margin-right:12px;}
+  td.acoes>*:last-child{margin-right:0;}
+  .tbl-ativos tbody td{vertical-align:middle;}
   .assin-box .pbtn{pointer-events:auto;font-size:12px;padding:4px 12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);}
   .assin-box.na-linha{border-style:solid;border-bottom:3px solid #16a34a;}
   .btn-linkass{margin-top:6px;width:100%;justify-content:center;font-size:12px;padding:5px 8px;}
@@ -1907,13 +1913,14 @@ function abrirDocumentos(id){
   const listEl = document.getElementById('docsList');
   listEl.innerHTML = DOC_FIELDS.map(d=>{
     const link = c[`${d.key}_link`] || '';
+    const epiDig = d.key === 'epi' && ((epiResumo[String(c.id)] || {}).ass > 0);
     const status = statusDoc(d, c);
     const inputId = `anexoVer_${d.key}`;
     return `
-      <div class="doc-item" data-link="${link.replace(/"/g,'&quot;')}" onclick="selecionarDocumento(this)">
+      <div class="doc-item" data-link="${epiDig ? '__epi_digital__' : link.replace(/"/g,'&quot;')}" onclick="selecionarDocumento(this)">
         <div class="doc-nome">${d.label}</div>
         <span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span>
-        ${!link ? '<div class="doc-sem-link">Sem link cadastrado</div>' : ''}
+        ${epiDig ? '<div class="doc-sem-link">Ficha digital do sistema</div>' : (!link ? '<div class="doc-sem-link">Sem link cadastrado</div>' : '')}
         <div onclick="event.stopPropagation()" style="margin-top:8px;">
           <label class="btn" for="${inputId}" style="font-size:11px;padding:4px 8px;margin:0;">📎 ${link ? 'Substituir' : 'Anexar'}</label>
           <input type="file" id="${inputId}" class="input-upload-doc-ver" data-campo="${d.key}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
@@ -1973,6 +1980,8 @@ async function selecionarDocumento(el){
   const empty = document.getElementById('docsPreviewEmpty');
   const linkBtn = document.getElementById('docsPreviewLink');
   const downloadBtn = document.getElementById('docsDownloadLink');
+  downloadBtn.setAttribute('download', ''); downloadBtn.textContent = '⬇ Baixar para editar';
+  if(link === '__epi_digital__') return epiPreviewDigital(el);
 
   if(!link){
     frame.style.display = 'none'; frame.src = '';
@@ -2104,6 +2113,158 @@ async function abrirLinkTemp(link){
   }catch(e){ if(w) w.close(); toast('Erro: ' + e.message, 5000); }
 }
 window.abrirLinkTemp = abrirLinkTemp;
+
+
+/* ===== PDF da Ficha de EPI (gerado do que está salvo no sistema) ===== */
+async function epiGerarPdfBytes(colabId){
+  const c = epiColab(colabId);
+  const { data: ent, error } = await supabaseClient.from('epi_entregas').select('*')
+    .eq('colaborador_id', String(colabId)).order('ordem', { ascending:true }).order('data_entrega', { ascending:true });
+  if(error) throw error;
+  const { data: fi } = await supabaseClient.from('epi_fichas').select('*').eq('colaborador_id', String(colabId)).maybeSingle();
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const pdf = await PDFDocument.create();
+  const F = await pdf.embedFont(StandardFonts.Helvetica), FB = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const logo = await pdf.embedJpg(Uint8Array.from(atob(EPI_LOGO.split(',')[1]), ch => ch.charCodeAt(0)));
+  const azul = rgb(0.06, 0.27, 0.6), cinza = rgb(0.45, 0.45, 0.45), preto = rgb(0.1, 0.1, 0.1), linha = rgb(0.55, 0.55, 0.55);
+  const W = 595.28, H = 841.89, M = 36;
+  const safe = (t)=>{ t = String(t == null ? '' : t); try{ F.widthOfTextAtSize(t, 8); return t; }catch(e){ return t.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7E]/g, '?'); } };
+  const dataBR = (iso)=> iso ? String(iso).slice(0,10).split('-').reverse().join('/') : '';
+  let pg = pdf.addPage([W, H]), y = H - M;
+
+  const txt = (t, x, yy, o = {})=>{ pg.drawText(safe(t), { x, y: yy, size: o.s || 8, font: o.b ? FB : F, color: o.c || preto }); };
+  const centro = (t, x, w, yy, o = {})=>{ const f = o.b ? FB : F, s = o.s || 8; t = safe(t); txt(t, x + (w - f.widthOfTextAtSize(t, s)) / 2, yy, o); };
+  const caixa = (x, yy, w, h, o = {})=> pg.drawRectangle({ x, y: yy, width: w, height: h, borderColor: linha, borderWidth: .6, color: o.fill });
+  const quebra = (t, larg, s)=>{
+    const ps = safe(t).split(' '), ls = []; let at = '';
+    ps.forEach(p => { const x = at ? at + ' ' + p : p; if(F.widthOfTextAtSize(x, s) > larg && at){ ls.push(at); at = p; } else at = x; });
+    if(at) ls.push(at); return ls;
+  };
+  const dataHora = (iso)=>{ const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }); };
+
+  // cabeçalho
+  const hh = 54, lw = 110, cw = 120;
+  caixa(M, y - hh, W - 2*M, hh);
+  pg.drawLine({ start:{ x:M + lw, y }, end:{ x:M + lw, y: y - hh }, thickness:.6, color:linha });
+  pg.drawLine({ start:{ x:W - M - cw, y }, end:{ x:W - M - cw, y: y - hh }, thickness:.6, color:linha });
+  const ls = Math.min((lw - 14) / logo.width, (hh - 10) / logo.height);
+  pg.drawImage(logo, { x: M + (lw - logo.width * ls) / 2, y: y - hh + (hh - logo.height * ls) / 2, width: logo.width * ls, height: logo.height * ls });
+  centro('FICHA DE CONTROLE E ENTREGA DE EPI', M + lw, W - 2*M - lw - cw, y - 22, { b:true, s:12, c:azul });
+  centro('Sistema de Gestao de Seguranca e Saude no Trabalho - Norma Regulamentadora NR-6', M + lw, W - 2*M - lw - cw, y - 36, { s:6.5, c:cinza });
+  txt('COD: ' + EPI_DOC.cod, W - M - cw + 8, y - 20, { b:true, s:7.5 });
+  txt('REVISAO: ' + EPI_DOC.rev, W - M - cw + 8, y - 32, { b:true, s:7.5 });
+  y -= hh + 18;
+
+  // identificação
+  txt('1. IDENTIFICACAO DO TRABALHADOR', M, y, { b:true, s:9, c:azul }); y -= 8;
+  const cpfTxt = c ? formatCPF(c.cpf) : '';
+  const idl = [
+    [['Nome Completo:', c ? c.nome : ''], ['CPF:', cpfTxt]],
+    [['Funcao / Cargo:', c ? c.funcao : ''], ['Setor:', c ? c.setor : '']],
+    [['Data de Admissao:', c ? dataBR(c.admissao_data) : ''], ['CBO:', c ? c.cbo : '']]
+  ];
+  const tw = W - 2*M, rh = 20, wl = [88, tw * .43 - 88, 40, tw * .57 - 40 - 0];
+  idl.forEach(par=>{
+    let x = M; y -= rh;
+    par.forEach((cel, k)=>{
+      const wA = k === 0 ? 88 : 40, wB = k === 0 ? tw * .55 - 88 : tw * .45 - 40;
+      caixa(x, y, wA, rh, { fill: rgb(.93, .94, .96) }); txt(cel[0], x + 4, y + 7, { b:true, s:7.5 }); x += wA;
+      caixa(x, y, wB, rh); let v = safe(cel[1] || ''); while(v.length > 1 && F.widthOfTextAtSize(v, 8) > wB - 8) v = v.slice(0, -1);
+      txt(v, x + 4, y + 7, { s:8 }); x += wB;
+    });
+  });
+  y -= 18;
+
+  // declaração
+  txt('2. DECLARACAO DE RESPONSABILIDADE E COMPROMISSO', M, y, { b:true, s:9, c:azul }); y -= 12;
+  [ 'Em cumprimento ao disposto na Norma Regulamentadora NR-6 do Ministerio do Trabalho e Emprego, declaro para os devidos fins que recebi gratuitamente os Equipamentos de Protecao Individual (EPIs) abaixo listados, estando novos, higienizados e em perfeitas condicoes operacionais. Assumo o compromisso formal de:',
+    'a) Utiliza-los obrigatoriamente apenas para as finalidades a que se destinam durante toda a minha jornada laboral;',
+    'b) Responsabilizar-me pela guarda, higienizacao diaria e conservacao adequada de cada item;',
+    'c) Comunicar imediatamente ao SESMT ou a chefia direta qualquer dano, extravio ou alteracao que os torne improprios para o uso;',
+    'd) Estar ciente de que a nao utilizacao intencional constitui ato de insubordinacao, sujeito as sancoes previstas no Art. 482 da CLT, e que danos decorrentes de uso negligente ou extravio intencional poderao gerar coparticipacao financeira, conforme Art. 462 da CLT.'
+  ].forEach(p => { quebra(p, tw, 7.5).forEach(l => { txt(l, M, y, { s:7.5 }); y -= 9.5; }); y -= 2.5; });
+  y -= 8;
+
+  // tabela
+  txt('3. REGISTRO INDIVIDUAL DE ENTREGA, SUBSTITUICAO E DEVOLUCAO', M, y, { b:true, s:9, c:azul }); y -= 6;
+  const cols = [ ['Data', .11], ['Descricao do EPI', .27], ['N C.A.', .10], ['Qtde', .07], ['Tipo', .06], ['Assinatura do trabalhador', .29], ['Visto', .10] ];
+  const cab = ()=>{
+    y -= 20; let x = M;
+    cols.forEach(([t, p])=>{ const w = tw * p; pg.drawRectangle({ x, y, width:w, height:20, color: azul, borderColor: rgb(1,1,1), borderWidth:.5 }); centro(t.toUpperCase(), x, w, y + 7, { b:true, s:6.5, c: rgb(1,1,1) }); x += w; });
+  };
+  cab();
+  const sigH = 34;
+  for(const r of (ent || [])){
+    if(y - sigH < M + 110){ pg = pdf.addPage([W, H]); y = H - M; cab(); }
+    y -= sigH; let x = M;
+    const vals = [dataBR(r.data_entrega), (r.descricao || '').toUpperCase(), r.ca || '', r.qtde || '', r.tipo || 'E', null, r.visto || ''];
+    for(let k = 0; k < cols.length; k++){
+      const w = tw * cols[k][1]; caixa(x, y, w, sigH);
+      if(k === 5){
+        if(r.assinatura_img){
+          try{
+            const im = await pdf.embedPng(Uint8Array.from(atob(r.assinatura_img.split(',')[1]), ch => ch.charCodeAt(0)));
+            const sc = Math.min((w - 10) / im.width, 20 / im.height);
+            pg.drawImage(im, { x: x + (w - im.width * sc) / 2, y: y + 11, width: im.width * sc, height: im.height * sc });
+          }catch(e){}
+        }
+        if(r.assinado_em) centro(dataHora(r.assinado_em), x, w, y + 3, { s:5.5, c:cinza });
+      } else {
+        let v = safe(vals[k]); while(v.length > 1 && F.widthOfTextAtSize(v, 7.5) > w - 6) v = v.slice(0, -1);
+        centro(v, x, w, y + sigH / 2 - 3, { s:7.5 });
+      }
+      x += w;
+    }
+  }
+  y -= 12; txt('*Legenda Tipo: [E] Entrega inicial  |  [S] Substituicao por desgaste  |  [D] Devolucao / Desligamento', M, y, { s:6.5, c:cinza });
+
+  // assinaturas finais
+  if(y < M + 100){ pg = pdf.addPage([W, H]); y = H - M; }
+  y -= 70;
+  const sw = (tw - 40) / 2;
+  const primeira = (ent || []).find(r => r.assinatura_img);
+  const blocos = [
+    { x: M, img: primeira && primeira.assinatura_img, lab: 'Assinatura do Colaborador', sub: '' },
+    { x: M + sw + 40, img: fi && fi.resp_img, lab: 'Responsavel Legal pela Entrega', sub: fi && fi.resp_em ? safe((fi.resp_nome || '') + ' - ' + dataHora(fi.resp_em)) : '' }
+  ];
+  for(const b of blocos){
+    if(b.img){
+      try{
+        const im = await pdf.embedPng(Uint8Array.from(atob(b.img.split(',')[1]), ch => ch.charCodeAt(0)));
+        const sc = Math.min((sw - 20) / im.width, 44 / im.height);
+        pg.drawImage(im, { x: b.x + (sw - im.width * sc) / 2, y: y + 4, width: im.width * sc, height: im.height * sc });
+      }catch(e){}
+    }
+    pg.drawLine({ start:{ x:b.x, y }, end:{ x:b.x + sw, y }, thickness:.7, color: preto });
+    centro(b.lab, b.x, sw, y - 10, { b:true, s:8 });
+    if(b.sub) centro(b.sub, b.x, sw, y - 20, { s:6.5, c:cinza });
+  }
+  return await pdf.save();
+}
+
+let epiPdfUrlAtual = null;
+async function epiPreviewDigital(el){
+  const c = colaboradorDocsAtual;
+  const frame = document.getElementById('docsPreviewFrame'), empty = document.getElementById('docsPreviewEmpty');
+  const linkBtn = document.getElementById('docsPreviewLink'), downloadBtn = document.getElementById('docsDownloadLink');
+  frame.style.display = 'none'; frame.src = ''; linkBtn.style.display = 'none'; downloadBtn.style.display = 'none';
+  empty.style.display = 'block'; empty.textContent = 'Gerando a ficha de EPI...';
+  try{
+    const bytes = await epiGerarPdfBytes(c.id);
+    if(!el.classList.contains('active')) return;
+    if(epiPdfUrlAtual) URL.revokeObjectURL(epiPdfUrlAtual);
+    epiPdfUrlAtual = URL.createObjectURL(new Blob([bytes], { type:'application/pdf' }));
+    empty.style.display = 'none';
+    frame.style.display = 'block'; frame.src = epiPdfUrlAtual;
+    linkBtn.style.display = 'block'; linkBtn.href = epiPdfUrlAtual;
+    downloadBtn.style.display = 'block'; downloadBtn.href = epiPdfUrlAtual;
+    downloadBtn.setAttribute('download', 'Ficha-EPI-' + (c.nome || 'colaborador').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-') + '.pdf');
+    downloadBtn.textContent = '⬇ Baixar ficha (PDF)';
+  }catch(e){
+    console.error(e);
+    empty.textContent = 'Não foi possível gerar a ficha: ' + (e.message || e);
+  }
+}
 
 async function sha256Hex(buf){
   const h = await crypto.subtle.digest('SHA-256', buf);
@@ -3499,6 +3660,7 @@ function epiRenderFicha(){
     <div class="epi-bar epi-np">
       <button class="btn" onclick="epiVoltar()">← Voltar à lista</button><span class="sp"></span>
       ${f.anexo ? '<button class="btn" onclick="epiVerAnexo()">📎 Ver anexo</button>' : ''}
+      ${f.rows.some(r => r.sig && !r.visto) ? '<button class="btn" onclick="epiVisarPendentes()">Visar pendentes</button>' : ''}
       <button class="btn" onclick="epiKit()">Aplicar kit do cargo</button>
       <button class="btn" onclick="epiAddLinha()">+ Adicionar linha</button>
       <button class="btn" onclick="epiImprimir()">🖨 Imprimir ficha</button>
@@ -3516,7 +3678,7 @@ function epiRenderFicha(){
       <table class="idt">
         <tr><td class="lb">Nome Completo:</td><td><input id="epiNome" list="epiDlColab" value="${epiEsc(f.nome)}" placeholder="Digite o nome ou CPF do colaborador" aria-label="Nome completo"${travaColab} onchange="epiEscolherColab(this)"></td><td class="lb s">CPF:</td><td><input value="${epiEsc(f.cpf)}" readonly aria-label="CPF"></td></tr>
         <tr><td class="lb">Função / Cargo:</td><td><input value="${epiEsc(f.funcao)}" aria-label="Função ou cargo" oninput="epiCampo('funcao',this)"></td><td class="lb s">Setor:</td><td><input value="${epiEsc(f.setor)}" aria-label="Setor" oninput="epiCampo('setor',this)"></td></tr>
-        <tr><td class="lb">Data de Admissão:</td><td><input value="${epiEsc(f.adm)}" readonly aria-label="Data de admissão"></td><td class="lb s">CBO:</td><td><input value="${epiEsc(f.cbo)}" aria-label="CBO" oninput="epiCampo('cbo',this)"></td></tr>
+        <tr><td class="lb">Data de Admissão:</td><td><input value="${epiEsc(f.adm)}" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" aria-label="Data de admissão" oninput="epiAdmMask(this)"></td><td class="lb s">CBO:</td><td><input value="${epiEsc(f.cbo)}" aria-label="CBO" oninput="epiCampo('cbo',this)"></td></tr>
       </table>
       <h3>2. Declaração de responsabilidade e compromisso</h3>
       <div class="decl"><p>Em cumprimento ao disposto na Norma Regulamentadora NR-6 do Ministério do Trabalho e Emprego, declaro para os devidos fins que recebi gratuitamente os Equipamentos de Proteção Individual (EPIs) abaixo listados, estando novos, higienizados e em perfeitas condições operacionais. Assumo o compromisso formal de:</p>
@@ -3541,6 +3703,22 @@ function epiRenderFicha(){
 }
 
 function epiCampo(chave, el){ epiFicha[chave] = el.value; }
+function epiAdmMask(el){
+  let d = el.value.replace(/\D/g, '').slice(0, 8);
+  if(d.length > 4) d = d.slice(0,2) + '/' + d.slice(2,4) + '/' + d.slice(4);
+  else if(d.length > 2) d = d.slice(0,2) + '/' + d.slice(2);
+  el.value = d; epiFicha.adm = d;
+}
+window.epiAdmMask = epiAdmMask;
+function epiAdmISO(t){
+  t = (t || '').trim();
+  if(!t) return null;
+  const m = t.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(!m) return undefined;
+  const dt = new Date(+m[3], +m[2]-1, +m[1]);
+  if(dt.getFullYear() !== +m[3] || dt.getMonth() !== +m[2]-1 || dt.getDate() !== +m[1]) return undefined;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
 window.epiCampo = epiCampo;
 
 function epiLinha(i, c, el){
@@ -3591,9 +3769,18 @@ function epiRemoverLinha(i){
 }
 window.epiRemoverLinha = epiRemoverLinha;
 
+function epiIniciais(){
+  const ini = epiNomeUsuario().split(/\s+/).filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase();
+  return ini || 'OK';
+}
+function epiVisarPendentes(){
+  epiFicha.rows.forEach(r => { if(r.sig && !r.visto) r.visto = epiIniciais(); });
+  epiRenderFicha();
+  toast('Vistos aplicados. Clique em Salvar ficha para confirmar.');
+}
+window.epiVisarPendentes = epiVisarPendentes;
 function epiVisar(i){
-  const ini = epiNomeUsuario().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase();
-  epiFicha.rows[i].visto = ini || 'OK';
+  epiFicha.rows[i].visto = epiIniciais();
   epiRenderFicha();
 }
 window.epiVisar = epiVisar;
@@ -3615,8 +3802,10 @@ async function epiSalvarFicha(silencioso){
     // linhas em branco, sem descrição, não são gravadas
     f.rows = f.rows.filter(r => r.id || (r.desc || '').trim());
 
+    const admISO = epiAdmISO(f.adm);
+    if(admISO === undefined) throw new Error('Data de admissão inválida. Use o formato dd/mm/aaaa.');
     let { error } = await supabaseClient.from('colaboradores')
-      .update({ funcao: f.funcao || null, setor: f.setor || null, cbo: f.cbo || null }).eq('id', f.colabId);
+      .update({ funcao: f.funcao || null, setor: f.setor || null, cbo: f.cbo || null, admissao_data: admISO }).eq('id', f.colabId);
     if(error) throw new Error('dados do colaborador (rode o supabase_epi.sql): ' + error.message);
 
     if(f.removidos.length){
@@ -3654,7 +3843,7 @@ async function epiSalvarFicha(silencioso){
     }
 
     const c = epiColab(f.colabId);
-    if(c){ c.funcao = f.funcao; c.setor = f.setor; c.cbo = f.cbo; }
+    if(c){ c.funcao = f.funcao; c.setor = f.setor; c.cbo = f.cbo; c.admissao_data = admISO; }
     epiResumo[f.colabId] = {
       n: f.rows.length, ass: f.rows.filter(r => r.sig).length,
       ultima: f.rows.reduce((m, r) => (r.d && r.d > m ? r.d : m), '')
@@ -3816,7 +4005,7 @@ document.getElementById('epiAssinOk').addEventListener('click', async ()=>{
   const agora = new Date().toISOString();
   const por = `${epiNomeUsuario()} (${epiLoginUsuario()})`;
   if(epiAssin.quem === 'colab'){
-    epiAssin.alvo.forEach(i => { f.rows[i].sig = { img, at: agora, por }; });
+    epiAssin.alvo.forEach(i => { f.rows[i].sig = { img, at: agora, por }; if(!f.rows[i].visto) f.rows[i].visto = epiIniciais(); });
   } else {
     f.resp = { img, at: agora, nome: epiNomeUsuario() };
   }
@@ -3844,7 +4033,8 @@ async function gerarLinkAssinatura(tipo, colabId){
     const ok = await epiSalvarFicha(true);       // grava as linhas antes de gerar o link
     if(!ok) return;
   }
-  const { data, error } = await supabaseClient.rpc('criar_link_assinatura', { p_colab: String(colabId), p_tipo: tipo });
+  let { data, error } = await supabaseClient.rpc('criar_link_assinatura', { p_colab: String(colabId), p_tipo: tipo, p_visto: epiIniciais() });
+  if(error && /p_visto|function/i.test(error.message || '')) ({ data, error } = await supabaseClient.rpc('criar_link_assinatura', { p_colab: String(colabId), p_tipo: tipo }));
   if(error){ toast('Não foi possível gerar o link: ' + (error.message || error) + ' (se for a primeira vez, rode o supabase_links.sql no Supabase)', 9000); return; }
   const slug = (t)=> (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const url = new URL('assinar.html', location.href); url.search = '';
