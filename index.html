@@ -1964,7 +1964,7 @@ function ehEditavelSomenteBaixando(link){
   return EXTENSOES_OFFICE.includes(extensao);
 }
 
-function selecionarDocumento(el){
+async function selecionarDocumento(el){
   document.querySelectorAll('.doc-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
 
@@ -1983,19 +1983,25 @@ function selecionarDocumento(el){
     return;
   }
 
-  empty.style.display = 'none';
-  frame.style.display = 'block';
-  frame.src = montarUrlPreview(link);
-  linkBtn.style.display = 'block';
-  // "Abrir em nova aba" usa a mesma conversão da pré-visualização: assim
-  // arquivos do Word abrem no visualizador do Office em vez de baixar.
-  linkBtn.href = montarUrlPreview(link);
-
-  if(ehEditavelSomenteBaixando(link)){
-    downloadBtn.style.display = 'block';
-    downloadBtn.href = link;
-  } else {
-    downloadBtn.style.display = 'none';
+  empty.style.display = 'block';
+  empty.textContent = 'Carregando documento...';
+  frame.style.display = 'none'; frame.src = '';
+  linkBtn.style.display = 'none'; downloadBtn.style.display = 'none';
+  try{
+    const urlPrev = await montarUrlPreviewTemp(link);
+    if(!el.classList.contains('active')) return; // clicou em outro documento enquanto carregava
+    empty.style.display = 'none';
+    frame.style.display = 'block';
+    frame.src = urlPrev;
+    linkBtn.style.display = 'block';
+    linkBtn.href = urlPrev;
+    if(ehEditavelSomenteBaixando(link)){
+      downloadBtn.style.display = 'block';
+      downloadBtn.href = await urlTemp(link, true);
+    }
+  }catch(e){
+    empty.style.display = 'block';
+    empty.textContent = 'Não foi possível abrir o documento: ' + e.message;
   }
 }
 window.selecionarDocumento = selecionarDocumento;
@@ -2071,6 +2077,34 @@ function caminhoStorageDoLink(link){
   return m ? decodeURIComponent(m[1]) : null;
 }
 
+
+/* ===== Documentos privados: o arquivo só abre com link temporário (vale 10 min) ===== */
+async function urlTemp(link, baixar){
+  const caminho = caminhoStorageDoLink(link);
+  if(!caminho) return link; // link externo (OneDrive etc.) segue como está
+  const { data, error } = await supabaseClient.storage.from('documentos').createSignedUrl(caminho, 600, baixar ? { download:true } : undefined);
+  if(error || !data) throw new Error('não foi possível liberar o documento (' + ((error && error.message) || 'sem acesso') + ')');
+  return data.signedUrl;
+}
+async function fetchDocTemp(link){
+  return fetch(await urlTemp(link), { cache:'no-store' });
+}
+async function montarUrlPreviewTemp(link){
+  if(ehLinkOneDriveOuSharePoint(link)) return link;
+  const ext = link.split('?')[0].split('.').pop().toLowerCase();
+  const u = await urlTemp(link);
+  if(EXTENSOES_OFFICE.includes(ext)) return 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(u);
+  return u;
+}
+async function abrirLinkTemp(link){
+  const w = window.open('', '_blank');
+  try{
+    const u = await montarUrlPreviewTemp(link);
+    if(w) w.location.href = u; else window.location.href = u;
+  }catch(e){ if(w) w.close(); toast('Erro: ' + e.message, 5000); }
+}
+window.abrirLinkTemp = abrirLinkTemp;
+
 async function sha256Hex(buf){
   const h = await crypto.subtle.digest('SHA-256', buf);
   return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -2133,7 +2167,7 @@ async function iniciarAssinatura(key){
 
   toast('Carregando documento...');
   try{
-    const resp = await fetch(link, { cache:'no-store' });
+    const resp = await fetchDocTemp(link);
     if(!resp.ok) throw new Error(`não foi possível baixar o documento (${resp.status})`);
     const origBuf = await resp.arrayBuffer();
     const hashOriginal = await sha256Hex(origBuf);
@@ -2763,8 +2797,8 @@ function renderTreinamentos(){
         <td>${t.data_validade || 'Não vence'}</td>
         <td><span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span></td>
         <td class="acoes">
-          ${t.certificado_link ? `<span title="Ver certificado" onclick="window.open(montarUrlPreview('${t.certificado_link.replace(/'/g,"\\'")}'),'_blank')">🎓</span>` : ''}
-          ${t.relatorio_link ? `<span title="Ver relatório" onclick="window.open(montarUrlPreview('${t.relatorio_link.replace(/'/g,"\\'")}'),'_blank')">📄</span>` : ''}
+          ${t.certificado_link ? `<span title="Ver certificado" onclick="abrirLinkTemp('${t.certificado_link.replace(/'/g,"\\'")}')">🎓</span>` : ''}
+          ${t.relatorio_link ? `<span title="Ver relatório" onclick="abrirLinkTemp('${t.relatorio_link.replace(/'/g,"\\'")}')">📄</span>` : ''}
           <span title="Editar" onclick="editarTreinamento('${t.id}')">✏️</span>
           <span title="Excluir" onclick="excluirTreinamento('${t.id}','${t.nome_treinamento.replace(/'/g,"\\'")}')">🗑️</span>
         </td>
@@ -3325,7 +3359,7 @@ window.epiVoltar = epiVoltar;
 /* lê a ficha de EPI anexada em Word (.docx) e extrai identificação + itens entregues */
 async function epiLerDocx(url){
   if(typeof JSZip === 'undefined') throw new Error('a biblioteca de leitura de Word não carregou');
-  const resp = await fetch(url, { cache:'no-store' });
+  const resp = await fetchDocTemp(url);
   if(!resp.ok) throw new Error('não foi possível baixar o anexo (' + resp.status + ')');
   const zip = await JSZip.loadAsync(await resp.arrayBuffer());
   const arq = zip.file('word/document.xml');
@@ -3373,7 +3407,7 @@ async function epiLerDocx(url){
 }
 
 function epiVerAnexo(){
-  if(epiFicha && epiFicha.anexo) window.open(epiFicha.anexo, '_blank', 'noopener');
+  if(epiFicha && epiFicha.anexo) abrirLinkTemp(epiFicha.anexo);
 }
 window.epiVerAnexo = epiVerAnexo;
 
