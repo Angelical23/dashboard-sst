@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b2a3a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <title>Gestão de Segurança do Trabalho - Dashboard de Compliance</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -525,6 +529,62 @@
   .bk-card p,.bk-card li{font-size:13px;color:var(--cinza-texto);line-height:1.55;}
   .bk-card ol{margin:6px 0 0 18px;padding:0;}
   .bk-prog{font-size:12.5px;margin-top:8px;color:#0f4c5c;font-weight:600;min-height:18px;}
+
+  /* ---------- App do celular ---------- */
+  #mobApp{display:none;position:fixed;inset:0;z-index:90;background:#f1f5f9;color:#0f172a;flex-direction:column;font-family:inherit;}
+  body.mob-on #mobApp{display:flex;}
+  body.mob-on #appContainer .app-shell{display:none !important;}
+  body.mob-on .toast{left:16px;right:16px;bottom:auto;top:calc(12px + env(safe-area-inset-top));text-align:center;}
+  .mb-top{background:#0b2a3a;color:#fff;padding:calc(14px + env(safe-area-inset-top)) 18px 16px;display:flex;flex-direction:column;gap:10px;flex:none;}
+  .mb-top h1{margin:0;font-size:21px;}
+  .mb-eyebrow{font-size:11px;letter-spacing:1px;font-weight:700;color:#4ade80;}
+  .mb-sub{font-size:13px;color:#cfe3ee;}
+  .mb-tag{font-size:11px;font-weight:700;background:#0e3342;color:#7dd3fc;padding:4px 10px;border-radius:999px;}
+  .mb-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .mb-back{all:unset;cursor:pointer;color:#cfe3ee;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;height:36px;}
+  .mb-search{display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:0 12px;height:46px;}
+  .mb-search input{border:0;outline:0;font-size:16px;flex:1;background:transparent;color:#0f172a;min-width:0;}
+  .mb-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+  .mb-chips{display:flex;gap:8px;padding:12px 16px 0;flex:none;overflow-x:auto;}
+  .mb-chip{all:unset;cursor:pointer;border:1px solid #cbd5e1;border-radius:999px;padding:0 14px;height:36px;display:inline-flex;align-items:center;font-size:13px;font-weight:600;background:#fff;color:#0f172a;white-space:nowrap;}
+  .mb-chip.on{background:#135469;border-color:#135469;color:#fff;font-weight:700;}
+  .mb-card{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;width:100%;}
+  .mb-av{width:44px;height:44px;border-radius:50%;background:#dbe5ec;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0b2a3a;flex:none;}
+  .mb-info{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+  .mb-info b{font-size:15px;}
+  .mb-info small{font-size:12.5px;color:#526173;}
+  .mb-pill{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;align-self:flex-start;}
+  .mb-pill.w{color:#92400e;background:#fef3c7;} .mb-pill.g{color:#166534;background:#dcfce7;} .mb-pill.n{color:#334155;background:#e2e8f0;}
+  .mb-stats{display:flex;gap:10px;}
+  .mb-stat{flex:1;background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;}
+  .mb-stat b{font-size:22px;} .mb-stat span{font-size:12px;color:#526173;}
+  .mb-item{background:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;border-left:4px solid #d97706;}
+  .mb-item.ok{border-left-color:#16a34a;}
+  .mb-item .t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;} .mb-item b{font-size:14px;} .mb-item small{font-size:12px;color:#526173;}
+  .mb-bar{background:#fff;border-top:1px solid #e2e8f0;padding:12px 16px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;flex:none;}
+  .mb-btn{all:unset;box-sizing:border-box;cursor:pointer;border-radius:12px;height:50px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;text-align:center;flex:none;}
+  .mb-bar>div>.mb-btn{flex:1;}
+  .mb-btn.p{background:#135469;color:#fff;font-size:16px;height:52px;} .mb-btn.s{border:1.5px solid #135469;color:#135469;} .mb-btn.g{border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;}
+  .mb-btn[disabled]{opacity:.5;}
+  .mb-nav{background:#fff;border-top:1px solid #e2e8f0;padding:8px 8px calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;flex:none;}
+  .mb-nav button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700;color:#526173;padding:4px 10px;min-width:60px;}
+  .mb-nav button.on{color:#135469;}
+  .mb-seg{display:flex;border:1.5px solid #135469;border-radius:12px;overflow:hidden;height:46px;}
+  .mb-seg button{all:unset;cursor:pointer;flex:1;text-align:center;font-size:14px;font-weight:700;color:#135469;background:#fff;line-height:46px;}
+  .mb-seg button+button{border-left:1px solid #135469;} .mb-seg button.on{background:#135469;color:#fff;}
+  .mb-opt{background:#fff;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:12px;border:1px solid #cbd5e1;}
+  .mb-opt.on{border:2px solid #135469;padding:9px 13px;}
+  .mb-opt input[type=checkbox]{width:22px;height:22px;accent-color:#135469;flex:none;}
+  .mb-opt .t{flex:1;display:flex;flex-direction:column;min-width:0;} .mb-opt b{font-size:14px;} .mb-opt small{font-size:12px;color:#526173;}
+  .mb-opt input.q{width:56px;height:38px;border:1px solid #cbd5e1;border-radius:8px;text-align:center;font-size:15px;background:#f8fafc;color:#0f172a;}
+  .mb-in{height:46px;border:1px solid #cbd5e1;border-radius:10px;padding:0 12px;font-size:16px;background:#fff;color:#0f172a;box-sizing:border-box;width:100%;}
+  .mb-lb{font-size:13px;font-weight:700;display:flex;flex-direction:column;gap:6px;}
+  .mb-info-box{background:#e0f2fe;border-radius:12px;padding:12px 14px;font-size:14px;color:#0c4a6e;line-height:1.4;}
+  .mb-pad{height:190px;background:#fff;border:2px dashed #94a3b8;border-radius:12px;position:relative;}
+  .mb-pad canvas{width:100%;height:100%;touch-action:none;display:block;border-radius:12px;}
+  .mb-vazio{text-align:center;color:#526173;font-size:14px;padding:24px 8px;}
+  #mobVoltarCel{display:none;position:fixed;right:14px;bottom:14px;z-index:95;background:#135469;color:#fff;border:0;border-radius:999px;padding:12px 18px;font-size:14px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.3);}
+  body.mob-forcar-completo #mobVoltarCel{display:block;}
 </style>
 </head>
 <body>
@@ -1177,6 +1237,8 @@
   </div>
 </div>
 
+<div id="mobApp" aria-label="Entrega de EPI"></div>
+<button type="button" id="mobVoltarCel">Modo celular</button>
 <div class="toast" id="toast"></div>
 
 <!-- MODAL VER DOCUMENTOS -->
@@ -1463,6 +1525,7 @@ async function mudarPapel(id, sel){
 window.mudarPapel = mudarPapel;
 
 function mostrarLogin(){
+  if(typeof mobOcultar === 'function') mobOcultar();
   appContainer.style.display = 'none';
   loginScreen.style.display = 'flex';
 }
@@ -2697,6 +2760,254 @@ document.getElementById('btnBackupArquivos').addEventListener('click', async ()=
   }catch(e){ console.error(e); prog.textContent = ''; toast('Erro no backup: ' + (e.message || e), 8000); }
   finally{ btn.disabled = false; }
 });
+
+
+/* =========================================================
+   APP DO CELULAR — Entrega de EPI e coleta de assinatura
+   ========================================================= */
+const MOB_QUERY = window.matchMedia('(max-width: 820px)');
+let mobForcarCompleto = false, mobLogado = false;
+let mobTela = 'lista', mobFiltro = 'todos', mobBusca = '', mobColab = null, mobItens = [], mobTipo = 'E', mobAposSalvar = 'assinar', mobIds = [];
+let mobPad = null, mobInativo = null;
+const mobE = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const MOB_SVG = {
+  voltar:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>',
+  seta:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#526173" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>',
+  busca:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#526173" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  pessoas:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>',
+  escudo:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+  tela:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+  sair:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'
+};
+const mobPapel = ()=> (typeof ehAdmin === 'function' && ehAdmin()) ? 'ADMIN' : 'LÍDER';
+const mobHoje = ()=> new Date().toLocaleDateString('sv-SE');
+
+function mobAvaliar(){
+  const app = document.getElementById('mobApp');
+  const on = mobLogado && MOB_QUERY.matches && !mobForcarCompleto;
+  document.body.classList.toggle('mob-on', on);
+  document.body.classList.toggle('mob-forcar-completo', mobLogado && MOB_QUERY.matches && mobForcarCompleto);
+  if(on) mobRender(); else if(app && !mobLogado) app.innerHTML = '';
+  mobTimerInatividade(on);
+}
+function mobOcultar(){ mobLogado = false; mobColab = null; mobTela = 'lista'; mobAvaliar(); }
+MOB_QUERY.addEventListener('change', mobAvaliar);
+document.getElementById('mobVoltarCel').addEventListener('click', ()=>{ mobForcarCompleto = false; mobAvaliar(); });
+
+/* sair sozinho depois de 30 min sem uso (celular perdido) */
+function mobTimerInatividade(on){
+  clearTimeout(mobInativo);
+  if(!on) return;
+  mobInativo = setTimeout(()=>{ toast('Sessão encerrada por inatividade.', 5000); document.getElementById('btnLogout').click(); }, 30 * 60 * 1000);
+}
+['touchstart','click','keydown'].forEach(ev => document.addEventListener(ev, ()=>{ if(document.body.classList.contains('mob-on')) mobTimerInatividade(true); }, { passive:true }));
+
+function mobSituacao(c){
+  const r = epiResumo[String(c.id)] || {};
+  const n = r.n || 0, ass = r.ass || 0, pend = n - ass;
+  if(!n) return { k:'sem', pill:'<span class="mb-pill n">Sem ficha de EPI</span>', pend:0 };
+  if(pend > 0) return { k:'pend', pill:`<span class="mb-pill w">Aguardando assinatura · ${pend} ${pend === 1 ? 'item' : 'itens'}</span>`, pend };
+  return { k:'ok', pill:`<span class="mb-pill g">Ficha assinada · ${n} ${n === 1 ? 'item' : 'itens'}</span>`, pend:0 };
+}
+
+function mobRender(){
+  const app = document.getElementById('mobApp');
+  if(!app) return;
+  if(mobTela === 'lista') mobRenderLista(app);
+  else if(mobTela === 'ficha') mobRenderFicha(app);
+  else if(mobTela === 'nova') mobRenderNova(app);
+  else if(mobTela === 'assinar') mobRenderAssinar(app);
+}
+
+/* ---------- 1. lista ---------- */
+function mobRenderLista(app){
+  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  const termo = normalizarTexto(mobBusca);
+  const sit = new Map(ativos.map(c => [c.id, mobSituacao(c)]));
+  const cont = { todos: ativos.length, pend: 0, ok: 0 };
+  sit.forEach(s => { if(s.k === 'pend') cont.pend++; if(s.k === 'ok') cont.ok++; });
+  const lista = ativos.filter(c => (mobFiltro === 'todos' || sit.get(c.id).k === mobFiltro) && (!termo || normalizarTexto(c.nome).includes(termo)));
+  const LIM = 60;
+  app.innerHTML = `
+    <div class="mb-top">
+      <div class="mb-row"><div><div class="mb-eyebrow">GESTÃO DE SEGURANÇA DO TRABALHO</div><h1>Entrega de EPI</h1></div><span class="mb-tag">${mobPapel()}</span></div>
+      <label class="mb-search">${MOB_SVG.busca}<input id="mobBusca" type="search" placeholder="Buscar pelo nome" value="${mobE(mobBusca)}" autocomplete="off" aria-label="Buscar colaborador"></label>
+    </div>
+    <div class="mb-chips">
+      <button class="mb-chip${mobFiltro === 'todos' ? ' on' : ''}" onclick="mobSetFiltro('todos')">Todos ${cont.todos}</button>
+      <button class="mb-chip${mobFiltro === 'pend' ? ' on' : ''}" onclick="mobSetFiltro('pend')">Pendentes ${cont.pend}</button>
+      <button class="mb-chip${mobFiltro === 'ok' ? ' on' : ''}" onclick="mobSetFiltro('ok')">Assinadas ${cont.ok}</button>
+    </div>
+    <div class="mb-body" id="mobLista">${lista.slice(0, LIM).map(c => { const s = sit.get(c.id); return `
+      <button class="mb-card" onclick="mobAbrirFicha('${c.id}')"><span class="mb-av">${mobE(iniciais(c.nome))}</span>
+        <span class="mb-info"><b>${mobE(c.nome)}</b><small>${mobE(c.local || '-')}${c.funcao ? ' · ' + mobE(c.funcao) : ''}</small>${s.pill}</span>${MOB_SVG.seta}</button>`; }).join('') || '<div class="mb-vazio">Nenhum colaborador encontrado.</div>'}
+      ${lista.length > LIM ? `<div class="mb-vazio">Mostrando ${LIM} de ${lista.length}. Digite o nome para filtrar.</div>` : ''}</div>
+    ${mobNav('lista')}`;
+  const inp = document.getElementById('mobBusca');
+  inp.addEventListener('input', ()=>{ mobBusca = inp.value; const pos = inp.selectionStart; mobRenderLista(app); const n = document.getElementById('mobBusca'); n.focus(); n.setSelectionRange(pos, pos); });
+}
+function mobNav(ativa){
+  return `<nav class="mb-nav">
+    <button class="${ativa === 'lista' && mobFiltro !== 'pend' ? 'on' : ''}" onclick="mobSetFiltro('todos')">${MOB_SVG.pessoas}Colaboradores</button>
+    <button class="${ativa === 'lista' && mobFiltro === 'pend' ? 'on' : ''}" onclick="mobSetFiltro('pend')">${MOB_SVG.escudo}Pendências</button>
+    <button onclick="mobVersaoCompleta()">${MOB_SVG.tela}Versão completa</button>
+    <button onclick="document.getElementById('btnLogout').click()">${MOB_SVG.sair}Sair</button></nav>`;
+}
+function mobSetFiltro(f){ mobFiltro = f; mobTela = 'lista'; mobRender(); }
+function mobVersaoCompleta(){ mobForcarCompleto = true; mobAvaliar(); }
+window.mobSetFiltro = mobSetFiltro; window.mobVersaoCompleta = mobVersaoCompleta;
+
+/* ---------- 2. ficha ---------- */
+async function mobCarregarItens(){
+  const { data, error } = await supabaseClient.from('epi_entregas')
+    .select('id,data_entrega,descricao,ca,qtde,tipo,assinado_em,visto,ordem')
+    .eq('colaborador_id', String(mobColab.id)).order('ordem', { ascending:true }).order('data_entrega', { ascending:true });
+  if(error){ toast('Não foi possível abrir a ficha: ' + error.message, 6000); return false; }
+  mobItens = data || []; return true;
+}
+async function mobAbrirFicha(id){
+  mobColab = colaboradores.find(c => String(c.id) === String(id));
+  if(!mobColab) return;
+  auditar('ver_ficha_epi', mobColab.id, `${mobColab.nome} — abriu a ficha de EPI (celular)`);
+  if(await mobCarregarItens()){ mobTela = 'ficha'; mobRender(); }
+}
+window.mobAbrirFicha = mobAbrirFicha;
+const mobTipoNome = { E:'Entrega inicial', S:'Substituição', D:'Devolução' };
+function mobRenderFicha(app){
+  const c = mobColab, pend = mobItens.filter(i => !i.assinado_em), ass = mobItens.length - pend.length;
+  const item = (i)=> `<div class="mb-item${i.assinado_em ? ' ok' : ''}"><span class="t"><b>${mobE(i.descricao)} · ${mobE(i.qtde || '')} un.${i.ca && i.ca !== 'N/A' ? ' · C.A. ' + mobE(i.ca) : ''}</b><small>${mobTipoNome[i.tipo] || 'Entrega'} · ${mobE(epiDataBR(i.data_entrega))}</small></span><span class="mb-pill ${i.assinado_em ? 'g' : 'w'}">${i.assinado_em ? 'Assinado' : 'Pendente'}</span></div>`;
+  const recentes = mobItens.filter(i => i.assinado_em).slice(-3);
+  app.innerHTML = `
+    <div class="mb-top"><button class="mb-back" onclick="mobSetFiltro(mobFiltro)">${MOB_SVG.voltar}Voltar à lista</button>
+      <div><h1>${mobE(c.nome)}</h1><div class="mb-sub">${mobE(c.local || '-')}${c.funcao ? ' · ' + mobE(c.funcao) : ''}</div></div></div>
+    <div class="mb-body">
+      <div class="mb-stats"><div class="mb-stat"><b>${mobItens.length}</b><span>itens na ficha</span></div><div class="mb-stat"><b style="color:#166534">${ass}</b><span>assinados</span></div><div class="mb-stat" style="background:#fef3c7"><b style="color:#92400e">${pend.length}</b><span style="color:#92400e">pendentes</span></div></div>
+      ${pend.map(item).join('')}
+      ${recentes.map(item).join('')}
+      ${ass > recentes.length ? `<div class="mb-vazio" style="padding:4px">+ ${ass - recentes.length} itens assinados</div>` : ''}
+      ${!mobItens.length ? '<div class="mb-vazio">Esta ficha ainda não tem entregas. Toque em “Nova entrega”.</div>' : ''}
+    </div>
+    <div class="mb-bar">
+      <button class="mb-btn p" ${pend.length ? '' : 'disabled'} onclick="mobIrAssinar(${JSON.stringify(pend.map(i => i.id)).replace(/"/g, '&quot;')})">Colher assinatura${pend.length ? ' (' + pend.length + ')' : ''}</button>
+      <div style="display:flex;gap:10px"><button class="mb-btn s" onclick="mobIrNova()">+ Nova entrega</button><button class="mb-btn g" ${pend.length ? '' : 'disabled'} onclick="epiEnviarLink('${c.id}')">Enviar link</button></div>
+    </div>`;
+}
+
+/* ---------- 3. nova entrega ---------- */
+let mobKit = [], mobDataSel = '';
+function mobIrNova(){
+  mobTipo = 'E'; mobDataSel = '';
+  mobKit = EPI_CATALOGO.map(k => ({ desc:k[0], ca:k[1], qt:k[2], on:false, extra:false }));
+  mobTela = 'nova'; mobRender();
+}
+window.mobIrNova = mobIrNova;
+function mobRenderNova(app){
+  app.innerHTML = `
+    <div class="mb-top"><button class="mb-back" onclick="mobTela='ficha';mobRender()">${MOB_SVG.voltar}Voltar à ficha</button>
+      <div><h1>Registrar entrega</h1><div class="mb-sub">${mobE(mobColab.nome)}</div></div></div>
+    <div class="mb-body">
+      <div class="mb-lb">Tipo de entrega
+        <div class="mb-seg"><button class="${mobTipo === 'E' ? 'on' : ''}" onclick="mobTipo='E';mobRender()">Inicial</button><button class="${mobTipo === 'S' ? 'on' : ''}" onclick="mobTipo='S';mobRender()">Substituição</button><button class="${mobTipo === 'D' ? 'on' : ''}" onclick="mobTipo='D';mobRender()">Devolução</button></div></div>
+      <div class="mb-row"><span class="mb-lb" style="display:block">Itens entregues</span><button class="mb-chip" onclick="mobKit.forEach(k=>k.on=true);mobRender()">Aplicar kit do cargo</button></div>
+      ${mobKit.map((k, i) => k.extra ? `<div class="mb-opt on"><input type="checkbox" checked aria-label="Incluir"><span class="t"><input class="mb-in" style="height:40px" placeholder="Descrição do item" value="${mobE(k.desc)}" oninput="mobKit[${i}].desc=this.value"><small style="margin-top:4px">C.A.: <input class="mb-in" style="height:34px;width:110px;display:inline-block" value="${mobE(k.ca)}" oninput="mobKit[${i}].ca=this.value"></small></span><input class="q" inputmode="numeric" value="${mobE(k.qt)}" aria-label="Quantidade" oninput="mobKit[${i}].qt=this.value"></div>`
+        : `<label class="mb-opt${k.on ? ' on' : ''}"><input type="checkbox" ${k.on ? 'checked' : ''} onchange="mobKit[${i}].on=this.checked;mobRender()"><span class="t"><b>${mobE(k.desc)}</b><small>C.A. ${mobE(k.ca)}</small></span><input class="q" inputmode="numeric" value="${mobE(k.qt)}" aria-label="Quantidade de ${mobE(k.desc)}" onclick="event.preventDefault()" oninput="mobKit[${i}].qt=this.value"></label>`).join('')}
+      <button class="mb-btn s" style="flex:none;border-style:dashed" onclick="mobKit.push({desc:'',ca:'N/A',qt:'01',on:true,extra:true});mobRender()">+ Outro item</button>
+      <label class="mb-lb">Data da entrega<input class="mb-in" id="mobData" type="date" value="${mobDataSel || mobHoje()}" oninput="mobDataSel=this.value"></label>
+    </div>
+    <div class="mb-bar">
+      <button class="mb-btn p" onclick="mobSalvarEntrega(true)">Salvar e colher assinatura</button>
+      <button class="mb-btn g" onclick="mobSalvarEntrega(false)">Salvar sem assinar agora</button>
+    </div>`;
+}
+async function mobSalvarEntrega(ir){
+  const data = document.getElementById('mobData').value || mobHoje();
+  const sel = mobKit.filter(k => (k.extra || k.on) && (k.desc || '').trim());
+  if(!sel.length){ toast('Marque pelo menos um item.'); return; }
+  const base = mobItens.length;
+  const linhas = sel.map((k, i) => ({ colaborador_id: String(mobColab.id), data_entrega: data, descricao: k.desc.trim().toUpperCase(), ca: k.ca || 'N/A', qtde: k.qt || '01', tipo: mobTipo, ordem: base + i }));
+  const { data: novos, error } = await supabaseClient.from('epi_entregas').insert(linhas).select('id');
+  if(error){ toast('Não foi possível salvar: ' + error.message + ' (rode o supabase_movel.sql no Supabase)', 8000); return; }
+  toast('Entrega registrada.');
+  await mobCarregarItens(); epiCarregarResumo();
+  if(ir) mobIrAssinar([]); else { mobTela = 'ficha'; mobRender(); }
+}
+window.mobSalvarEntrega = mobSalvarEntrega;
+
+/* ---------- 4. assinatura ---------- */
+function mobIrAssinar(ids){
+  mobIds = ids && ids.length ? ids : mobItens.filter(i => !i.assinado_em).map(i => i.id);
+  if(!mobIds.length){ toast('Não há itens pendentes.'); return; }
+  mobTela = 'assinar'; mobRender();
+}
+window.mobIrAssinar = mobIrAssinar;
+function mobRenderAssinar(app){
+  const alvo = mobItens.filter(i => mobIds.includes(i.id));
+  app.innerHTML = `
+    <div class="mb-top"><button class="mb-back" onclick="mobTela='ficha';mobRender()">${MOB_SVG.voltar}Cancelar</button><h1>Ficha de controle e entrega de EPI</h1></div>
+    <div class="mb-body">
+      <div class="mb-info-box">Passe o celular para <b>${mobE(mobColab.nome)}</b></div>
+      <div style="background:#fff;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;max-height:150px;overflow-y:auto"><span style="font-size:13px;font-weight:700">Itens recebidos, pendentes de assinatura (${alvo.length})</span>
+        ${alvo.map(i => `<div style="display:flex;justify-content:space-between;gap:8px;font-size:14px;border-top:1px solid #e2e8f0;padding-top:8px"><span>${mobE(i.descricao)}</span><span style="color:#526173;white-space:nowrap">${mobE(i.qtde)} un.</span></div>`).join('')}</div>
+      <p style="margin:0;font-size:13px;color:#334155;line-height:1.45">Declaro que recebi os equipamentos de proteção individual listados e estou ciente dos compromissos da ficha (NR-6).</p>
+      <div class="mb-lb">Assine com o dedo no quadro abaixo<div class="mb-pad"><canvas id="mobPad" aria-label="Quadro de assinatura"></canvas></div></div>
+      <label class="mb-lb">Confirme os 3 últimos dígitos do seu CPF<input class="mb-in" id="mobCpf3" inputmode="numeric" maxlength="3" autocomplete="off" style="width:130px;font-size:20px;letter-spacing:5px" placeholder="000"></label>
+    </div>
+    <div class="mb-bar"><button class="mb-btn p" id="mobConfirmar" onclick="mobConfirmarAssinatura()">✔ Confirmar assinatura</button><button class="mb-btn g" onclick="mobLimparPad()">Limpar</button></div>`;
+  mobIniciaPad();
+}
+function mobIniciaPad(){
+  const c = document.getElementById('mobPad'), dpr = window.devicePixelRatio || 1, r = c.getBoundingClientRect();
+  c.width = Math.floor(r.width * dpr); c.height = Math.floor(r.height * dpr);
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.lineWidth = 2.8; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0b1f33';
+  const P = mobPad = { c, x, dpr, on:false, tem:false, b:{ minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 } };
+  const pos = (e)=>{ const q = c.getBoundingClientRect(); return { x:e.clientX - q.left, y:e.clientY - q.top }; };
+  const box = (p)=>{ const b = P.b; b.minX = Math.min(b.minX, p.x); b.minY = Math.min(b.minY, p.y); b.maxX = Math.max(b.maxX, p.x); b.maxY = Math.max(b.maxY, p.y); };
+  c.addEventListener('pointerdown', (e)=>{ e.preventDefault(); c.setPointerCapture(e.pointerId); P.on = true; const p = pos(e); x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p.x + .01, p.y + .01); x.stroke(); x.beginPath(); x.moveTo(p.x, p.y); box(p); P.tem = true; });
+  c.addEventListener('pointermove', (e)=>{ if(!P.on) return; e.preventDefault(); const p = pos(e); x.lineTo(p.x, p.y); x.stroke(); x.beginPath(); x.moveTo(p.x, p.y); box(p); });
+  ['pointerup','pointercancel'].forEach(ev => c.addEventListener(ev, ()=>{ P.on = false; }));
+}
+function mobLimparPad(){ const P = mobPad; if(!P) return; P.x.save(); P.x.setTransform(1,0,0,1,0,0); P.x.clearRect(0,0,P.c.width,P.c.height); P.x.restore(); P.tem = false; P.b = { minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 }; }
+window.mobLimparPad = mobLimparPad;
+function mobRecortar(){
+  const P = mobPad, k = 6, d = P.dpr, b = P.b;
+  const sx = Math.max(0, Math.floor((b.minX - k) * d)), sy = Math.max(0, Math.floor((b.minY - k) * d));
+  const ex = Math.min(P.c.width, Math.ceil((b.maxX + k) * d)), ey = Math.min(P.c.height, Math.ceil((b.maxY + k) * d));
+  const t = document.createElement('canvas'); t.width = Math.max(1, ex - sx); t.height = Math.max(1, ey - sy);
+  t.getContext('2d').drawImage(P.c, sx, sy, t.width, t.height, 0, 0, t.width, t.height);
+  return t.toDataURL('image/png');
+}
+async function mobConfirmarAssinatura(){
+  if(!mobPad || !mobPad.tem){ toast('Faça a assinatura no quadro.'); return; }
+  const btn = document.getElementById('mobConfirmar'); btn.disabled = true;
+  try{
+    const cpf3 = (document.getElementById('mobCpf3').value || '').replace(/\D/g, '');
+    const { data: ok, error: e0 } = await supabaseClient.rpc('conferir_cpf3', { p_colab: String(mobColab.id), p_cpf3: cpf3 });
+    if(e0) throw new Error(e0.message + ' (rode o supabase_movel.sql no Supabase)');
+    if(!ok){ toast('Os 3 últimos dígitos do CPF não conferem.'); return; }
+    const img = mobRecortar();
+    const { error } = await supabaseClient.from('epi_entregas').update({
+      assinatura_img: img, assinado_em: new Date().toISOString(),
+      assinado_por: `${epiNomeUsuario()} (${epiLoginUsuario()}) — no celular`, assinado_disp: (navigator.userAgent || '').slice(0, 250),
+      visto: epiIniciais()
+    }).in('id', mobIds).is('assinado_em', null);
+    if(error) throw error;
+    toast('Assinatura registrada.');
+    await mobCarregarItens(); epiCarregarResumo();
+    mobTela = 'ficha'; mobRender();
+  }catch(e){ console.error(e); toast('Erro: ' + (e.message || e), 8000); }
+  finally{ const b = document.getElementById('mobConfirmar'); if(b) b.disabled = false; }
+}
+window.mobConfirmarAssinatura = mobConfirmarAssinatura;
+
+/* atualiza a lista quando os dados são recarregados */
+(function(){
+  const orig = renderTudo;
+  renderTudo = function(){ orig.apply(this, arguments); mobLogado = true; if(document.body.classList.contains('mob-on') && mobTela === 'lista') mobRender(); else mobAvaliar(); };
+})();
+
+/* PWA: registra o service worker (sem cache: o sistema sempre abre a versão mais nova) */
+if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 
 async function sha256Hex(buf){
   const h = await crypto.subtle.digest('SHA-256', buf);
