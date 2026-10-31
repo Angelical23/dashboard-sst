@@ -507,7 +507,7 @@
   /* ---------- Perfil Líder: somente consulta ---------- */
   body.lider #btnAbrirNovo, body.lider #btnAbrirAnexar, body.lider label[for="inputImport"], body.lider #btnNovoTreinamento,
   body.lider [onclick^="assinarDireto"], body.lider [onclick^="gerarLinkAssinatura"], body.lider [onclick^="editarColaborador"],
-  body.lider [onclick^="abrirModalDesligar"], body.lider [onclick^="excluirColaborador"], body.lider [onclick^="reativarColaborador"],
+  body.lider [onclick^="abrirModalDesligar"], body.lider [onclick^="excluirColaborador"], body.lider [onclick^="arquivarColaborador"], body.lider [onclick^="desarquivarColaborador"], body.lider #btnBackupDados, body.lider #btnBackupArquivos, body.lider [onclick^="reativarColaborador"],
   body.lider [onclick^="editarTreinamento"], body.lider [onclick^="excluirTreinamento"], body.lider [onclick^="iniciarAssinatura"],
   body.lider [onclick^="epiAbrirFicha('')"], body.lider label[for^="anexoVer_"], body.lider .btn-assinar, body.lider .btn-linkass,
   body.lider .epi-bar button:not([onclick^="epiVoltar"]):not([onclick^="epiImprimir"]):not([onclick^="epiVerAnexo"]),
@@ -515,6 +515,16 @@
   body.lider #epiPaper input, body.lider #epiPaper select{pointer-events:none;}
   .perfil-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;padding:1px 7px;border-radius:999px;background:#0e3342;color:#7dd3fc;margin-left:6px;vertical-align:middle;}
   .acessos-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--cinza-texto);margin-bottom:14px;line-height:1.55;}
+  .aud-filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px;}
+  .aud-filtros label{font-size:11px;color:var(--cinza-texto);display:block;margin-bottom:3px;font-weight:600;}
+  .aud-filtros input,.aud-filtros select{font-size:13px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;}
+  .aud-acao{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#e2e8f0;color:#334155;white-space:nowrap;}
+  .aud-acao.criou{background:#dcfce7;color:#166534;}.aud-acao.alterou{background:#fef3c7;color:#92400e;}.aud-acao.excluiu{background:#fee2e2;color:#991b1b;}.aud-acao.exportar{background:#dbeafe;color:#1e40af;}
+  .bk-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:14px;}
+  .bk-card h3{margin:0 0 6px;font-size:14px;}
+  .bk-card p,.bk-card li{font-size:13px;color:var(--cinza-texto);line-height:1.55;}
+  .bk-card ol{margin:6px 0 0 18px;padding:0;}
+  .bk-prog{font-size:12.5px;margin-top:8px;color:#0f4c5c;font-weight:600;min-height:18px;}
 </style>
 </head>
 <body>
@@ -603,6 +613,24 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </span>
           Acessos e perfis
+        </span>
+      </button>
+
+      <button class="side-link" data-view="auditoria" id="navAuditoria" style="display:none;">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+          </span>
+          Auditoria
+        </span>
+      </button>
+
+      <button class="side-link" data-view="backup" id="navBackup" style="display:none;">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </span>
+          Backup e segurança
         </span>
       </button>
     </nav>
@@ -825,6 +853,66 @@
       </div>
     </section>
 
+    <!-- VIEW: AUDITORIA -->
+    <section id="viewAuditoria" style="display:none;">
+      <div class="view-header"><div><h1>Auditoria</h1>
+        <div class="epi-sub">Histórico de quem visualizou documentos, criou, alterou, excluiu e exportou. Os registros não podem ser editados nem apagados.</div></div>
+        <div class="toolbar"><button class="btn" id="audExportar">⬇ Exportar Excel</button></div></div>
+      <div class="aud-filtros">
+        <div><label>De</label><input type="date" id="audDe"></div>
+        <div><label>Até</label><input type="date" id="audAte"></div>
+        <div><label>Ação</label><select id="audAcao"><option value="">Todas</option><option value="ver_documento">Visualizou documento</option><option value="ver_ficha_epi">Abriu ficha de EPI</option><option value="criou">Criou</option><option value="alterou">Alterou</option><option value="excluiu">Excluiu</option><option value="exportar">Exportou</option><option value="gerar_link">Gerou link</option></select></div>
+        <div><label>Usuário</label><input type="text" id="audUsuario" placeholder="parte do e-mail"></div>
+        <div><label>Texto (nome, campo...)</label><input type="text" id="audTexto" placeholder="ex.: Angelica"></div>
+        <button class="btn primary" id="audBuscar">Buscar</button>
+      </div>
+      <div class="table-panel">
+        <div class="table-header"><h3 id="audTitulo">REGISTROS</h3></div>
+        <div class="table-scroll"><table class="tbl-ativos"><thead><tr><th>DATA / HORA</th><th>USUÁRIO</th><th>AÇÃO</th><th>ONDE</th><th>DETALHE</th></tr></thead>
+          <tbody id="audBody"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- VIEW: BACKUP E SEGURANÇA -->
+    <section id="viewBackup" style="display:none;">
+      <div class="view-header"><div><h1>Backup e segurança</h1>
+        <div class="epi-sub">Cópias de segurança dos dados e dos documentos, e a proteção da conta do Supabase.</div></div></div>
+
+      <div class="bk-card">
+        <h3>1. Backup dos dados</h3>
+        <p>Baixa um arquivo ZIP com todas as tabelas (colaboradores, treinamentos, fichas de EPI, assinaturas e auditoria) em <b>JSON</b> (cópia completa, com assinaturas desenhadas) e em <b>Excel</b> (para consulta).</p>
+        <button class="btn primary" id="btnBackupDados">⬇ Baixar backup dos dados</button>
+        <div class="bk-prog" id="bkDadosProg"></div><div class="epi-hint" id="bkDadosUlt"></div>
+      </div>
+
+      <div class="bk-card">
+        <h3>2. Backup dos arquivos (documentos anexados)</h3>
+        <p>Baixa os PDFs e imagens do Storage em arquivos ZIP. Se for muita coisa, o sistema divide em várias partes (de cerca de 250 MB) e o navegador pode pedir permissão para baixar vários arquivos: aceite. Mantenha a aba aberta até terminar.</p>
+        <select id="bkPasta" class="search-select" style="max-width:300px;margin-right:8px;">
+          <option value="">Todas as pastas</option><option value="admissao">Ficha de Admissão</option><option value="aso">ASO</option><option value="os">OS - Ordem de Serviço</option><option value="epi">Ficha de EPI</option><option value="nr06">Certificado NR06</option><option value="assinar">Assinados por link</option><option value="treinamento-certificados">Certificados de treinamento</option><option value="treinamento-relatorios">Relatórios de treinamento</option>
+        </select>
+        <button class="btn primary" id="btnBackupArquivos">⬇ Baixar backup dos arquivos</button>
+        <div class="bk-prog" id="bkArqProg"></div><div class="epi-hint" id="bkArqUlt"></div>
+      </div>
+
+      <div class="bk-card">
+        <h3>Onde guardar</h3>
+        <p>O plano gratuito do Supabase <b>não faz backup automático</b>. Faça os dois backups pelo menos <b>uma vez por mês</b> e guarde em um local protegido da empresa (OneDrive/SharePoint com acesso restrito). Esses arquivos têm CPF e dados de saúde: <b>não coloque no GitHub</b> nem em pasta pública.</p>
+      </div>
+
+      <div class="bk-card">
+        <h3>3. Verificação em duas etapas (conta do Supabase)</h3>
+        <p>Protege o painel que administra o banco. Quem tem essa conta vê tudo, então é a proteção mais importante.</p>
+        <ol>
+          <li>Entre em <b>supabase.com/dashboard/account/security</b>.</li>
+          <li>Ative o aplicativo autenticador (Google Authenticator, Microsoft Authenticator, Authy ou 1Password) e leia o QR code.</li>
+          <li>Digite o código de 6 dígitos para confirmar.</li>
+          <li><b>Importante:</b> o Supabase não gera códigos de recuperação. Cadastre um segundo aparelho/aplicativo como reserva; se perder todos, ele não consegue devolver o acesso.</li>
+        </ol>
+        <p style="margin-top:8px;">Faça o mesmo no <b>GitHub</b> (Settings &gt; Password and authentication &gt; Two-factor authentication), pois quem controla o repositório controla o sistema.</p>
+      </div>
+    </section>
+
     <!-- VIEW: CONTROLE DE EPI -->
     <section id="viewEpi" style="display:none;">
       <div id="epiTelaLista">
@@ -884,6 +972,7 @@
       <div class="view-header">
         <h1>Colaboradores Inativos / Desligados</h1>
         <div class="toolbar">
+          <div class="epi-chips" id="inatChips" style="margin-right:8px;"></div>
           <button class="btn" id="btnExportInativosExcel">⬇ Exportar Inativos Excel</button>
         </div>
       </div>
@@ -917,7 +1006,7 @@
                 <th>LOCAL / SETOR</th>
                 <th>DATA DESLIGAMENTO</th>
                 <th>MOTIVO</th>
-                <th>HISTÓRICO DOCS</th>
+                <th>DOCUMENTOS / GUARDA</th>
                 <th>AÇÕES</th>
               </tr>
             </thead>
@@ -1125,12 +1214,25 @@
   </div>
 </div>
 
+<!-- MODAL ARQUIVAR -->
+<div class="modal-overlay" id="modalArquivarOverlay" style="z-index:160;">
+  <div class="modal" style="max-width:480px;">
+    <h2>Arquivar colaborador</h2>
+    <p style="margin:10px 0;">Deseja arquivar <b id="arquivarNome"></b>?</p>
+    <p class="epi-hint">Os dados e documentos <b>continuam guardados</b> até <b id="arquivarAte"></b> (<span id="arquivarAnos"></span> anos após o desligamento, prazo de guarda do ASO). Ele sai da lista de desligados e passa para <b>Arquivados</b>. Não é possível excluir antes dessa data.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="arquivarNao">Não</button>
+      <button type="button" class="btn primary" id="arquivarSim">Sim, arquivar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMAR EXCLUSÃO -->
 <div class="modal-overlay" id="modalExcluirOverlay" style="z-index:160;">
   <div class="modal" style="max-width:460px;">
-    <h2>Excluir colaborador</h2>
+    <h2>Excluir definitivamente</h2>
     <p style="margin:10px 0;">Deseja realmente excluir <b id="excluirNome"></b> definitivamente?</p>
-    <p class="epi-hint">Essa ação não pode ser desfeita: o cadastro, os documentos anexados e as assinaturas dele serão apagados.</p>
+    <p class="epi-hint">Só é possível depois do prazo de guarda. Essa ação não pode ser desfeita: o cadastro, os documentos anexados e as assinaturas dele serão apagados.</p>
     <div class="modal-actions">
       <button type="button" class="btn" id="excluirNao">Não</button>
       <button type="button" class="btn" id="excluirSim" style="background:#dc2626;border-color:#dc2626;color:#fff;">Sim, excluir</button>
@@ -1335,9 +1437,13 @@ async function carregarPerfil(session){
   document.body.classList.toggle('lider', papel !== 'admin');
   const nav = document.getElementById('navAcessos');
   if(nav) nav.style.display = papel === 'admin' ? '' : 'none';
+  const navA = document.getElementById('navAuditoria');
+  if(navA) navA.style.display = papel === 'admin' ? '' : 'none';
+  const navB = document.getElementById('navBackup');
+  if(navB) navB.style.display = papel === 'admin' ? '' : 'none';
   const el = document.getElementById('usuarioLogadoEmail');
   if(el && !el.querySelector('.perfil-tag')) el.insertAdjacentHTML('beforeend', `<span class="perfil-tag">${papel === 'admin' ? 'ADMIN' : 'LÍDER'}</span>`);
-  if(papel !== 'admin' && viewAtual === 'acessos') mostrarView('painel');
+  if(papel !== 'admin' && (viewAtual === 'acessos' || viewAtual === 'auditoria' || viewAtual === 'backup')) mostrarView('painel');
 }
 
 async function carregarAcessos(){
@@ -1426,9 +1532,11 @@ const VIEWS = {
   inativos: document.getElementById('viewInativos'),
   epi: document.getElementById('viewEpi'),
   treinamentos: document.getElementById('viewTreinamentos'),
-  acessos: document.getElementById('viewAcessos')
+  acessos: document.getElementById('viewAcessos'),
+  auditoria: document.getElementById('viewAuditoria'),
+  backup: document.getElementById('viewBackup')
 };
-const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', treinamentos:'Treinamentos', acessos:'Acessos e perfis' };
+const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', treinamentos:'Treinamentos', acessos:'Acessos e perfis', auditoria:'Auditoria', backup:'Backup e segurança' };
 let viewAtual = 'painel';
 
 function atualizarMigalha(){
@@ -1448,6 +1556,8 @@ function mostrarView(alvo){
     loadTreinamentos();
   }
   if(alvo === 'acessos') carregarAcessos();
+  if(alvo === 'auditoria') carregarAuditoria();
+  if(alvo === 'backup') backupMostrarUltimos();
   if(alvo === 'epi'){
     if(typeof epiTela !== 'undefined' && epiTela === 'lista') loadEpi();
   }
@@ -1666,24 +1776,85 @@ function __antigoLinhasAtivos(filtrados){ return filtrados.map(c => `<tr>
   </tr>`).join('');
 }
 
+const ANOS_GUARDA = 20;   // prazo de guarda após o desligamento (NR-7: ASO/PCMSO) — confirme com o jurídico/SESMT
+let inatAba = 'desligados';
+const hojeISO = ()=> new Date().toLocaleDateString('sv-SE');
+function guardaAte(c){
+  const base = (c.data_desligamento || hojeISO()).slice(0, 10).split('-').map(Number);
+  return `${base[0] + ANOS_GUARDA}-${String(base[1]).padStart(2,'0')}-${String(base[2]).padStart(2,'0')}`;
+}
+function setAbaInativos(a){ inatAba = a; renderTabelaInativos(); }
+window.setAbaInativos = setAbaInativos;
+
 function renderTabelaInativos(){
   const termo = normalizarTexto(inputBuscaInativos.value);
   const termoNumerico = termo.replace(/\D/g, '');
   const inicio = filtroDataInicio.value, fim = filtroDataFim.value;
-  const inativos = colaboradores.filter(c => c.status === 'INATIVO');
-  const filtrados = inativos.filter(c => {
+  const todos = colaboradores.filter(c => c.status === 'INATIVO');
+  const desligados = todos.filter(c => !c.arquivado_em), arquivados = todos.filter(c => c.arquivado_em);
+  const lista = inatAba === 'arquivados' ? arquivados : desligados;
+  const filtrados = lista.filter(c => {
     const textoOk = normalizarTexto(c.nome).includes(termo) || normalizarTexto(c.local).includes(termo) || (termoNumerico && (c.cpf || '').replace(/\D/g, '').includes(termoNumerico));
     const dataOk = !c.data_desligamento || ((!inicio || c.data_desligamento >= inicio) && (!fim || c.data_desligamento <= fim));
     return textoOk && dataOk;
   });
-  document.getElementById('badgeInativos').textContent = inativos.length;
+  document.getElementById('badgeInativos').textContent = desligados.length;
+  document.getElementById('inatChips').innerHTML =
+    `<button class="epi-chip${inatAba === 'desligados' ? ' on' : ''}" type="button" onclick="setAbaInativos('desligados')">Desligados<b>${desligados.length}</b></button>` +
+    `<button class="epi-chip${inatAba === 'arquivados' ? ' on' : ''}" type="button" onclick="setAbaInativos('arquivados')">Arquivados<b>${arquivados.length}</b></button>`;
   const tbody = document.getElementById('tableInativosBody');
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum colaborador inativo encontrado.</td></tr>'; return; }
-  tbody.innerHTML = filtrados.map(c => `<tr>
-    <td><div class="colab-avatar">${iniciais(c.nome)}</div></td><td><div class="nome-riscado">${c.nome}</div><div class="sub-inativo">Inativo</div></td><td>${formatCPF(c.cpf)}</td><td>${c.local || '-'}</td><td>${formatDataBR(c.data_desligamento)}</td><td><span class="status-pill inactive">${c.motivo_desligamento || 'Não informado'}</span></td>
-    <td><button class="pill-arquivado" onclick="abrirDocumentos('${c.id}')">📦 Arquivado</button></td><td class="acoes"><span title="Excluir definitivamente" onclick="excluirColaborador('${c.id}', '${c.nome.replace(/'/g,"\\'")}')">🗑️</span></td>
-  </tr>`).join('');
+  if(!filtrados.length){ tbody.innerHTML = `<tr><td colspan="8" class="empty">${inatAba === 'arquivados' ? 'Nenhum colaborador arquivado.' : 'Nenhum colaborador desligado encontrado.'}</td></tr>`; return; }
+  tbody.innerHTML = filtrados.map(c => {
+    const nomeJs = c.nome.replace(/'/g, "\\'");
+    const vencido = c.guarda_ate && String(c.guarda_ate).slice(0, 10) <= hojeISO();
+    const acoes = inatAba === 'arquivados'
+      ? `<span title="Desarquivar (volta para Desligados)" onclick="desarquivarColaborador('${c.id}', '${nomeJs}')">↩️</span>` +
+        (vencido ? `<span title="Excluir definitivamente (prazo de guarda vencido)" onclick="excluirColaborador('${c.id}', '${nomeJs}')">🗑️</span>` : '')
+      : `<span title="Arquivar (guarda de ${ANOS_GUARDA} anos)" onclick="arquivarColaborador('${c.id}', '${nomeJs}')">📦</span>`;
+    const guarda = inatAba === 'arquivados' ? `<div class="sub-local" style="display:block;">${vencido ? 'Prazo de guarda vencido' : 'Guarda até ' + formatDataBR(c.guarda_ate)}</div>` : '';
+    return `<tr>
+    <td><div class="colab-avatar">${iniciais(c.nome)}</div></td><td><div class="nome-riscado">${c.nome}</div><div class="sub-inativo">${inatAba === 'arquivados' ? 'Arquivado' : 'Desligado'}</div></td><td>${formatCPF(c.cpf)}</td><td>${c.local || '-'}</td><td>${formatDataBR(c.data_desligamento)}</td><td><span class="status-pill inactive">${c.motivo_desligamento || 'Não informado'}</span></td>
+    <td><button class="pill-arquivado" onclick="abrirDocumentos('${c.id}')">📂 Documentos</button>${guarda}</td><td class="acoes">${acoes}</td>
+  </tr>`;
+  }).join('');
 }
+
+/* ---------- arquivar / desarquivar ---------- */
+let arquivarPendente = null;
+function arquivarColaborador(id, nome){
+  const c = colaboradores.find(x => String(x.id) === String(id));
+  if(!c) return;
+  arquivarPendente = { id, c };
+  document.getElementById('arquivarNome').textContent = nome;
+  document.getElementById('arquivarAte').textContent = formatDataBR(guardaAte(c));
+  document.getElementById('arquivarAnos').textContent = ANOS_GUARDA;
+  document.getElementById('modalArquivarOverlay').classList.add('open');
+}
+window.arquivarColaborador = arquivarColaborador;
+function fecharArquivar(){ document.getElementById('modalArquivarOverlay').classList.remove('open'); arquivarPendente = null; }
+document.getElementById('arquivarNao').addEventListener('click', fecharArquivar);
+document.getElementById('arquivarSim').addEventListener('click', async ()=>{
+  if(!arquivarPendente) return;
+  const { id, c } = arquivarPendente;
+  const btn = document.getElementById('arquivarSim'); btn.disabled = true;
+  const { data: sess } = await supabaseClient.auth.getSession();
+  const { error } = await supabaseClient.from('colaboradores').update({
+    arquivado_em: new Date().toISOString(), guarda_ate: guardaAte(c), arquivado_por: (sess && sess.session && sess.session.user.email) || null
+  }).eq('id', id);
+  btn.disabled = false;
+  if(error){ toast('Não foi possível arquivar: ' + error.message + ' (rode o supabase_arquivo.sql no Supabase)', 8000); return; }
+  fecharArquivar();
+  toast('Colaborador arquivado.');
+  await loadColaboradores();
+});
+async function desarquivarColaborador(id, nome){
+  if(!confirm(`Desarquivar ${nome}? Ele volta para a lista de Desligados.`)) return;
+  const { error } = await supabaseClient.from('colaboradores').update({ arquivado_em: null, guarda_ate: null, arquivado_por: null }).eq('id', id);
+  if(error){ toast('Erro: ' + error.message, 6000); return; }
+  toast('Colaborador desarquivado.');
+  await loadColaboradores();
+}
+window.desarquivarColaborador = desarquivarColaborador;
 
 function renderKpis(ativos, inativos){
   const total = ativos.length;
@@ -1940,17 +2111,22 @@ document.getElementById('excluirSim').addEventListener('click', async ()=>{
   btn.disabled = true; btn.textContent = 'Excluindo...';
   try{
     const c = colaboradores.find(x => String(x.id) === String(id));
-    // arquivos anexados (best effort): apaga do Storage junto com o cadastro
+    // regra de guarda: só exclui depois do prazo (o banco também bloqueia)
+    if(c && c.status === 'INATIVO' && (!c.guarda_ate || String(c.guarda_ate).slice(0,10) > new Date().toLocaleDateString('sv-SE'))){
+      toast('Este colaborador está no prazo de guarda' + (c.guarda_ate ? ' (até ' + formatDataBR(c.guarda_ate) + ')' : '') + ' e não pode ser excluído.', 7000);
+      fecharExcluir(); return;
+    }
+    // primeiro o cadastro (se o banco recusar, nada mais é apagado)
+    const { error } = await supabaseClient.from('colaboradores').delete().eq('id', id);
+    if(error){ toast('Erro ao excluir: ' + error.message, 7000); return; }
+    // depois os arquivos e dados ligados (best effort)
     if(c){
       const caminhos = DOC_FIELDS.map(d => c[`${d.key}_link`]).filter(Boolean).map(caminhoStorageDoLink).filter(Boolean);
       if(caminhos.length){ try{ await supabaseClient.storage.from('documentos').remove(caminhos); }catch(e){ console.warn(e); } }
     }
-    // dados ligados ao colaborador (fichas de EPI, assinaturas e links): best effort
     for(const t of ['epi_entregas', 'epi_fichas', 'assinaturas', 'assinatura_links']){
       try{ await supabaseClient.from(t).delete().eq('colaborador_id', String(id)); }catch(e){ console.warn(e); }
     }
-    const { error } = await supabaseClient.from('colaboradores').delete().eq('id', id);
-    if(error){ toast('Erro ao excluir: ' + error.message); return; }
     toast('Colaborador excluído.');
     fecharExcluir();
     loadColaboradores();
@@ -2178,6 +2354,7 @@ function caminhoStorageDoLink(link){
 async function urlTemp(link, baixar){
   const caminho = caminhoStorageDoLink(link);
   if(!caminho) return link; // link externo (OneDrive etc.) segue como está
+  auditarArquivo(caminho);
   const { data, error } = await supabaseClient.storage.from('documentos').createSignedUrl(caminho, 600, baixar ? { download:true } : undefined);
   if(error || !data) throw new Error('não foi possível liberar o documento (' + ((error && error.message) || 'sem acesso') + ')');
   return data.signedUrl;
@@ -2337,6 +2514,7 @@ async function epiPreviewDigital(el){
   frame.style.display = 'none'; frame.src = ''; linkBtn.style.display = 'none'; downloadBtn.style.display = 'none';
   empty.style.display = 'block'; empty.textContent = 'Gerando a ficha de EPI...';
   try{
+    auditar('ver_ficha_epi', c.id, `${c.nome} — abriu/baixou o PDF da ficha de EPI`);
     const bytes = await epiGerarPdfBytes(c.id);
     if(!el.classList.contains('active')) return;
     if(epiPdfUrlAtual) URL.revokeObjectURL(epiPdfUrlAtual);
@@ -2352,6 +2530,173 @@ async function epiPreviewDigital(el){
     empty.textContent = 'Não foi possível gerar a ficha: ' + (e.message || e);
   }
 }
+
+
+/* ===== Auditoria ===== */
+function auditar(acao, registro, resumo){
+  try{
+    supabaseClient.rpc('registrar_auditoria', { p_acao: acao, p_registro: registro ? String(registro) : null, p_resumo: resumo || '' })
+      .then(()=>{}, ()=>{});
+  }catch(e){}
+}
+const audVistos = new Map();
+function auditarArquivo(caminho){
+  const agora = Date.now();
+  if(audVistos.has(caminho) && agora - audVistos.get(caminho) < 5000) return;   // evita registro duplo no mesmo clique
+  audVistos.set(caminho, agora);
+  const m = caminho.match(/^([^/]+)\/([^/.]+)/);
+  const colab = m ? colaboradores.find(c => String(c.id) === m[2]) : null;
+  const pasta = m ? m[1] : caminho;
+  auditar('ver_documento', colab ? colab.id : null, `${colab ? colab.nome + ' — ' : ''}${pasta} | ${caminho}`);
+}
+
+const AUD_ACOES = { criou:'Criou', alterou:'Alterou', excluiu:'Excluiu', ver_documento:'Visualizou documento', ver_ficha_epi:'Abriu ficha de EPI', exportar:'Exportou', gerar_link:'Gerou link' };
+const AUD_TABELAS = { colaboradores:'Colaboradores', treinamentos:'Treinamentos', epi_entregas:'Ficha de EPI (itens)', epi_fichas:'Ficha de EPI', assinaturas:'Assinaturas' };
+let audLinhas = [];
+const audEsc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+async function carregarAuditoria(){
+  const tb = document.getElementById('audBody');
+  tb.innerHTML = '<tr><td colspan="5" class="empty">Carregando...</td></tr>';
+  let q = supabaseClient.from('auditoria').select('*').order('em', { ascending:false }).limit(500);
+  const de = document.getElementById('audDe').value, ate = document.getElementById('audAte').value;
+  const acao = document.getElementById('audAcao').value;
+  const usu = document.getElementById('audUsuario').value.trim();
+  const txt = document.getElementById('audTexto').value.trim();
+  if(de) q = q.gte('em', de + 'T00:00:00-03:00');
+  if(ate) q = q.lte('em', ate + 'T23:59:59-03:00');
+  if(acao) q = q.eq('acao', acao);
+  if(usu) q = q.ilike('email', '%' + usu.replace(/[%,]/g, '') + '%');
+  if(txt) q = q.ilike('resumo', '%' + txt.replace(/[%,]/g, '') + '%');
+  const { data, error } = await q;
+  if(error){ tb.innerHTML = `<tr><td colspan="5" class="empty">Não foi possível carregar (${audEsc(error.message)}). Rode o arquivo supabase_auditoria.sql no Supabase.</td></tr>`; return; }
+  audLinhas = data || [];
+  document.getElementById('audTitulo').textContent = `REGISTROS (${audLinhas.length}${audLinhas.length === 500 ? ' — mostrando os 500 mais recentes; use os filtros' : ''})`;
+  tb.innerHTML = audLinhas.map(r => `<tr>
+    <td style="white-space:nowrap">${new Date(r.em).toLocaleString('pt-BR')}</td>
+    <td><b>${audEsc(r.email || '-')}</b>${r.papel ? `<div class="sub-local" style="display:block;">${r.papel === 'admin' ? 'Administrador' : 'Líder'}</div>` : ''}</td>
+    <td><span class="aud-acao ${audEsc(r.acao)}">${audEsc(AUD_ACOES[r.acao] || r.acao)}</span></td>
+    <td>${audEsc(AUD_TABELAS[r.tabela] || r.tabela || '-')}</td>
+    <td style="white-space:normal;font-size:12.5px;">${audEsc(r.resumo || '')}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Nenhum registro encontrado.</td></tr>';
+}
+document.getElementById('audBuscar').addEventListener('click', carregarAuditoria);
+document.getElementById('audExportar').addEventListener('click', ()=>{
+  if(!audLinhas.length){ toast('Não há registros para exportar.'); return; }
+  const linhas = audLinhas.map(r => ({ 'Data/Hora': new Date(r.em).toLocaleString('pt-BR'), 'Usuário': r.email || '', 'Perfil': r.papel || '', 'Ação': AUD_ACOES[r.acao] || r.acao, 'Onde': AUD_TABELAS[r.tabela] || r.tabela || '', 'Detalhe': r.resumo || '' }));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), 'Auditoria');
+  XLSX.writeFile(wb, `auditoria_${new Date().toISOString().slice(0,10)}.xlsx`);
+  auditar('exportar', null, 'Exportou o histórico de auditoria');
+});
+['btnExportExcel','btnExportPdf','btnExportInativosExcel'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('click', ()=> auditar('exportar', null, 'Clicou em: ' + el.textContent.replace('⬇', '').trim()));
+});
+
+
+/* ===== Backup (roda no navegador do administrador; nada vai para servidor de terceiros) ===== */
+const BK_PK = { epi_fichas:'colaborador_id', assinatura_posicoes:'tipo_doc', perfis:'user_id' };
+const BK_TABELAS = ['colaboradores','treinamentos','epi_entregas','epi_fichas','assinaturas','assinatura_posicoes','perfis','auditoria'];
+const BK_IMAGENS = ['assinatura_img', 'resp_img'];
+function bkLs(k, v){ try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
+function backupMostrarUltimos(){
+  const f = (k)=> { const v = bkLs(k); return v ? 'Último backup neste navegador: ' + new Date(v).toLocaleString('pt-BR') : 'Nenhum backup feito neste navegador ainda.'; };
+  document.getElementById('bkDadosUlt').textContent = f('sst_bk_dados');
+  document.getElementById('bkArqUlt').textContent = f('sst_bk_arquivos');
+}
+function bkBaixar(blob, nome){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=> URL.revokeObjectURL(a.href), 60000);
+}
+async function bkBuscar(tabela){
+  const pk = BK_PK[tabela] || 'id', tudo = [], passo = 1000;
+  for(let ini = 0; ; ini += passo){
+    const { data, error } = await supabaseClient.from(tabela).select('*').order(pk).range(ini, ini + passo - 1);
+    if(error) throw new Error(tabela + ': ' + error.message);
+    tudo.push(...data);
+    if(data.length < passo) break;
+  }
+  return tudo;
+}
+document.getElementById('btnBackupDados').addEventListener('click', async ()=>{
+  const prog = document.getElementById('bkDadosProg'), btn = document.getElementById('btnBackupDados');
+  btn.disabled = true;
+  try{
+    if(typeof JSZip === 'undefined' || typeof XLSX === 'undefined') throw new Error('bibliotecas não carregaram; recarregue a página');
+    const zip = new JSZip(), wb = XLSX.utils.book_new(), resumo = [];
+    for(const t of BK_TABELAS){
+      prog.textContent = `Lendo ${t}...`;
+      let linhas;
+      try{ linhas = await bkBuscar(t); }catch(e){ if(t === 'auditoria' || t === 'perfis') { resumo.push(`${t}: não disponível (${e.message})`); continue; } throw e; }
+      zip.file(`dados/${t}.json`, JSON.stringify(linhas));
+      const leve = linhas.map(r => { const o = {}; Object.keys(r).forEach(k => { if(!BK_IMAGENS.includes(k)) o[k] = (r[k] !== null && typeof r[k] === 'object') ? JSON.stringify(r[k]) : r[k]; }); return o; });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(leve), t.slice(0, 31));
+      resumo.push(`${t}: ${linhas.length} registros`);
+    }
+    const dia = new Date().toLocaleDateString('sv-SE');
+    zip.file(`backup-dados-${dia}.xlsx`, XLSX.write(wb, { type:'array', bookType:'xlsx' }));
+    zip.file('LEIA-ME.txt', `Backup dos dados — ${new Date().toLocaleString('pt-BR')}\nContém CPF e dados de saúde: guarde em local protegido.\n\n${resumo.join('\n')}\n`);
+    prog.textContent = 'Compactando...';
+    bkBaixar(await zip.generateAsync({ type:'blob', compression:'DEFLATE' }), `backup-dados-${dia}.zip`);
+    bkLs('sst_bk_dados', new Date().toISOString());
+    prog.textContent = '✔ Backup dos dados concluído.';
+    auditar('exportar', null, 'Backup dos dados (ZIP com todas as tabelas)');
+    backupMostrarUltimos();
+  }catch(e){ console.error(e); prog.textContent = ''; toast('Erro no backup: ' + (e.message || e), 8000); }
+  finally{ btn.disabled = false; }
+});
+
+async function bkListar(prefixo, acc){
+  for(let off = 0; ; off += 1000){
+    const { data, error } = await supabaseClient.storage.from('documentos').list(prefixo, { limit:1000, offset:off, sortBy:{ column:'name', order:'asc' } });
+    if(error) throw error;
+    for(const it of data){
+      const p = prefixo ? prefixo + '/' + it.name : it.name;
+      if(it.id === null) await bkListar(p, acc); else acc.push({ path:p, size:(it.metadata && it.metadata.size) || 0 });
+    }
+    if(data.length < 1000) break;
+  }
+}
+document.getElementById('btnBackupArquivos').addEventListener('click', async ()=>{
+  const prog = document.getElementById('bkArqProg'), btn = document.getElementById('btnBackupArquivos');
+  const pasta = document.getElementById('bkPasta').value;
+  btn.disabled = true;
+  try{
+    if(typeof JSZip === 'undefined') throw new Error('biblioteca não carregou; recarregue a página');
+    prog.textContent = 'Listando arquivos...';
+    const itens = [];
+    await bkListar(pasta, itens);
+    if(!itens.length){ prog.textContent = 'Nenhum arquivo encontrado.'; return; }
+    const dia = new Date().toLocaleDateString('sv-SE'), LIMITE = 250 * 1024 * 1024;
+    let zip = new JSZip(), bytes = 0, parte = 1, feitos = 0, falhas = [];
+    const nomeBase = `backup-arquivos${pasta ? '-' + pasta : ''}-${dia}`;
+    const fechar = async ()=>{
+      prog.textContent = `Compactando parte ${parte}...`;
+      bkBaixar(await zip.generateAsync({ type:'blob', compression:'STORE' }), `${nomeBase}-parte${parte}.zip`);
+      parte++; zip = new JSZip(); bytes = 0;
+    };
+    for(let i = 0; i < itens.length; i += 50){
+      const lote = itens.slice(i, i + 50);
+      const { data: urls, error } = await supabaseClient.storage.from('documentos').createSignedUrls(lote.map(x => x.path), 900);
+      if(error) throw error;
+      await Promise.all(urls.map(async (u)=>{
+        try{
+          if(u.error || !u.signedUrl) throw new Error(u.error || 'sem link');
+          const r = await fetch(u.signedUrl); if(!r.ok) throw new Error('HTTP ' + r.status);
+          const buf = await r.arrayBuffer(); zip.file(u.path, buf); bytes += buf.byteLength;
+        }catch(e){ falhas.push(u.path + ' (' + (e.message || e) + ')'); }
+        feitos++; prog.textContent = `Baixando ${feitos} de ${itens.length} arquivos... (parte ${parte})`;
+      }));
+      if(bytes >= LIMITE) await fechar();
+    }
+    if(falhas.length) zip.file('FALHAS.txt', falhas.join('\n'));
+    if(bytes > 0 || falhas.length) await fechar();
+    bkLs('sst_bk_arquivos', new Date().toISOString());
+    prog.textContent = `✔ Concluído: ${itens.length - falhas.length} de ${itens.length} arquivos em ${parte - 1} parte(s).` + (falhas.length ? ` ${falhas.length} falharam (veja FALHAS.txt).` : '');
+    auditar('exportar', null, `Backup de arquivos (${pasta || 'todas as pastas'}): ${itens.length} arquivos`);
+    backupMostrarUltimos();
+  }catch(e){ console.error(e); prog.textContent = ''; toast('Erro no backup: ' + (e.message || e), 8000); }
+  finally{ btn.disabled = false; }
+});
 
 async function sha256Hex(buf){
   const h = await crypto.subtle.digest('SHA-256', buf);
@@ -3671,6 +4016,7 @@ async function epiAbrirFicha(id){
   };
   if(c){
     const ok = await epiCarregarFicha();
+    if(ok) auditar('ver_ficha_epi', c.id, `${c.nome} — abriu a ficha de EPI`);
     if(!ok){ epiFicha = null; return; }
     epiFicha.anexo = c.epi_link || '';
     // sem ficha digital, mas com ficha anexada: importa os itens do Word para conferência
@@ -4137,6 +4483,7 @@ async function gerarLinkAssinatura(tipo, colabId, semSalvar){
   document.getElementById('linkWhats').href = 'https://wa.me/?text=' + encodeURIComponent(linkMsgAtual);
   document.getElementById('linkCompartilhar').style.display = navigator.share ? '' : 'none';
   document.getElementById('modalLinkOverlay').classList.add('open');
+  auditar('gerar_link', colabId, `${c.nome} — link de ${nomeDoc.replace(/^(a|o) /, '')}`);
 }
 window.gerarLinkAssinatura = gerarLinkAssinatura;
 function epiEnviarLink(id){ return gerarLinkAssinatura('epi', id, true); }
