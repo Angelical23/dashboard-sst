@@ -2766,6 +2766,9 @@ document.getElementById('btnBackupArquivos').addEventListener('click', async ()=
    APP DO CELULAR — Entrega de EPI e coleta de assinatura
    ========================================================= */
 const MOB_QUERY = window.matchMedia('(max-width: 820px)');
+const MOB_TOQUE = window.matchMedia('(pointer: coarse)');
+/* celular de verdade, mesmo com o Chrome em "Site para computador" */
+const mobEhCelular = ()=> MOB_QUERY.matches || (MOB_TOQUE.matches && Math.min(screen.width, screen.height) <= 820);
 let mobForcarCompleto = false, mobLogado = false;
 let mobTela = 'lista', mobFiltro = 'todos', mobBusca = '', mobColab = null, mobItens = [], mobTipo = 'E', mobAposSalvar = 'assinar', mobIds = [];
 let mobPad = null, mobInativo = null;
@@ -2784,9 +2787,9 @@ const mobHoje = ()=> new Date().toLocaleDateString('sv-SE');
 
 function mobAvaliar(){
   const app = document.getElementById('mobApp');
-  const on = mobLogado && MOB_QUERY.matches && !mobForcarCompleto;
+  const on = mobLogado && mobEhCelular() && !mobForcarCompleto;
   document.body.classList.toggle('mob-on', on);
-  document.body.classList.toggle('mob-forcar-completo', mobLogado && MOB_QUERY.matches && mobForcarCompleto);
+  document.body.classList.toggle('mob-forcar-completo', mobLogado && mobEhCelular() && mobForcarCompleto);
   if(on) mobRender(); else if(app && !mobLogado) app.innerHTML = '';
   mobTimerInatividade(on);
 }
