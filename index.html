@@ -1237,6 +1237,21 @@
   </div>
 </div>
 
+<div id="soApp" style="display:none;position:fixed;inset:0;z-index:300;background:#0b2a3a;color:#fff;overflow-y:auto;padding:24px 20px;">
+  <div style="max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px;">
+    <img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:14px;">
+    <h1 style="margin:0;font-size:22px;">Use o aplicativo</h1>
+    <p style="margin:0;color:#cfe3ee;line-height:1.5;">O acesso de <b>Líder</b> funciona somente pelo aplicativo instalado no celular, não pelo navegador.</p>
+    <button type="button" id="soAppInstalar" style="display:none;border:0;border-radius:12px;background:#4ade80;color:#06281a;font-size:17px;font-weight:700;height:54px;">Instalar aplicativo</button>
+    <div style="background:#0e3342;border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.55;">
+      <b>Android (Chrome):</b> toque nos três pontinhos e em <b>Instalar aplicativo</b>.<br>
+      <b>iPhone (Safari):</b> toque em Compartilhar e em <b>Adicionar à Tela de Início</b>.<br>
+      Depois abra pelo <b>ícone</b> na tela inicial.
+    </div>
+    <a href="instalar.html" style="color:#7dd3fc;font-size:14px;">Ver instruções completas e QR code</a>
+    <button type="button" id="soAppSair" style="border:1.5px solid #7dd3fc;background:transparent;color:#7dd3fc;border-radius:12px;height:46px;font-size:15px;font-weight:700;">Sair</button>
+  </div>
+</div>
 <div id="mobApp" aria-label="Entrega de EPI"></div>
 <button type="button" id="mobVoltarCel">Modo celular</button>
 <div class="toast" id="toast"></div>
@@ -1496,6 +1511,7 @@ async function carregarPerfil(session){
     } else if(data && data.papel) papel = data.papel;
   }catch(e){ console.warn(e); }
   perfilAtual = papel;
+  soAppAvaliar(papel);
   document.body.classList.toggle('lider', papel !== 'admin');
   const nav = document.getElementById('navAcessos');
   if(nav) nav.style.display = papel === 'admin' ? '' : 'none';
@@ -3011,6 +3027,26 @@ window.mobConfirmarAssinatura = mobConfirmarAssinatura;
 
 /* PWA: registra o service worker (sem cache: o sistema sempre abre a versão mais nova) */
 if('serviceWorker' in navigator){ window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+
+
+/* ===== Líder: só pelo aplicativo instalado (PWA) ===== */
+const LIDER_SO_APP = true;     // mude para false se quiser liberar o líder também no navegador
+let instalarEvento = null;
+window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); instalarEvento = e; const b = document.getElementById('soAppInstalar'); if(b) b.style.display = 'block'; });
+const ehAppInstalado = ()=> window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: minimal-ui)').matches || window.matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
+function soAppAvaliar(papel){
+  const el = document.getElementById('soApp');
+  if(!el) return;
+  el.style.display = (LIDER_SO_APP && papel !== 'admin' && !ehAppInstalado()) ? 'block' : 'none';
+  const b = document.getElementById('soAppInstalar');
+  if(b) b.style.display = instalarEvento ? 'block' : 'none';
+}
+document.getElementById('soAppInstalar').addEventListener('click', async ()=>{
+  if(!instalarEvento) return;
+  instalarEvento.prompt(); await instalarEvento.userChoice; instalarEvento = null;
+  document.getElementById('soAppInstalar').style.display = 'none';
+});
+document.getElementById('soAppSair').addEventListener('click', ()=>{ document.getElementById('soApp').style.display = 'none'; document.getElementById('btnLogout').click(); });
 
 async function sha256Hex(buf){
   const h = await crypto.subtle.digest('SHA-256', buf);
