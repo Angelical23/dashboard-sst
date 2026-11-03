@@ -585,6 +585,21 @@
   .mb-vazio{text-align:center;color:#526173;font-size:14px;padding:24px 8px;}
   #mobVoltarCel{display:none;position:fixed;right:14px;bottom:14px;z-index:95;background:#135469;color:#fff;border:0;border-radius:999px;padding:12px 18px;font-size:14px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.3);}
   body.mob-forcar-completo #mobVoltarCel{display:block;}
+  .mb-sel{height:44px;border:0;border-radius:10px;padding:0 12px;font-size:15px;background:#fff;color:#0f172a;width:100%;box-sizing:border-box;}
+  .mb-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+  .mb-pills .mb-pill{font-size:11.5px;padding:2px 9px;}
+  .mb-doc{background:#fff;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;border-left:4px solid #d97706;}
+  .mb-doc.ok{border-left-color:#16a34a;} .mb-doc.sem{border-left-color:#94a3b8;}
+  .mb-doc b{font-size:15px;} .mb-doc small{font-size:12px;color:#526173;}
+  .mb-docbtns{display:flex;gap:8px;flex-wrap:wrap;}
+  .mb-docbtns .mb-btn{height:44px;font-size:14px;flex:1;min-width:120px;}
+  .mb-btn.p.sm{font-size:14px;height:44px;}
+  .mb-h{font-size:13px;font-weight:700;margin:2px 0 -2px;}
+  .mb-pdfwrap{position:relative;background:#fff;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;line-height:0;}
+  .mb-pdfwrap canvas{display:block;width:100%;}
+  #mobBox{position:absolute;border:2px dashed #135469;background:rgba(19,84,105,.14);border-radius:4px;pointer-events:none;box-sizing:border-box;}
+  .mb-check{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#334155;line-height:1.45;}
+  .mb-check input{width:22px;height:22px;accent-color:#135469;flex:none;margin:0;}
 </style>
 </head>
 <body>
@@ -921,7 +936,7 @@
       <div class="aud-filtros">
         <div><label>De</label><input type="date" id="audDe"></div>
         <div><label>Até</label><input type="date" id="audAte"></div>
-        <div><label>Ação</label><select id="audAcao"><option value="">Todas</option><option value="ver_documento">Visualizou documento</option><option value="ver_ficha_epi">Abriu ficha de EPI</option><option value="criou">Criou</option><option value="alterou">Alterou</option><option value="excluiu">Excluiu</option><option value="exportar">Exportou</option><option value="gerar_link">Gerou link</option></select></div>
+        <div><label>Ação</label><select id="audAcao"><option value="">Todas</option><option value="ver_documento">Visualizou documento</option><option value="ver_ficha_epi">Abriu ficha de EPI</option><option value="criou">Criou</option><option value="alterou">Alterou</option><option value="excluiu">Excluiu</option><option value="exportar">Exportou</option><option value="gerar_link">Gerou link</option><option value="assinar_doc">Assinou documento</option></select></div>
         <div><label>Usuário</label><input type="text" id="audUsuario" placeholder="parte do e-mail"></div>
         <div><label>Texto (nome, campo...)</label><input type="text" id="audTexto" placeholder="ex.: Angelica"></div>
         <button class="btn primary" id="audBuscar">Buscar</button>
@@ -2629,7 +2644,7 @@ function auditarArquivo(caminho){
   auditar('ver_documento', colab ? colab.id : null, `${colab ? colab.nome + ' — ' : ''}${pasta} | ${caminho}`);
 }
 
-const AUD_ACOES = { criou:'Criou', alterou:'Alterou', excluiu:'Excluiu', ver_documento:'Visualizou documento', ver_ficha_epi:'Abriu ficha de EPI', exportar:'Exportou', gerar_link:'Gerou link' };
+const AUD_ACOES = { criou:'Criou', alterou:'Alterou', excluiu:'Excluiu', ver_documento:'Visualizou documento', ver_ficha_epi:'Abriu ficha de EPI', exportar:'Exportou', gerar_link:'Gerou link', assinar_doc:'Assinou documento' };
 const AUD_TABELAS = { colaboradores:'Colaboradores', treinamentos:'Treinamentos', epi_entregas:'Ficha de EPI (itens)', epi_fichas:'Ficha de EPI', assinaturas:'Assinaturas' };
 let audLinhas = [];
 const audEsc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
@@ -2821,45 +2836,71 @@ function mobTimerInatividade(on){
 }
 ['touchstart','click','keydown'].forEach(ev => document.addEventListener(ev, ()=>{ if(document.body.classList.contains('mob-on')) mobTimerInatividade(true); }, { passive:true }));
 
+let mobLocal = '', mobOrigem = 'lista', mobPendTipo = 'todas', mobFila = [], mobFilaTotal = 0, mobDoc = null;
+const MOB_DOCNOME = { epi:'Ficha de EPI', os:'Ordem de Serviço (OS)', nr06:'Certificado NR06' };
+
+/* situação de cada um dos 3 documentos do colaborador */
+function mobDocs(c){
+  const r = epiResumo[String(c.id)] || {}, n = r.n || 0, pe = n - (r.ass || 0);
+  const epi = !n ? { k:'sem', txt:'EPI · sem ficha' }
+    : pe > 0 ? { k:'pend', txt:`EPI · ${pe} ${pe === 1 ? 'pendente' : 'pendentes'}`, qtd:pe } : { k:'ok', txt:'EPI ✓' };
+  const doc = (key, rot)=>{
+    const link = c[key + '_link'];
+    if(!link) return { k:'sem', txt:`${rot} · sem arquivo` };
+    return assinadosSet.has(`${c.id}|${key}|${link}`) ? { k:'ok', txt:`${rot} ✓` } : { k:'pend', txt:`${rot} · pendente` };
+  };
+  return { epi, os: doc('os', 'OS'), nr06: doc('nr06', 'NR-06') };
+}
 function mobSituacao(c){
-  const r = epiResumo[String(c.id)] || {};
-  const n = r.n || 0, ass = r.ass || 0, pend = n - ass;
-  if(!n) return { k:'sem', pill:'<span class="mb-pill n">Sem ficha de EPI</span>', pend:0 };
-  if(pend > 0) return { k:'pend', pill:`<span class="mb-pill w">Aguardando assinatura · ${pend} ${pend === 1 ? 'item' : 'itens'}</span>`, pend };
-  return { k:'ok', pill:`<span class="mb-pill g">Ficha assinada · ${n} ${n === 1 ? 'item' : 'itens'}</span>`, pend:0 };
+  const d = mobDocs(c), lista = [d.epi, d.os, d.nr06];
+  const pend = lista.filter(x => x.k === 'pend').length;
+  const k = pend ? 'pend' : (lista.some(x => x.k === 'ok') ? 'ok' : 'sem');
+  return { k, pend, docs:d, pills: lista.map(x => `<span class="mb-pill ${x.k === 'pend' ? 'w' : x.k === 'ok' ? 'g' : 'n'}">${x.txt}</span>`).join('') };
+}
+
+/* filtro por local de trabalho */
+const mobAtivos = ()=> colaboradores.filter(c => c.status !== 'INATIVO');
+const mobAtivosLocal = ()=> mobAtivos().filter(c => !mobLocal || (c.local || '').trim() === mobLocal);
+function mobSelLocal(){
+  const ls = [...new Set(mobAtivos().map(c => (c.local || '').trim()).filter(Boolean))].sort();
+  if(mobLocal && !ls.includes(mobLocal)) mobLocal = '';
+  return `<select class="mb-sel" aria-label="Local de trabalho" onchange="mobLocal=this.value;mobRender()"><option value="">Todos os locais</option>${ls.map(l => `<option value="${mobE(l)}"${l === mobLocal ? ' selected' : ''}>${mobE(l)}</option>`).join('')}</select>`;
 }
 
 function mobRender(){
   const app = document.getElementById('mobApp');
   if(!app) return;
   if(mobTela === 'lista') mobRenderLista(app);
+  else if(mobTela === 'pend') mobRenderPend(app);
   else if(mobTela === 'ficha') mobRenderFicha(app);
   else if(mobTela === 'nova') mobRenderNova(app);
   else if(mobTela === 'assinar') mobRenderAssinar(app);
+  else if(mobTela === 'assinarDoc') mobRenderAssinarDoc(app);
 }
 
 /* ---------- 1. lista ---------- */
 function mobRenderLista(app){
-  const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  const base = mobAtivosLocal();
   const termo = normalizarTexto(mobBusca);
-  const sit = new Map(ativos.map(c => [c.id, mobSituacao(c)]));
-  const cont = { todos: ativos.length, pend: 0, ok: 0 };
+  const sit = new Map(base.map(c => [c.id, mobSituacao(c)]));
+  const cont = { todos: base.length, pend: 0, ok: 0 };
   sit.forEach(s => { if(s.k === 'pend') cont.pend++; if(s.k === 'ok') cont.ok++; });
-  const lista = ativos.filter(c => (mobFiltro === 'todos' || sit.get(c.id).k === mobFiltro) && (!termo || normalizarTexto(c.nome).includes(termo)));
+  const lista = base.filter(c => (mobFiltro === 'todos' || sit.get(c.id).k === mobFiltro) && (!termo || normalizarTexto(c.nome).includes(termo)));
   const LIM = 60;
   app.innerHTML = `
     <div class="mb-top">
-      <div class="mb-row"><div><div class="mb-eyebrow">GESTÃO DE SEGURANÇA DO TRABALHO</div><h1>Entrega de EPI</h1></div><span class="mb-tag">${mobPapel()}</span></div>
+      <div class="mb-row"><div><div class="mb-eyebrow">GESTÃO DE SEGURANÇA DO TRABALHO</div><h1>Assinaturas</h1></div><span class="mb-tag">${mobPapel()}</span></div>
       <label class="mb-search">${MOB_SVG.busca}<input id="mobBusca" type="search" placeholder="Buscar pelo nome" value="${mobE(mobBusca)}" autocomplete="off" aria-label="Buscar colaborador"></label>
+      ${mobSelLocal()}
     </div>
     <div class="mb-chips">
       <button class="mb-chip${mobFiltro === 'todos' ? ' on' : ''}" onclick="mobSetFiltro('todos')">Todos ${cont.todos}</button>
       <button class="mb-chip${mobFiltro === 'pend' ? ' on' : ''}" onclick="mobSetFiltro('pend')">Pendentes ${cont.pend}</button>
-      <button class="mb-chip${mobFiltro === 'ok' ? ' on' : ''}" onclick="mobSetFiltro('ok')">Assinadas ${cont.ok}</button>
+      <button class="mb-chip${mobFiltro === 'ok' ? ' on' : ''}" onclick="mobSetFiltro('ok')">Em dia ${cont.ok}</button>
     </div>
     <div class="mb-body" id="mobLista">${lista.slice(0, LIM).map(c => { const s = sit.get(c.id); return `
       <button class="mb-card" onclick="mobAbrirFicha('${c.id}')"><span class="mb-av">${mobE(iniciais(c.nome))}</span>
-        <span class="mb-info"><b>${mobE(c.nome)}</b><small>${mobE(c.local || '-')}${c.funcao ? ' · ' + mobE(c.funcao) : ''}</small>${s.pill}</span>${MOB_SVG.seta}</button>`; }).join('') || '<div class="mb-vazio">Nenhum colaborador encontrado.</div>'}
+        <span class="mb-info"><b>${mobE(c.nome)}</b><small>${mobE(c.local || '-')}${c.funcao ? ' · ' + mobE(c.funcao) : ''}</small><span class="mb-pills">${s.pills}</span></span>${MOB_SVG.seta}</button>`; }).join('') || '<div class="mb-vazio">Nenhum colaborador encontrado.</div>'}
       ${lista.length > LIM ? `<div class="mb-vazio">Mostrando ${LIM} de ${lista.length}. Digite o nome para filtrar.</div>` : ''}</div>
     ${mobNav('lista')}`;
   const inp = document.getElementById('mobBusca');
@@ -2867,14 +2908,40 @@ function mobRenderLista(app){
 }
 function mobNav(ativa){
   return `<nav class="mb-nav">
-    <button class="${ativa === 'lista' && mobFiltro !== 'pend' ? 'on' : ''}" onclick="mobSetFiltro('todos')">${MOB_SVG.pessoas}Colaboradores</button>
-    <button class="${ativa === 'lista' && mobFiltro === 'pend' ? 'on' : ''}" onclick="mobSetFiltro('pend')">${MOB_SVG.escudo}Pendências</button>
+    <button class="${ativa === 'lista' ? 'on' : ''}" onclick="mobSetFiltro('todos')">${MOB_SVG.pessoas}Colaboradores</button>
+    <button class="${ativa === 'pend' ? 'on' : ''}" onclick="mobIrPend()">${MOB_SVG.escudo}Pendências</button>
     <button onclick="mobVersaoCompleta()">${MOB_SVG.tela}Versão completa</button>
     <button onclick="document.getElementById('btnLogout').click()">${MOB_SVG.sair}Sair</button></nav>`;
 }
 function mobSetFiltro(f){ mobFiltro = f; mobTela = 'lista'; mobRender(); }
+function mobIrPend(){ mobTela = 'pend'; mobRender(); }
+function mobVoltarLista(){ mobFila = []; mobFilaTotal = 0; mobTela = mobOrigem === 'pend' ? 'pend' : 'lista'; mobRender(); }
 function mobVersaoCompleta(){ mobForcarCompleto = true; mobAvaliar(); }
-window.mobSetFiltro = mobSetFiltro; window.mobVersaoCompleta = mobVersaoCompleta;
+window.mobSetFiltro = mobSetFiltro; window.mobIrPend = mobIrPend; window.mobVoltarLista = mobVoltarLista; window.mobVersaoCompleta = mobVersaoCompleta;
+
+/* ---------- pendências por documento ---------- */
+function mobRenderPend(app){
+  const NOMES = { epi:'EPI', os:'OS', nr06:'NR-06' };
+  const itens = mobAtivosLocal().map(c => ({ c, s:mobSituacao(c) })).filter(x => x.s.pend);
+  const falta = (x)=> ['epi', 'os', 'nr06'].filter(t => x.s.docs[t].k === 'pend');
+  const cont = { epi:0, os:0, nr06:0 };
+  itens.forEach(x => falta(x).forEach(t => cont[t]++));
+  const lista = itens.filter(x => mobPendTipo === 'todas' || x.s.docs[mobPendTipo].k === 'pend');
+  const LIM = 80;
+  app.innerHTML = `
+    <div class="mb-top"><div><div class="mb-eyebrow">GESTÃO DE SEGURANÇA DO TRABALHO</div><h1>Pendências</h1></div>
+      <div class="mb-sub">${itens.length} ${itens.length === 1 ? 'colaborador' : 'colaboradores'} com assinatura pendente</div>
+      ${mobSelLocal()}</div>
+    <div class="mb-body">
+      <div class="mb-stats">${['epi', 'os', 'nr06'].map(t => `<div class="mb-stat" style="background:#fef3c7"><b style="color:#92400e">${cont[t]}</b><span style="color:#92400e">${NOMES[t]}</span></div>`).join('')}</div>
+      <div class="mb-chips" style="padding:0">${[['todas', 'Todas'], ['epi', 'EPI'], ['os', 'OS'], ['nr06', 'NR-06']].map(([k, r]) => `<button class="mb-chip${mobPendTipo === k ? ' on' : ''}" onclick="mobPendTipo='${k}';mobRender()">${r}</button>`).join('')}</div>
+      ${lista.slice(0, LIM).map(x => { const f = falta(x); return `
+        <button class="mb-card" style="border-left:4px solid #d97706;border-radius:12px" onclick="mobOrigem='pend';mobAbrirFicha('${x.c.id}')"><span class="mb-info"><b>${mobE(x.c.nome)}</b><small>${f.map(t => t === 'epi' ? `EPI (${mobPl(x.s.docs.epi.qtd, 'item', 'itens')})` : NOMES[t]).join(' · ')}</small><small>${mobE(x.c.local || '-')}</small></span><span class="mb-pill w">${mobPl(f.length, 'documento', 'documentos')}</span></button>`; }).join('') || '<div class="mb-vazio">Nenhuma pendência. Tudo assinado.</div>'}
+      ${lista.length > LIM ? `<div class="mb-vazio">Mostrando ${LIM} de ${lista.length}. Use o filtro de local para reduzir.</div>` : ''}
+    </div>
+    ${mobNav('pend')}`;
+}
+const mobPl = (n, s, p)=> n + ' ' + (n === 1 ? s : p);
 
 /* ---------- 2. ficha ---------- */
 async function mobCarregarItens(){
@@ -2885,6 +2952,7 @@ async function mobCarregarItens(){
   mobItens = data || []; return true;
 }
 async function mobAbrirFicha(id){
+  if(mobTela === 'lista' || mobTela === 'pend') mobOrigem = mobTela;
   mobColab = colaboradores.find(c => String(c.id) === String(id));
   if(!mobColab) return;
   auditar('ver_ficha_epi', mobColab.id, `${mobColab.nome} — abriu a ficha de EPI (celular)`);
@@ -2893,24 +2961,50 @@ async function mobAbrirFicha(id){
 window.mobAbrirFicha = mobAbrirFicha;
 const mobTipoNome = { E:'Entrega inicial', S:'Substituição', D:'Devolução' };
 function mobRenderFicha(app){
-  const c = mobColab, pend = mobItens.filter(i => !i.assinado_em), ass = mobItens.length - pend.length;
+  const c = mobColab, d = mobDocs(c), pend = mobItens.filter(i => !i.assinado_em), ass = mobItens.length - pend.length;
+  const totalPend = [d.epi, d.os, d.nr06].filter(x => x.k === 'pend').length;
   const item = (i)=> `<div class="mb-item${i.assinado_em ? ' ok' : ''}"><span class="t"><b>${mobE(i.descricao)} · ${mobE(i.qtde || '')} un.${i.ca && i.ca !== 'N/A' ? ' · C.A. ' + mobE(i.ca) : ''}</b><small>${mobTipoNome[i.tipo] || 'Entrega'} · ${mobE(epiDataBR(i.data_entrega))}</small></span><span class="mb-pill ${i.assinado_em ? 'g' : 'w'}">${i.assinado_em ? 'Assinado' : 'Pendente'}</span></div>`;
   const recentes = mobItens.filter(i => i.assinado_em).slice(-3);
+  const cls = (k)=> k === 'pend' ? 'w' : k === 'ok' ? 'g' : 'n';
+  const cartaoDoc = (t)=>{
+    const s = d[t], link = c[t + '_link'];
+    const rot = s.k === 'pend' ? 'Pendente' : s.k === 'ok' ? 'Assinado' : 'Sem arquivo';
+    let btn = '';
+    if(s.k === 'pend') btn = `<button class="mb-btn p sm" onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('${t}')">Colher assinatura</button><button class="mb-btn g" onclick="gerarLinkAssinatura('${t}','${c.id}')">Enviar link</button>`;
+    else if(s.k === 'ok') btn = `<button class="mb-btn g" onclick="abrirLinkTemp(mobColab['${t}_link'])">Ver documento</button>`;
+    else btn = `<div class="mb-vazio" style="padding:0;text-align:left;font-size:12.5px">O documento ainda não foi anexado. O administrador precisa anexar no sistema.</div>`;
+    return `<div class="mb-doc ${s.k}"><div class="mb-row"><span class="mb-info"><b>${MOB_DOCNOME[t]}</b><small>${t === 'epi' ? '' : (c.funcao ? mobE(c.funcao) : '')}</small></span><span class="mb-pill ${cls(s.k)}">${rot}</span></div><div class="mb-docbtns">${btn}</div></div>`;
+  };
   app.innerHTML = `
-    <div class="mb-top"><button class="mb-back" onclick="mobSetFiltro(mobFiltro)">${MOB_SVG.voltar}Voltar à lista</button>
+    <div class="mb-top"><button class="mb-back" onclick="mobVoltarLista()">${MOB_SVG.voltar}Voltar</button>
       <div><h1>${mobE(c.nome)}</h1><div class="mb-sub">${mobE(c.local || '-')}${c.funcao ? ' · ' + mobE(c.funcao) : ''}</div></div></div>
     <div class="mb-body">
-      <div class="mb-stats"><div class="mb-stat"><b>${mobItens.length}</b><span>itens na ficha</span></div><div class="mb-stat"><b style="color:#166534">${ass}</b><span>assinados</span></div><div class="mb-stat" style="background:#fef3c7"><b style="color:#92400e">${pend.length}</b><span style="color:#92400e">pendentes</span></div></div>
+      <div class="mb-h">Documentos do colaborador</div>
+      <div class="mb-doc ${d.epi.k}"><div class="mb-row"><span class="mb-info"><b>Ficha de EPI</b><small>${mobItens.length} ${mobItens.length === 1 ? 'item' : 'itens'} · ${ass} ${ass === 1 ? 'assinado' : 'assinados'}</small></span><span class="mb-pill ${cls(d.epi.k)}">${d.epi.k === 'pend' ? mobPl(d.epi.qtd, 'pendente', 'pendentes') : d.epi.k === 'ok' ? 'Assinado' : 'Sem ficha'}</span></div>
+        <div class="mb-docbtns"><button class="mb-btn p sm" ${pend.length ? '' : 'disabled'} onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('epi')">Colher assinatura</button><button class="mb-btn s" onclick="mobIrNova()">+ Nova entrega</button>
+        <button class="mb-btn g" ${pend.length ? '' : 'disabled'} onclick="epiEnviarLink('${c.id}')">Enviar link</button></div></div>
+      ${cartaoDoc('os')}
+      ${cartaoDoc('nr06')}
+      ${mobItens.length ? '<div class="mb-h" style="margin-top:6px">Itens da ficha de EPI</div>' : ''}
       ${pend.map(item).join('')}
       ${recentes.map(item).join('')}
       ${ass > recentes.length ? `<div class="mb-vazio" style="padding:4px">+ ${ass - recentes.length} itens assinados</div>` : ''}
-      ${!mobItens.length ? '<div class="mb-vazio">Esta ficha ainda não tem entregas. Toque em “Nova entrega”.</div>' : ''}
+      <div class="mb-vazio" style="padding:4px 0;font-size:12.5px">A assinatura fica salva no sistema, com data, hora e quem colheu.</div>
     </div>
-    <div class="mb-bar">
-      <button class="mb-btn p" ${pend.length ? '' : 'disabled'} onclick="mobIrAssinar(${JSON.stringify(pend.map(i => i.id)).replace(/"/g, '&quot;')})">Colher assinatura${pend.length ? ' (' + pend.length + ')' : ''}</button>
-      <div style="display:flex;gap:10px"><button class="mb-btn s" onclick="mobIrNova()">+ Nova entrega</button><button class="mb-btn g" ${pend.length ? '' : 'disabled'} onclick="epiEnviarLink('${c.id}')">Enviar link</button></div>
-    </div>`;
+    <div class="mb-bar"><button class="mb-btn p" ${totalPend ? '' : 'disabled'} onclick="mobColherTodas()">Colher todas pendentes${totalPend ? ' (' + totalPend + ')' : ''}</button></div>`;
 }
+
+/* fila: assina um documento depois do outro */
+function mobFilaDe(c){ const d = mobDocs(c); return ['epi', 'os', 'nr06'].filter(t => d[t].k === 'pend'); }
+function mobColherTodas(){ mobFila = mobFilaDe(mobColab); mobFilaTotal = mobFila.length; mobProximo(); }
+function mobProximo(){
+  const t = mobFila.shift();
+  if(!t){ mobFilaTotal = 0; mobTela = 'ficha'; mobRender(); return; }
+  mobIniciarTipo(t);
+}
+function mobIniciarTipo(t){ if(t === 'epi') mobIrAssinar([]); else mobIrAssinarDoc(t); }
+const mobSubFila = ()=> mobFilaTotal > 1 ? `<div class="mb-sub">Documento ${mobFilaTotal - mobFila.length} de ${mobFilaTotal} pendentes</div>` : '';
+window.mobColherTodas = mobColherTodas; window.mobIniciarTipo = mobIniciarTipo;
 
 /* ---------- 3. nova entrega ---------- */
 let mobKit = [], mobDataSel = '';
@@ -2962,7 +3056,7 @@ window.mobIrAssinar = mobIrAssinar;
 function mobRenderAssinar(app){
   const alvo = mobItens.filter(i => mobIds.includes(i.id));
   app.innerHTML = `
-    <div class="mb-top"><button class="mb-back" onclick="mobTela='ficha';mobRender()">${MOB_SVG.voltar}Cancelar</button><h1>Ficha de controle e entrega de EPI</h1></div>
+    <div class="mb-top"><button class="mb-back" onclick="mobFila=[];mobFilaTotal=0;mobTela='ficha';mobRender()">${MOB_SVG.voltar}Cancelar</button><div><h1>Ficha de controle e entrega de EPI</h1>${mobSubFila()}</div></div>
     <div class="mb-body">
       <div class="mb-info-box">Passe o celular para <b>${mobE(mobColab.nome)}</b></div>
       <div style="background:#fff;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;max-height:150px;overflow-y:auto"><span style="font-size:13px;font-weight:700">Itens recebidos, pendentes de assinatura (${alvo.length})</span>
@@ -3012,12 +3106,153 @@ async function mobConfirmarAssinatura(){
     }).in('id', mobIds).is('assinado_em', null);
     if(error) throw error;
     toast('Assinatura registrada.');
-    await mobCarregarItens(); epiCarregarResumo();
-    mobTela = 'ficha'; mobRender();
+    await mobCarregarItens(); await epiCarregarResumo();
+    mobProximo();
   }catch(e){ console.error(e); toast('Erro: ' + (e.message || e), 8000); }
   finally{ const b = document.getElementById('mobConfirmar'); if(b) b.disabled = false; }
 }
 window.mobConfirmarAssinatura = mobConfirmarAssinatura;
+
+/* ---------- 5. assinar OS / Certificado NR06 no celular ---------- */
+async function mobIrAssinarDoc(tipo){
+  const c = mobColab, textos = ASSIN_TEXTOS[tipo], link = c[tipo + '_link'];
+  if(!link){ toast('O documento não está anexado. Peça ao administrador.', 5000); mobProximo(); return; }
+  const ext = extDoLink(link);
+  if(!['pdf', 'jpg', 'jpeg', 'png'].includes(ext)){ toast('Só é possível assinar PDF, JPG ou PNG. O administrador precisa anexar de novo em PDF.', 7000); return; }
+  if(typeof PDFLib === 'undefined' || typeof pdfjsLib === 'undefined'){ toast('As bibliotecas de assinatura não carregaram. Atualize a página.', 6000); return; }
+  toast('Carregando documento...');
+  try{
+    const resp = await fetchDocTemp(link);
+    if(!resp.ok) throw new Error(`não foi possível baixar o documento (${resp.status})`);
+    const origBuf = await resp.arrayBuffer();
+    const hashOriginal = await sha256Hex(origBuf);
+    const pdfBytes = ext === 'pdf' ? new Uint8Array(origBuf.slice(0)) : await imagemParaPdf(origBuf, ext);
+    const jsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
+    let pos = { pagina:1, x:0.58, y:0.80, w:0.30 };
+    try{
+      const { data } = await supabaseClient.from('assinatura_posicoes').select('*').eq('tipo_doc', tipo).maybeSingle();
+      if(data) pos = { pagina:data.pagina, x:Number(data.x), y:Number(data.y), w:Number(data.largura) };
+    }catch(e){ /* usa a posição padrão */ }
+    if(pos.pagina > jsDoc.numPages) pos.pagina = 1;
+    mobDoc = { tipo, link, nome:textos.nome, decl:textos.declaracao, hashOriginal, pdfBytes, jsDoc, pagina:pos.pagina, box:{ x:pos.x, y:pos.y, w:pos.w || 0.3 }, achou:false, cssW:1, cssH:1 };
+    try{
+      const ach = await acharCampoAssinatura(jsDoc, tipo);
+      if(ach){ mobDoc.pagina = ach.pagina; mobDoc.box.x = ach.cx - mobDoc.box.w / 2; mobDoc.box.y = ach.base - (mobDoc.box.w * ach.pw / 3) / ach.ph; mobDoc.achou = true; }
+    }catch(e){ console.warn('Campo de assinatura não localizado:', e); }
+    mobTela = 'assinarDoc'; mobRender();
+  }catch(e){ console.error(e); toast('Erro ao abrir o documento: ' + (e.message || e), 7000); }
+}
+window.mobIrAssinarDoc = mobIrAssinarDoc;
+
+function mobRenderAssinarDoc(app){
+  const d = mobDoc, c = mobColab;
+  app.innerHTML = `
+    <div class="mb-top"><button class="mb-back" onclick="mobFila=[];mobFilaTotal=0;mobTela='ficha';mobRender()">${MOB_SVG.voltar}Cancelar</button><div><h1>${mobE(d.nome)}</h1>${mobSubFila()}</div></div>
+    <div class="mb-body">
+      <div class="mb-info-box">Passe o celular para <b>${mobE(c.nome)}</b></div>
+      <button class="mb-btn s" onclick="abrirLinkTemp(mobDoc.link)">Abrir e ler o documento</button>
+      <label class="mb-check"><input type="checkbox" id="mobLi" onchange="mobDoc.lido=this.checked"><span>Li o documento. ${mobE(d.decl)}</span></label>
+      <div class="mb-lb">${d.achou ? 'Onde a assinatura vai ficar (toque no documento para mover)' : 'Não achei o campo sozinho: toque no documento onde a assinatura deve ficar'}
+        <div class="mb-pdfwrap" id="mobPdfWrap"><canvas id="mobPdf"></canvas><div id="mobBox"></div></div></div>
+      <div class="mb-lb">Assine com o dedo no quadro abaixo<div class="mb-pad"><canvas id="mobPad" aria-label="Quadro de assinatura"></canvas></div></div>
+      <label class="mb-lb">Confirme os 3 últimos dígitos do seu CPF<input class="mb-in" id="mobCpf3" inputmode="numeric" maxlength="3" autocomplete="off" style="width:130px;font-size:20px;letter-spacing:5px" placeholder="000"></label>
+    </div>
+    <div class="mb-bar"><button class="mb-btn p" id="mobConfirmarDoc" onclick="mobConfirmarDoc()">✔ Confirmar assinatura</button><button class="mb-btn g" onclick="mobLimparPad()">Limpar</button></div>`;
+  mobIniciaPad();
+  mobRenderPagina();
+  document.getElementById('mobPdfWrap').addEventListener('click', (e)=>{
+    const r = document.getElementById('mobPdf').getBoundingClientRect(), D = mobDoc;
+    if(!r.width || !D) return;
+    const hFrac = (D.box.w * D.cssW / 3) / D.cssH;
+    D.box.x = Math.min(Math.max((e.clientX - r.left) / r.width - D.box.w / 2, 0), 1 - D.box.w);
+    D.box.y = Math.min(Math.max((e.clientY - r.top) / r.height - hFrac / 2, 0), 1 - hFrac);
+    mobPosBox();
+  });
+}
+async function mobRenderPagina(){
+  const d = mobDoc, cv = document.getElementById('mobPdf'), wrap = document.getElementById('mobPdfWrap');
+  if(!d || !cv || !wrap) return;
+  try{
+    const page = await d.jsDoc.getPage(d.pagina);
+    if(page.rotate){ toast('Este PDF tem página rotacionada e não pode ser assinado aqui. Peça ao administrador.', 7000); return; }
+    const cssW = Math.max(260, wrap.clientWidth || 340), base = page.getViewport({ scale:1 }), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const vp = page.getViewport({ scale:(cssW / base.width) * dpr });
+    cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+    await page.render({ canvasContext:cv.getContext('2d'), viewport:vp }).promise;
+    d.cssW = cssW; d.cssH = vp.height / dpr;
+    const hFrac = (d.box.w * cssW / 3) / d.cssH;
+    d.box.x = Math.min(Math.max(d.box.x, 0), 1 - d.box.w); d.box.y = Math.min(Math.max(d.box.y, 0), 1 - hFrac);
+    mobPosBox();
+  }catch(e){ console.error(e); toast('Não foi possível mostrar o documento: ' + (e.message || e), 6000); }
+}
+function mobPosBox(){
+  const d = mobDoc, el = document.getElementById('mobBox');
+  if(!d || !el) return;
+  const hFrac = (d.box.w * d.cssW / 3) / d.cssH;
+  el.style.left = (d.box.x * 100) + '%'; el.style.top = (d.box.y * 100) + '%'; el.style.width = (d.box.w * 100) + '%'; el.style.height = (hFrac * 100) + '%';
+}
+
+async function mobCarimbar(){
+  const d = mobDoc, c = mobColab;
+  const pdfDoc = await PDFLib.PDFDocument.load(d.pdfBytes, { ignoreEncryption:true });
+  const pagina = pdfDoc.getPage(d.pagina - 1);
+  const { width:pw, height:ph } = pagina.getSize();
+  const boxW = d.box.w * pw, boxH = boxW / 3, boxX = d.box.x * pw, boxY = ph - (d.box.y * ph) - boxH;
+  const fonte = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica), fonteN = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const agora = new Date();
+  const dataTxt = `${agora.toLocaleDateString('pt-BR')} ${agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}`;
+  const limpa = (t)=>{ try{ fonte.widthOfTextAtSize(t, 8); return t; }catch(e){ return semAcentos(t); } };
+  const linhas = [
+    { t: limpa('Assinado eletronicamente por'), f: fonte },
+    { t: limpa(String(c.nome).toUpperCase()), f: fonteN },
+    { t: limpa(`${dataTxt} - coletado no celular`), f: fonte },
+    { t: `Cod. ${d.hashOriginal.slice(0, 10)}`, f: fonte }
+  ];
+  let tam = 9;
+  const larguraMax = Math.max(boxW, 150), larg = (tm)=> Math.max(...linhas.map(l => l.f.widthOfTextAtSize(l.t, tm)));
+  while(larg(tam) > larguraMax && tam > 4) tam -= 0.5;
+  const alturaLinha = tam * 1.25, alturaTotal = alturaLinha * linhas.length, centroX = boxX + boxW / 2;
+  let baseY = boxY + (boxH - alturaTotal) / 2;
+  if(baseY < 4) baseY = 4;
+  linhas.slice().reverse().forEach((l, i)=>{
+    const w = l.f.widthOfTextAtSize(l.t, tam);
+    pagina.drawText(l.t, { x: centroX - w / 2, y: baseY + i * alturaLinha, size: tam, font: l.f, color: PDFLib.rgb(0.07, 0.2, 0.45) });
+  });
+  const bytes = await pdfDoc.save();
+  return { bytes, hashAss: await sha256Hex(bytes) };
+}
+
+const MOB_MOTIVOS = { ja_assinado:'Este documento já está assinado.', sem_documento:'O documento não está anexado.', arquivo:'O arquivo assinado não chegou ao servidor. Tente de novo.', caminho:'Caminho do arquivo inválido.', auth:'Sua sessão expirou. Entre de novo.', tipo:'Tipo de documento inválido.' };
+async function mobConfirmarDoc(){
+  const d = mobDoc, c = mobColab;
+  if(!d) return;
+  if(!d.lido){ toast('Marque que leu o documento.'); return; }
+  if(!mobPad || !mobPad.tem){ toast('Faça a assinatura no quadro.'); return; }
+  const btn = document.getElementById('mobConfirmarDoc'); btn.disabled = true;
+  try{
+    const cpf3 = (document.getElementById('mobCpf3').value || '').replace(/\D/g, '');
+    const { data: ok, error: e0 } = await supabaseClient.rpc('conferir_cpf3', { p_colab: String(c.id), p_cpf3: cpf3 });
+    if(e0) throw new Error(e0.message + ' (rode o supabase_movel.sql no Supabase)');
+    if(!ok){ toast('Os 3 últimos dígitos do CPF não conferem.'); return; }
+    const { bytes, hashAss } = await mobCarimbar();
+    const caminho = `app/${d.tipo}/${c.id}-${Date.now()}.pdf`;
+    const { error: eUp } = await supabaseClient.storage.from('documentos').upload(caminho, new Blob([bytes], { type:'application/pdf' }), { contentType:'application/pdf' });
+    if(eUp) throw new Error('não foi possível enviar o documento: ' + eUp.message + ' (rode o supabase_docs_app.sql no Supabase)');
+    const { data: r, error: e2 } = await supabaseClient.rpc('app_assinar_pdf', {
+      p_colab: String(c.id), p_tipo: d.tipo, p_path: caminho, p_hash_original: d.hashOriginal, p_hash_assinado: hashAss,
+      p_pagina: d.pagina, p_x: d.box.x, p_y: d.box.y, p_w: d.box.w, p_disp: (navigator.userAgent || '').slice(0, 250) });
+    if(e2) throw new Error(e2.message + ' (rode o supabase_docs_app.sql no Supabase)');
+    if(!r || !r.ok){ toast(MOB_MOTIVOS[r && r.motivo] || 'Não foi possível concluir.', 6000); return; }
+    auditar('assinar_doc', c.id, `${c.nome} — ${d.nome} assinada no celular`);
+    toast('Documento assinado e salvo.');
+    mobTela = 'ficha';
+    await loadColaboradores(); await epiCarregarResumo();
+    mobColab = colaboradores.find(x => String(x.id) === String(c.id)) || c;
+    mobProximo();
+  }catch(e){ console.error(e); toast('Erro: ' + (e.message || e), 8000); }
+  finally{ const b = document.getElementById('mobConfirmarDoc'); if(b) b.disabled = false; }
+}
+window.mobConfirmarDoc = mobConfirmarDoc;
 
 /* atualiza a lista quando os dados são recarregados */
 (function(){
