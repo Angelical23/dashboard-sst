@@ -4230,7 +4230,9 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
   const wb = XLSX.read(dadosArray, { cellDates:true });
   const primeiraAba = wb.Sheets[wb.SheetNames[0]];
   /* lê como tabela de células e procura a linha de cabeçalho (pode haver título nas primeiras linhas) */
-  const matriz = XLSX.utils.sheet_to_json(primeiraAba, { header:1, raw:false, dateNF:'yyyy-mm-dd', defval:'' });
+  const isoDe = (d0)=>{ const d = new Date(d0.getTime() + 43200000); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const matriz = XLSX.utils.sheet_to_json(primeiraAba, { header:1, raw:true, defval:'' })
+    .map(l => l.map(v => v instanceof Date ? isoDe(v) : (typeof v === 'number' ? String(v) : v)));
   const ehCab = (linha)=>{
     const ks = linha.map(c => normalizarChave(c).replace(/[^a-z0-9 ]/g, ''));
     return ks.some(k => /\b(nome|colaborador|funcionario)\b/.test(k)) && ks.some(k => /cpf/.test(k));
