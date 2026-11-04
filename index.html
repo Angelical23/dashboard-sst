@@ -600,6 +600,10 @@
   #mobBox{position:absolute;border:2px dashed #135469;background:rgba(19,84,105,.14);border-radius:4px;pointer-events:none;box-sizing:border-box;}
   .mb-check{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#334155;line-height:1.45;}
   .mb-check input{width:22px;height:22px;accent-color:#135469;flex:none;margin:0;}
+.btn-olho{font-size:12px;padding:4px 10px;margin:0;white-space:nowrap;}
+.grupo.doc-oculto{opacity:.55;background:#f1f5f9;}
+.grupo.doc-oculto .btn-olho{background:#fef3c7;border-color:#f59e0b;color:#92400e;}
+.dica-olho{font-size:12.5px;color:#526173;margin:2px 0 10px;}
 </style>
 </head>
 <body>
@@ -871,7 +875,6 @@
           </select>
           <select id="selectFiltroDoc" class="search-select">
             <option value="">Qualquer documento</option>
-            <option value="admissao">Ficha de Admissão</option>
             <option value="aso">ASO</option>
             <option value="os">OS - Ordem de Serviço</option>
             <option value="epi">Ficha de EPI</option>
@@ -900,12 +903,14 @@
                 <th>NOME COMPLETO</th>
                 <th class="col-cpf">CPF</th>
                 <th class="col-loc">LOCAL DE TRABALHO</th>
+                <th class="col-loc">FUNÇÃO</th>
+                <th class="col-loc">DATA DE ADMISSÃO</th>
                 <th>SITUAÇÃO</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="6" class="loading">Carregando colaboradores...</td></tr>
+              <tr><td colspan="8" class="loading">Carregando colaboradores...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1137,21 +1142,15 @@
       <input type="text" name="cpf" placeholder="000.000.000-00" required>
       <label>Local de trabalho</label>
       <input type="text" name="local" placeholder="Production, Logistics, Admin...">
+      <label>Função / Cargo</label>
+      <input type="text" name="funcao" placeholder="Ex.: Agente de Higienização">
+      <label>Data de admissão</label>
+      <input type="date" name="admissao_data">
+      <input type="hidden" name="docs_ocultos" value="">
+      <p class="dica-olho">Use o olhinho 👁️ em cada documento para <b>deixar de controlá-lo</b> neste colaborador. Documento oculto não entra nos indicadores.</p>
 
       <div class="grupo">
-        <div class="grupo-titulo">Ficha de Admissão</div>
-        <label>Data de admissão</label>
-        <input type="date" name="admissao_data">
-        <label>Link do documento</label>
-        <div style="display:flex;gap:8px;">
-          <input type="url" name="admissao_link" placeholder="https://..." style="flex:1;">
-          <label class="btn" for="upload_admissao_link" style="margin:0;white-space:nowrap;">📎 Anexar</label>
-          <input type="file" id="upload_admissao_link" class="input-upload-doc" data-target="admissao_link" data-pasta="admissao" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-        </div>
-      </div>
-
-      <div class="grupo">
-        <div class="grupo-titulo">ASO</div>
+        <div class="grupo-titulo" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">ASO<button type="button" class="btn btn-olho" data-doc="aso" aria-pressed="false" title="Deixar de controlar este documento" onclick="docOlho('aso')">👁️ Controlado</button></div>
         <label>Data de vencimento</label>
         <input type="date" name="aso_data">
         <label>Link do documento</label>
@@ -1163,7 +1162,7 @@
       </div>
 
       <div class="grupo">
-        <div class="grupo-titulo">OS - Ordem de Serviço</div>
+        <div class="grupo-titulo" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">OS - Ordem de Serviço<button type="button" class="btn btn-olho" data-doc="os" aria-pressed="false" title="Deixar de controlar este documento" onclick="docOlho('os')">👁️ Controlado</button></div>
         <label>Data de emissão/vencimento</label>
         <input type="date" name="os_data">
         <label>Link do documento</label>
@@ -1175,7 +1174,7 @@
       </div>
 
       <div class="grupo">
-        <div class="grupo-titulo">Ficha de EPI</div>
+        <div class="grupo-titulo" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">Ficha de EPI<button type="button" class="btn btn-olho" data-doc="epi" aria-pressed="false" title="Deixar de controlar este documento" onclick="docOlho('epi')">👁️ Controlado</button></div>
         <label>Data de vencimento</label>
         <input type="date" name="epi_data">
         <label>Link do documento</label>
@@ -1187,7 +1186,7 @@
       </div>
 
       <div class="grupo">
-        <div class="grupo-titulo">Certificado NR06</div>
+        <div class="grupo-titulo" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">Certificado NR06<button type="button" class="btn btn-olho" data-doc="nr06" aria-pressed="false" title="Deixar de controlar este documento" onclick="docOlho('nr06')">👁️ Controlado</button></div>
         <label>Data de vencimento</label>
         <input type="date" name="nr06_data">
         <label>Link do documento</label>
@@ -1412,7 +1411,6 @@
 
     <label>Tipo de documento desta leva</label>
     <select id="anexarTipoDoc" style="width:100%;padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:6px;font-size:13px;">
-      <option value="admissao">Ficha de Admissão</option>
       <option value="aso">ASO</option>
       <option value="os">OS - Ordem de Serviço</option>
       <option value="epi">Ficha de EPI</option>
@@ -1492,12 +1490,15 @@ let ativosGrafico = [];
 let editandoId = null; // null = cadastro novo | id = edição em andamento
 
 const DOC_FIELDS = [
-  { key: "admissao", label: "Ficha de Admissão", expira: false },
   { key: "aso",       label: "ASO",               expira: true  },
   { key: "os",        label: "OS - Ordem de Serviço", expira: true, assinar: true  },
   { key: "epi",       label: "Ficha de EPI",       expira: true  },
   { key: "nr06",      label: "Certificado NR06",   expira: true, assinar: true  }
 ];
+
+/* documentos que o colaborador não precisa ter: ficam fora dos indicadores */
+const docOculto = (c, key)=> !!c && ((c.docs_ocultos || '').split(',').map(s => s.trim()).includes(key));
+const docsDe = (c)=> DOC_FIELDS.filter(d => !docOculto(c, d.key));
 
 /* =========================================================
    AUTENTICAÇÃO
@@ -1723,7 +1724,7 @@ async function loadColaboradores(){
 
   if(error){
     document.getElementById('tableBody').innerHTML =
-      `<tr><td colspan="6" class="empty">Erro ao carregar dados: ${error.message}</td></tr>`;
+      `<tr><td colspan="8" class="empty">Erro ao carregar dados: ${error.message}</td></tr>`;
     console.error(error);
     return;
   }
@@ -1841,12 +1842,13 @@ function renderTabelaAtivos(){
   const filtrados = ativos.filter(c => {
     const textoOk = normalizarTexto(c.nome).includes(termo)
       || normalizarTexto(c.local).includes(termo)
+      || normalizarTexto(c.funcao).includes(termo)
       || (termoNumerico && (c.cpf || '').replace(/\D/g, '').includes(termoNumerico));
     const localOk = !local || (c.local || '').trim() === local;
 
     let statusOk = true;
     if(statusSel){
-      const docs = docSel ? DOC_FIELDS.filter(d => d.key === docSel) : DOC_FIELDS;
+      const docs = (docSel ? DOC_FIELDS.filter(d => d.key === docSel) : DOC_FIELDS).filter(d => !docOculto(c, d.key));
       const statusDe = d => statusDoc(d, c).chave;
       // "Em Dia" sem documento escolhido = TODOS os documentos em dia.
       // Os demais status = pelo menos um documento naquele status.
@@ -1860,7 +1862,7 @@ function renderTabelaAtivos(){
 
   document.getElementById('badgeAtivos').textContent = ativos.length;
   const tbody = document.getElementById('tableBody');
-  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>'; return; }
+  if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>'; return; }
   tbody.innerHTML = linhasAtivosHtml(filtrados);
 }
 function __antigoLinhasAtivos(filtrados){ return filtrados.map(c => `<tr>
@@ -1956,7 +1958,7 @@ function renderKpis(ativos, inativos){
   let emDia=0, docsVencendo=0, docsVencidos=0, docsSemData=0;
   ativos.forEach(c=>{
     let problema=false;
-    DOC_FIELDS.forEach(d=>{
+    docsDe(c).forEach(d=>{
       const s=statusDoc(d, c);
       if(s.chave==='bad'){docsVencidos++;problema=true;}
       if(s.chave==='warn'){docsVencendo++;problema=true;}
@@ -1964,7 +1966,7 @@ function renderKpis(ativos, inativos){
     });
     if(!problema) emDia++;
   });
-  const totalDocs=total*DOC_FIELDS.length;
+  const totalDocs=ativos.reduce((n, c)=> n + docsDe(c).length, 0);
   const pctDocs=(n)=> totalDocs ? `${n} (${Math.round(n/totalDocs*100)}%)` : '0 (0%)';
   document.getElementById('kpiEmDia').textContent = total ? `${emDia} (${Math.round(emDia/total*100)}%)` : '0 (0%)';
   document.getElementById('kpiVencendo').textContent = pctDocs(docsVencendo);
@@ -1996,6 +1998,7 @@ function renderBarraDocumentos(localSel){
   const dados = DOC_FIELDS.map(d=>{
     const v = { regular:0, vencendo:0, vencido:0, semdata:0 };
     ativosGrafico.forEach(c=>{
+      if(docOculto(c, d.key)) return;
       const s = statusDoc(d, c);
       v[s.chave==='ok' ? 'regular' : s.chave==='warn' ? 'vencendo' : s.chave==='nodate' ? 'semdata' : 'vencido']++;
     });
@@ -2047,7 +2050,7 @@ function renderBarraSetores(){
   ativosGrafico.forEach(c=>{
     const setor = (c.local || 'Não informado').trim();
     if(!mapa[setor]) mapa[setor] = { regular:0, vencendo:0, vencido:0, semdata:0 };
-    DOC_FIELDS.forEach(d=>{
+    docsDe(c).forEach(d=>{
       const s = statusDoc(d, c);
       mapa[setor][s.chave==='ok' ? 'regular' : s.chave==='warn' ? 'vencendo' : s.chave==='nodate' ? 'semdata' : 'vencido']++;
     });
@@ -2135,7 +2138,7 @@ function renderGraficos(ativos, inativos){
   const cores={admissao:'#2b6777',aso:'#2ecc71',os:'#3498db',epi:'#f5c518',nr06:'#e74c3c'};
   const pendentes=DOC_FIELDS.map(d=>({
     label:d.label,
-    valor:ativos.filter(c=>statusDoc(d, c).chave!=='ok').length,
+    valor:ativos.filter(c=>!docOculto(c, d.key) && statusDoc(d, c).chave!=='ok').length,
     cor:cores[d.key]
   }));
   if(pieChartInstance)pieChartInstance.destroy();
@@ -2215,7 +2218,7 @@ document.getElementById('excluirSim').addEventListener('click', async ()=>{
     if(error){ toast('Erro ao excluir: ' + error.message, 7000); return; }
     // depois os arquivos e dados ligados (best effort)
     if(c){
-      const caminhos = DOC_FIELDS.map(d => c[`${d.key}_link`]).filter(Boolean).map(caminhoStorageDoLink).filter(Boolean);
+      const caminhos = [...DOC_FIELDS.map(d => c[`${d.key}_link`]), c.admissao_link].filter(Boolean).map(caminhoStorageDoLink).filter(Boolean);
       if(caminhos.length){ try{ await supabaseClient.storage.from('documentos').remove(caminhos); }catch(e){ console.warn(e); } }
     }
     for(const t of ['epi_entregas', 'epi_fichas', 'assinaturas', 'assinatura_links']){
@@ -2240,11 +2243,12 @@ function editarColaborador(id){
   document.getElementById('btnSalvar').textContent = 'Salvar alterações';
 
   const form = document.getElementById('formNovo');
-  const campos = ['nome','cpf','local','admissao_data','admissao_link','aso_data','aso_link','os_data','os_link','epi_data','epi_link','nr06_data','nr06_link'];
+  const campos = ['nome','cpf','local','funcao','docs_ocultos','admissao_data','aso_data','aso_link','os_data','os_link','epi_data','epi_link','nr06_data','nr06_link'];
   campos.forEach(campo=>{
     if(form.elements[campo]) form.elements[campo].value = c[campo] || '';
   });
 
+  docOlhosSync(c.docs_ocultos || '');
   modalOverlay.classList.add('open');
 }
 window.editarColaborador = editarColaborador;
@@ -2383,7 +2387,30 @@ function fecharModal(){
   editandoId = null;
   document.getElementById('modalTitulo').textContent = 'Novo Colaborador';
   document.getElementById('btnSalvar').textContent = 'Salvar';
+  docOlhosSync('');
 }
+
+/* ---------- olhinho: documento controlado / oculto ---------- */
+function docOlhosSync(csv){
+  const campo = document.querySelector('#formNovo [name=docs_ocultos]');
+  if(campo) campo.value = csv || '';
+  const lista = (csv || '').split(',').map(s => s.trim()).filter(Boolean);
+  document.querySelectorAll('#formNovo .btn-olho').forEach(b=>{
+    const oculto = lista.includes(b.dataset.doc);
+    b.textContent = oculto ? '🙈 Oculto' : '👁️ Controlado';
+    b.setAttribute('aria-pressed', oculto ? 'true' : 'false');
+    b.title = oculto ? 'Voltar a controlar este documento' : 'Deixar de controlar este documento';
+    const grupo = b.closest('.grupo'); if(grupo) grupo.classList.toggle('doc-oculto', oculto);
+  });
+}
+function docOlho(chave){
+  const campo = document.querySelector('#formNovo [name=docs_ocultos]');
+  const lista = (campo.value || '').split(',').map(s => s.trim()).filter(Boolean);
+  const i = lista.indexOf(chave);
+  if(i >= 0) lista.splice(i, 1); else lista.push(chave);
+  docOlhosSync(lista.join(','));
+}
+window.docOlho = docOlho;
 
 /* ---------- Modal novo/editar colaborador ---------- */
 const modalOverlay = document.getElementById('modalOverlay');
@@ -2399,7 +2426,7 @@ document.getElementById('formNovo').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const fd = new FormData(e.target);
   const registro = Object.fromEntries(fd.entries());
-  ['admissao_data','aso_data','os_data','epi_data','nr06_data'].forEach(k=>{ if(!registro[k]) registro[k] = null; });
+  ['admissao_data','aso_data','os_data','epi_data','nr06_data','funcao','docs_ocultos'].forEach(k=>{ if(!registro[k]) registro[k] = null; });
 
   let error;
   if(editandoId){
@@ -2842,17 +2869,18 @@ const MOB_DOCNOME = { epi:'Ficha de EPI', os:'Ordem de Serviço (OS)', nr06:'Cer
 /* situação de cada um dos 3 documentos do colaborador */
 function mobDocs(c){
   const r = epiResumo[String(c.id)] || {}, n = r.n || 0, pe = n - (r.ass || 0);
-  const epi = !n ? { k:'sem', txt:'EPI · sem ficha' }
+  const epi = docOculto(c, 'epi') ? { k:'oc', txt:'' } : !n ? { k:'sem', txt:'EPI · sem ficha' }
     : pe > 0 ? { k:'pend', txt:`EPI · ${pe} ${pe === 1 ? 'pendente' : 'pendentes'}`, qtd:pe } : { k:'ok', txt:'EPI ✓' };
   const doc = (key, rot)=>{
     const link = c[key + '_link'];
+    if(docOculto(c, key)) return { k:'oc', txt:'' };
     if(!link) return { k:'sem', txt:`${rot} · sem arquivo` };
     return assinadosSet.has(`${c.id}|${key}|${link}`) ? { k:'ok', txt:`${rot} ✓` } : { k:'pend', txt:`${rot} · pendente` };
   };
   return { epi, os: doc('os', 'OS'), nr06: doc('nr06', 'NR-06') };
 }
 function mobSituacao(c){
-  const d = mobDocs(c), lista = [d.epi, d.os, d.nr06];
+  const d = mobDocs(c), lista = [d.epi, d.os, d.nr06].filter(x => x.k !== 'oc');
   const pend = lista.filter(x => x.k === 'pend').length;
   const k = pend ? 'pend' : (lista.some(x => x.k === 'ok') ? 'ok' : 'sem');
   return { k, pend, docs:d, pills: lista.map(x => `<span class="mb-pill ${x.k === 'pend' ? 'w' : x.k === 'ok' ? 'g' : 'n'}">${x.txt}</span>`).join('') };
@@ -2973,6 +3001,7 @@ function mobRenderFicha(app){
     if(s.k === 'pend') btn = `<button class="mb-btn p sm" onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('${t}')">Colher assinatura</button><button class="mb-btn g" onclick="gerarLinkAssinatura('${t}','${c.id}')">Enviar link</button>`;
     else if(s.k === 'ok') btn = `<button class="mb-btn g" onclick="abrirLinkTemp(mobColab['${t}_link'])">Ver documento</button>`;
     else btn = `<div class="mb-vazio" style="padding:0;text-align:left;font-size:12.5px">O documento ainda não foi anexado. O administrador precisa anexar no sistema.</div>`;
+    if(s.k === 'oc') return '';
     return `<div class="mb-doc ${s.k}"><div class="mb-row"><span class="mb-info"><b>${MOB_DOCNOME[t]}</b><small>${t === 'epi' ? '' : (c.funcao ? mobE(c.funcao) : '')}</small></span><span class="mb-pill ${cls(s.k)}">${rot}</span></div><div class="mb-docbtns">${btn}</div></div>`;
   };
   app.innerHTML = `
@@ -4059,9 +4088,8 @@ document.getElementById('btnExportExcel').addEventListener('click', ()=>{
       'CPF': c.cpf,
       'Local de Trabalho': c.local,
 
-      'Status Ficha de Admissão': statusOf('admissao', false),
+      'Função': c.funcao || '',
       'Data Admissão': c.admissao_data || '',
-      'Link Admissão': c.admissao_link || '',
 
       'Status ASO': statusOf('aso', true),
       'Data Vencimento ASO': c.aso_data || '',
@@ -4121,7 +4149,8 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
       c.nome,
       c.cpf || '-',
       c.local || '-',
-      status('admissao', false),
+      c.funcao || '-',
+      c.admissao_data ? formatDataBR(c.admissao_data) : '-',
       status('aso', true),
       status('os', true),
       status('epi', true),
@@ -4131,7 +4160,7 @@ document.getElementById('btnExportPdf').addEventListener('click', ()=>{
 
   doc.autoTable({
     startY: 22,
-    head: [['Nome Completo','CPF','Local','Ficha de Admissão','ASO','OS - Ordem de Serviço','Ficha de EPI','Certificado NR06']],
+    head: [['Nome Completo','CPF','Local','Função','Admissão','ASO','OS - Ordem de Serviço','Ficha de EPI','Certificado NR06']],
     body: linhas,
     styles: { fontSize: 9 },
     headStyles: { fillColor: [43,103,119] }
@@ -4157,8 +4186,8 @@ const ALIASES_COLUNAS = {
   nome:          ['nome', 'nome completo', 'colaborador', 'funcionario'],
   cpf:           ['cpf', 'cpf do colaborador'],
   local:         ['local', 'local de trabalho', 'setor', 'departamento', 'area'],
-  admissao_data: ['admissao_data', 'data de admissao', 'data admissao', 'admissao'],
-  admissao_link: ['admissao_link', 'link admissao', 'link da admissao'],
+  funcao:        ['funcao', 'funcao / cargo', 'funcao/cargo', 'cargo'],
+  admissao_data: ['admissao_data', 'data de admissao', 'data admissao', 'admissao', 'dt admissao', 'data da admissao'],
   aso_data:      ['aso_data', 'data aso', 'data do aso', 'vencimento aso'],
   aso_link:      ['aso_link', 'link aso'],
   os_data:       ['os_data', 'data os', 'data da os', 'vencimento os', 'ordem de servico'],
@@ -4187,21 +4216,27 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
   if(!arquivo) return;
 
   const dadosArray = await arquivo.arrayBuffer();
-  const wb = XLSX.read(dadosArray);
+  const wb = XLSX.read(dadosArray, { cellDates:true });
   const primeiraAba = wb.Sheets[wb.SheetNames[0]];
-  const linhasCruas = XLSX.utils.sheet_to_json(primeiraAba, { raw:false });
+  const linhasCruas = XLSX.utils.sheet_to_json(primeiraAba, { raw:false, dateNF:'yyyy-mm-dd' });
 
   if(linhasCruas.length === 0){ toast('Planilha vazia ou em formato inválido.'); e.target.value=''; return; }
 
   const registros = linhasCruas.map(linhaCrua => {
     const l = mapearLinhaImportada(linhaCrua);
-    const norm = (v)=> v ? new Date(v).toISOString().slice(0,10) : null;
+    const norm = (v)=>{
+      if(!v) return null;
+      const s = String(v).trim(); let m;
+      if((m = s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return `${m[1]}-${m[2]}-${m[3]}`;
+      if((m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/))){ let y = +m[3]; if(y < 100) y += 2000; return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`; }
+      return null;
+    };
     return {
       nome: l.nome ? l.nome.toString().trim() : null,
       cpf: l.cpf ? l.cpf.toString().trim() : null,
       local: l.local ? l.local.toString().trim() : null,
+      funcao: l.funcao ? l.funcao.toString().trim() : null,
       admissao_data: norm(l.admissao_data),
-      admissao_link: l.admissao_link || null,
       aso_data: norm(l.aso_data),
       aso_link: l.aso_link || null,
       os_data: norm(l.os_data),
@@ -4242,6 +4277,7 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
 
   const novos = mesclados.filter(m=>!m.id);
   const atualizados = mesclados.filter(m=>m.id);
+  if(!confirm(`Importar a planilha?\n\n${novos.length} colaborador(es) NOVO(S)\n${atualizados.length} já cadastrado(s) (só os campos preenchidos na planilha serão atualizados)\n\nFaça o backup antes, se ainda não fez.`)){ e.target.value = ''; return; }
   let error = null;
   if(atualizados.length){
     ({ error } = await supabaseClient.from('colaboradores').upsert(atualizados, { onConflict: 'id' }));
@@ -4265,6 +4301,7 @@ const ativosAbertos = new Set();
 
 /* status de um documento; a Ficha de EPI assinada no Controle de EPI conta como Em Dia */
 function statusDocCampo(campo, c, d){
+  if(docOculto(c, campo)) return { chave:'oculto', texto:'Oculto (não controlado)', classe:'nodate', icone:'🙈' };
   if(campo === 'epi'){
     const r = epiResumo[String(c.id)];
     if(r && r.n && r.ass === r.n) return { chave:'ok', texto:'Assinado', classe:'ok', icone:'✔' };
@@ -4276,7 +4313,7 @@ function statusDoc(d, c){ return statusDocCampo(d.key, c, d); }
 
 function situacaoColab(c){
   const r = { ok:0, warn:0, bad:0, nodate:0 };
-  DOC_FIELDS.forEach(d=>{
+  docsDe(c).forEach(d=>{
     const s = statusDoc(d, c);
     r[s.chave]++;
   });
@@ -4313,9 +4350,9 @@ function infoDocumento(d, c, s){
 function detalheDocsHtml(c){
   const r = situacaoColab(c);
   const cab = r.total
-    ? `<b>${r.total} de ${DOC_FIELDS.length} documentos</b> precisam de atenção.`
-    : `<b>Todos os ${DOC_FIELDS.length} documentos</b> estão em dia.`;
-  const cards = DOC_FIELDS.map(d=>{
+    ? `<b>${r.total} de ${docsDe(c).length} documentos</b> precisam de atenção.`
+    : `<b>Todos os ${docsDe(c).length} documentos</b> estão em dia.`;
+  const cards = docsDe(c).map(d=>{
     const link = c[`${d.key}_link`];
     const s = statusDoc(d, c);
     let botoes = '';
@@ -4330,7 +4367,7 @@ function detalheDocsHtml(c){
     }
     return `<div class="at-doc"><div class="dn">${d.label}</div><div><span class="status-pill ${s.classe}">${s.icone} ${s.texto}</span></div><div class="di">${infoDocumento(d, c, s)}</div><div class="da">${botoes}</div></div>`;
   }).join('');
-  return `<tr class="at-detalhe"><td></td><td colspan="5"><div class="at-dhead"><span>${cab}</span><span>${formatCPF(c.cpf)} · ${c.local || '-'}</span></div><div class="at-docs">${cards}</div></td></tr>`;
+  return `<tr class="at-detalhe"><td></td><td colspan="7"><div class="at-dhead"><span>${cab}</span><span>${formatCPF(c.cpf)} · ${c.local || '-'}</span></div><div class="at-docs">${cards}</div></td></tr>`;
 }
 
 function toggleDocsAtivo(id){
@@ -4355,6 +4392,7 @@ function linhasAtivosHtml(lista){
       <td style="width:48px"><div class="colab-avatar">${iniciais(c.nome)}</div></td>
       <td><button class="at-namebtn" type="button" aria-expanded="${aberto}" onclick="toggleDocsAtivo('${c.id}')">${chev(aberto)}<span><span class="at-nm">${c.nome}</span><span class="sub-local">${c.local || '-'}</span></span></button></td>
       <td class="col-cpf">${formatCPF(c.cpf)}</td><td class="col-loc">${c.local || '-'}</td>
+      <td class="col-loc">${c.funcao || '-'}</td><td class="col-loc">${c.admissao_data ? formatDataBR(c.admissao_data) : '-'}</td>
       <td class="at-sit"><button class="at-pillbtn" type="button" aria-label="Ver documentos de ${c.nome}" onclick="toggleDocsAtivo('${c.id}')">${situacaoPills(r)}</button></td>
       <td class="acoes"><span title="Ver documentos" onclick="abrirDocumentos('${c.id}')">👁️</span><span title="Editar colaborador" onclick="editarColaborador('${c.id}')">✏️</span><span class="btn-icon-desligar icon-desligar" role="button" tabindex="0" title="Desligar / Inativar colaborador" onclick="abrirModalDesligar('${c.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalDesligar('${c.id}');}">${ICON_PESSOA}</span></td>
     </tr>${aberto ? detalheDocsHtml(c) : ''}`;
@@ -5110,11 +5148,13 @@ function contaAguardandoAssinatura(lista){
   const r = { os:0, nr06:0, epi:0, total:0 };
   lista.forEach(c=>{
     ['os', 'nr06'].forEach(k=>{
+      if(docOculto(c, k)) return;
       const link = c[`${k}_link`];
       if(link && !assinadosSet.has(`${c.id}|${k}|${link}`)) r[k]++;
     });
     const f = epiResumo[String(c.id)];
-    if(f && f.n){ if(f.ass < f.n) r.epi++; }
+    if(docOculto(c, 'epi')){ /* não controlado */ }
+    else if(f && f.n){ if(f.ass < f.n) r.epi++; }
     else if(c.epi_link) r.epi++;          // ficha anexada (Word/PDF) que ainda não foi assinada no sistema
   });
   r.total = r.os + r.nr06 + r.epi;
