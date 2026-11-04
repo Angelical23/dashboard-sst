@@ -4207,6 +4207,17 @@ function mapearLinhaImportada(linhaOriginal){
         mapeada[campo] = linhaOriginal[chaveOriginal];
       }
     }
+    /* reconhecimento aproximado: "NOME DO COLABORADOR", "C.P.F.", "LOTAÇÃO", "CARGO ATUAL"... */
+    const k = chaveNorm.replace(/[^a-z0-9 ]/g, '');
+    const ehLink = k.includes('link') || k.includes('anexo');
+    const tenta = (campo, ok)=>{ if(!mapeada[campo] && ok && linhaOriginal[chaveOriginal] !== '') mapeada[campo] = linhaOriginal[chaveOriginal]; };
+    if(!ehLink){
+      tenta('nome', /\b(nome|colaborador|funcionario)\b/.test(k) && !/(pai|mae|social|cargo|funcao)/.test(k));
+      tenta('cpf', /\bcpf\b/.test(k.replace(/\s/g, ' ')) || k.replace(/ /g, '') === 'cpf');
+      tenta('local', /(local|lotacao|unidade|setor|departamento)/.test(k));
+      tenta('funcao', /(funcao|cargo)/.test(k));
+      tenta('admissao_data', /admiss/.test(k));
+    }
   });
   return mapeada;
 }
@@ -4218,7 +4229,22 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
   const dadosArray = await arquivo.arrayBuffer();
   const wb = XLSX.read(dadosArray, { cellDates:true });
   const primeiraAba = wb.Sheets[wb.SheetNames[0]];
-  const linhasCruas = XLSX.utils.sheet_to_json(primeiraAba, { raw:false, dateNF:'yyyy-mm-dd' });
+  /* lê como tabela de células e procura a linha de cabeçalho (pode haver título nas primeiras linhas) */
+  const matriz = XLSX.utils.sheet_to_json(primeiraAba, { header:1, raw:false, dateNF:'yyyy-mm-dd', defval:'' });
+  const ehCab = (linha)=>{
+    const ks = linha.map(c => normalizarChave(c).replace(/[^a-z0-9 ]/g, ''));
+    return ks.some(k => /\b(nome|colaborador|funcionario)\b/.test(k)) && ks.some(k => /cpf/.test(k));
+  };
+  let iCab = matriz.slice(0, 30).findIndex(ehCab);
+  if(iCab < 0){
+    const vistas = (matriz.find(l => l.some(c => String(c).trim())) || []).map(c => String(c).trim()).filter(Boolean).join(' | ');
+    toast('Não encontrei as colunas NOME e CPF. Colunas lidas na planilha: ' + (vistas || '(nenhuma)') + '. Confira o cabeçalho.', 14000);
+    e.target.value = ''; return;
+  }
+  const cab = matriz[iCab].map((c, i)=> (String(c).trim() || ('coluna' + (i + 1))));
+  const linhasCruas = matriz.slice(iCab + 1).filter(l => l.some(c => String(c).trim() !== '')).map(l=>{
+    const o = {}; cab.forEach((nomeCol, i)=>{ if(o[nomeCol] === undefined) o[nomeCol] = (l[i] === undefined ? '' : l[i]); }); return o;
+  });
 
   if(linhasCruas.length === 0){ toast('Planilha vazia ou em formato inválido.'); e.target.value=''; return; }
 
@@ -4233,7 +4259,7 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
     };
     return {
       nome: l.nome ? l.nome.toString().trim() : null,
-      cpf: l.cpf ? l.cpf.toString().trim() : null,
+      cpf: l.cpf ? (()=>{ const d = l.cpf.toString().replace(/\D/g, ''); return (d.length >= 8 && d.length < 11) ? d.padStart(11, '0') : l.cpf.toString().trim(); })() : null,
       local: l.local ? l.local.toString().trim() : null,
       funcao: l.funcao ? l.funcao.toString().trim() : null,
       admissao_data: norm(l.admissao_data),
@@ -4248,7 +4274,7 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
     };
   }).filter(r => r.cpf && r.nome);
 
-  if(registros.length === 0){ toast('Nenhuma linha com nome e CPF válidos encontrada.'); e.target.value=''; return; }
+  if(registros.length === 0){ toast('Achei o cabeçalho, mas nenhuma linha tem NOME e CPF preenchidos (' + linhasCruas.length + ' linhas lidas). Colunas: ' + cab.join(' | '), 14000); e.target.value=''; return; }
 
   // Preserva documentos já salvos: busca os cadastros existentes e só
   // sobrescreve um campo quando a planilha trouxer valor para ele.
