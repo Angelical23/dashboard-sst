@@ -46,7 +46,10 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    background:var(--cinza-fundo);
+    background:linear-gradient(90deg, rgba(8,24,44,.55), rgba(8,24,44,.25)), url('fundo-login-m.jpg') center/cover no-repeat #0b2a3a;
+  }
+  @media (min-width:800px){
+    #loginScreen{ background:linear-gradient(90deg, rgba(8,24,44,.55), rgba(8,24,44,.25)), url('fundo-login.jpg') center/cover no-repeat #0b2a3a; }
   }
   .login-card{
     background:var(--branco);
@@ -1275,7 +1278,7 @@
     <button type="button" id="soAppSair" style="border:1.5px solid #7dd3fc;background:transparent;color:#7dd3fc;border-radius:12px;height:46px;font-size:15px;font-weight:700;">Sair</button>
   </div>
 </div>
-<div id="mobApp" aria-label="Entrega de EPI"></div>
+<div id="mobApp" aria-label="SST"></div>
 <button type="button" id="mobVoltarCel">Modo celular</button>
 <div class="toast" id="toast"></div>
 

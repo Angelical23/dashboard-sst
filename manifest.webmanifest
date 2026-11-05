@@ -1,6 +1,6 @@
 {
-  "name": "Gestão de Segurança do Trabalho",
-  "short_name": "Entrega de EPI",
+  "name": "SST - Gestão de Segurança do Trabalho",
+  "short_name": "SST",
   "description": "Controle de entrega de EPI e coleta de assinaturas",
   "start_url": "./",
   "scope": "./",
