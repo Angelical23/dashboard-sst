@@ -510,7 +510,7 @@
 
   /* ---------- Perfil Líder: somente consulta ---------- */
   body.lider #btnAbrirNovo, body.lider #btnAbrirAnexar, body.lider label[for="inputImport"], body.lider #btnNovoTreinamento,
-  body.lider [onclick^="assinarDireto"], body.lider [onclick^="gerarLinkAssinatura"], body.lider [onclick^="editarColaborador"],
+  body.lider #btnMinhaAssin, body.lider [onclick^="assinarDireto"], body.lider [onclick^="gerarLinkAssinatura"], body.lider [onclick^="editarColaborador"],
   body.lider [onclick^="abrirModalDesligar"], body.lider [onclick^="excluirColaborador"], body.lider [onclick^="arquivarColaborador"], body.lider [onclick^="desarquivarColaborador"], body.lider #btnBackupDados, body.lider #btnBackupArquivos, body.lider [onclick^="reativarColaborador"],
   body.lider [onclick^="editarTreinamento"], body.lider [onclick^="excluirTreinamento"], body.lider [onclick^="iniciarAssinatura"],
   body.lider [onclick^="epiAbrirFicha('')"], body.lider label[for^="anexoVer_"], body.lider .btn-assinar, body.lider .btn-linkass,
@@ -722,6 +722,7 @@
           <div class="user-role" id="usuarioLogadoEmail">Modo Teste</div>
         </div>
       </div>
+      <button class="header-logout" id="btnMinhaAssin" type="button" style="margin-bottom:6px;">✍️ Minha assinatura</button>
       <button class="header-logout" id="btnLogout">Sair</button>
     </div>
   </aside>
@@ -1349,6 +1350,30 @@
       <button type="button" class="btn" id="epiAssinCancelar">Cancelar</button>
       <button type="button" class="btn primary" id="epiAssinOk">✔ Confirmar assinatura</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL MINHA ASSINATURA (Segurança do Trabalho / Responsável Legal) -->
+<div class="modal-overlay" id="modalRespOverlay" style="z-index:125;">
+  <div class="modal" style="max-width:560px;">
+    <h2>✍️ Minha assinatura</h2>
+    <p style="font-size:13px;color:#526173;">Cadastre uma vez. Ela é usada como <b>Segurança do Trabalho / SESMT</b> nas OS e como <b>Responsável Legal pela Entrega</b> nas fichas de EPI.</p>
+    <label>NOME COMPLETO</label><input type="text" id="rsNome" autocomplete="off">
+    <label>CARGO / REGISTRO (aparece no carimbo)</label><input type="text" id="rsCargo" placeholder="Técnico de Segurança do Trabalho - MTE 0000" autocomplete="off">
+    <label>ASSINATURA SALVA</label><img id="rsAtual" alt="Assinatura salva" style="display:none;max-height:70px;border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#fff;">
+    <label>DESENHE A NOVA ASSINATURA (só se quiser trocar)</label>
+    <canvas id="rsPad" class="assin-pad"></canvas>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      <button type="button" class="btn" id="rsLimpar">Limpar</button>
+      <button type="button" class="btn primary" id="rsSalvar">Salvar minha assinatura</button>
+    </div>
+    <hr style="margin:14px 0;border:0;border-top:1px solid #e2e8f0;">
+    <b style="font-size:13px;">Aplicar em lote</b>
+    <p id="rsLoteOsTxt" style="font-size:13px;margin:8px 0 4px;">...</p>
+    <button type="button" class="btn" id="rsLoteOs" disabled>Assinar OS pendentes como Segurança do Trabalho</button>
+    <p id="rsLoteEpiTxt" style="font-size:13px;margin:12px 0 4px;">...</p>
+    <button type="button" class="btn" id="rsLoteEpi" disabled>Assinar fichas de EPI como Responsável Legal</button>
+    <div class="modal-actions"><button type="button" class="btn" id="rsFechar">Fechar</button></div>
   </div>
 </div>
 
@@ -2279,7 +2304,7 @@ function abrirDocumentos(id){
         <div onclick="event.stopPropagation()" style="margin-top:8px;">
           <label class="btn" for="${inputId}" style="font-size:11px;padding:4px 8px;margin:0;">📎 ${link ? 'Substituir' : 'Anexar'}</label>
           <input type="file" id="${inputId}" class="input-upload-doc-ver" data-campo="${d.key}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-          ${(d.assinar && link) ? `<button type="button" class="btn btn-assinar" onclick="iniciarAssinatura('${d.key}')">✍️ Assinar documento</button><button type="button" class="btn btn-linkass" onclick="gerarLinkAssinatura('${d.key}','${c.id}')">🔗 Enviar link ao colaborador</button>` : ''}
+          ${(d.assinar && link) ? `<button type="button" class="btn btn-assinar" onclick="iniciarAssinatura('${d.key}')">✍️ Assinar documento</button><button type="button" class="btn btn-linkass" onclick="gerarLinkAssinatura('${d.key}','${c.id}')">🔗 Enviar link ao colaborador</button>${d.key === 'os' ? `<button type="button" class="btn btn-assinar" onclick="sesmtAssinarUm('${c.id}')">✍️ Assinar como Segurança do Trabalho</button>` : ''}` : ''}
           <div id="assinInfo_${d.key}" class="assin-info"></div>
         </div>
       </div>`;
@@ -3249,7 +3274,7 @@ async function mobCarimbar(){
   const larguraMax = Math.max(boxW, 150), larg = (tm)=> Math.max(...linhas.map(l => l.f.widthOfTextAtSize(l.t, tm)));
   while(larg(tam) > larguraMax && tam > 4) tam -= 0.5;
   const alturaLinha = tam * 1.25, alturaTotal = alturaLinha * linhas.length, centroX = boxX + boxW / 2;
-  let baseY = boxY + (boxH - alturaTotal) / 2;
+  let baseY = d.achou ? boxY + 3 : boxY + (boxH - alturaTotal) / 2;
   if(baseY < 4) baseY = 4;
   linhas.slice().reverse().forEach((l, i)=>{
     const w = l.f.widthOfTextAtSize(l.t, tam);
@@ -3343,10 +3368,12 @@ async function marcarAssinados(colab){
     if(error || !data) return;
     const vistos = {};
     data.forEach(a=>{
-      if(vistos[a.tipo_doc]) return;
-      vistos[a.tipo_doc] = true;
-      if(colab[`${a.tipo_doc}_link`] !== a.link_assinado) return;
-      const el = document.getElementById(`assinInfo_${a.tipo_doc}`);
+      const vk = a.tipo_doc === 'os_sesmt' ? 'os' : a.tipo_doc;
+      if(vistos[vk]) return;
+      vistos[vk] = true;
+      const tdoc = a.tipo_doc === 'os_sesmt' ? 'os' : a.tipo_doc;
+      if(colab[`${tdoc}_link`] !== a.link_assinado) return;
+      const el = document.getElementById(`assinInfo_${tdoc}`);
       if(!el) return;
       const d = new Date(a.assinado_em);
       el.textContent = `✍️ Assinado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
@@ -3800,9 +3827,19 @@ window.iniciarAssinatura = iniciarAssinatura;
 
 const ASSIN_TERMOS = { nr06:['PARTICIPANTE'], os:['COLABORADOR','FUNCIONARIO','TRABALHADOR','PARTICIPANTE'] };
 
+function agrupaItens(itens){
+  const v = itens.filter(i => i.str !== undefined && i.transform).map(i => ({ str:i.str, x:i.transform[4], y:i.transform[5], w:i.width || 0, h:i.height || Math.abs(i.transform[3]) || 10 }));
+  const out = [];
+  v.forEach(i=>{
+    const u = out[out.length - 1];
+    if(u && Math.abs(u.y - i.y) < 1 && i.x - (u.x + u.w) < 6 && i.x - (u.x + u.w) > -3){ u.str += i.str; u.w = (i.x + i.w) - u.x; u.h = Math.max(u.h, i.h); }
+    else out.push({ ...i });
+  });
+  return out.map(g => ({ str:g.str, width:g.w, height:g.h, transform:[1, 0, 0, g.h, g.x, g.y] }));
+}
 /* procura no PDF o rótulo do campo (ex.: PARTICIPANTE) e devolve onde fica a linha logo acima dele */
-async function acharCampoAssinatura(jsDoc, key){
-  const termos = ASSIN_TERMOS[key] || ['COLABORADOR','PARTICIPANTE'];
+async function acharCampoAssinatura(jsDoc, key, termosProprios){
+  const termos = termosProprios || ASSIN_TERMOS[key] || ['COLABORADOR','PARTICIPANTE'];
   const norm = (t)=> (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
   for(const termo of termos){
     let melhor = null;
@@ -3811,19 +3848,29 @@ async function acharCampoAssinatura(jsDoc, key){
       if(page.rotate) continue;
       const vp = page.getViewport({ scale:1 });
       const tc = await page.getTextContent();
-      tc.items.forEach(it=>{
+      const grupos = agrupaItens(tc.items);
+      grupos.forEach(it=>{
         const s = norm(it.str).trim();
         if(!s || s.length > 40 || !s.includes(termo)) return;
         const alt = it.height || Math.abs(it.transform[3]) || 10;
         const cand = { pagina:n, pw:vp.width, ph:vp.height, cx:(it.transform[4] + (it.width || 0) / 2) / vp.width,
                        topoTexto:(vp.height - (it.transform[5] + alt)) / vp.height, alt };
+        /* linha de sublinhados (______) logo acima do rótulo: centraliza nela */
+        let linha = null;
+        grupos.forEach(l=>{
+          if(!/^_{5,}$/.test((l.str || '').trim())) return;
+          const dy = l.transform[5] - it.transform[5], x0 = l.transform[4], x1 = x0 + (l.width || 0), cxl = it.transform[4] + (it.width || 0) / 2;
+          if(dy < -2 || dy > 45 || cxl < x0 - 2 || cxl > x1 + 2 || (x1 - x0) > vp.width * 0.7) return;
+          if(!linha || dy < linha.dy) linha = { dy, cx:(x0 + x1) / 2, y:l.transform[5] };
+        });
+        if(linha){ cand.cx = linha.cx / vp.width; cand.linhaY = (vp.height - (linha.y + 2)) / vp.height; }
         // vale o que está mais embaixo, na última página
         if(!melhor || cand.pagina > melhor.pagina || (cand.pagina === melhor.pagina && cand.topoTexto > melhor.topoTexto)) melhor = cand;
       });
     }
     if(melhor){
       // a linha fica um pouco acima do texto: a base da caixa começa ~0,45 da altura da letra acima dele
-      melhor.base = melhor.topoTexto - (melhor.alt * 0.45) / melhor.ph;
+      melhor.base = melhor.linhaY != null ? melhor.linhaY : melhor.topoTexto - (melhor.alt * 0.45) / melhor.ph;
       return melhor;
     }
   }
@@ -4131,6 +4178,167 @@ async function confirmarAssinatura(){
   }
 }
 document.getElementById('assinConfirmar').addEventListener('click', confirmarAssinatura);
+
+/* ---------- Minha assinatura (Segurança do Trabalho / Responsável Legal) ---------- */
+let minhaAssin = null, minhaAssinCarregada = false, rsPad = null;
+async function carregarMinhaAssin(forcar){
+  if(minhaAssinCarregada && !forcar) return minhaAssin;
+  try{
+    const { data: s } = await supabaseClient.auth.getSession();
+    const uid = s && s.session && s.session.user && s.session.user.id;
+    if(!uid) return null;
+    const { data, error } = await supabaseClient.from('assinatura_responsavel').select('*').eq('user_id', uid).maybeSingle();
+    if(error) throw error;
+    minhaAssin = data || null; minhaAssinCarregada = true;
+  }catch(e){ console.warn('Minha assinatura:', e.message || e); }
+  return minhaAssin;
+}
+function rsIniciaPad(){
+  const c = document.getElementById('rsPad'), dpr = window.devicePixelRatio || 1, r = c.getBoundingClientRect();
+  c.width = Math.floor(r.width * dpr); c.height = Math.floor(r.height * dpr);
+  const x = c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0);
+  x.lineWidth = 2.6; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0b1f33';
+  rsPad = { c, x, dpr, on:false, tem:false, b:{ minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 } };
+}
+(function(){
+  const el = document.getElementById('rsPad');
+  const pos = (e)=>{ const r = el.getBoundingClientRect(); return { x:e.clientX - r.left, y:e.clientY - r.top }; };
+  const box = (p)=>{ const b = rsPad.b; b.minX = Math.min(b.minX,p.x); b.minY = Math.min(b.minY,p.y); b.maxX = Math.max(b.maxX,p.x); b.maxY = Math.max(b.maxY,p.y); };
+  el.addEventListener('pointerdown', (e)=>{ if(!rsPad) return; e.preventDefault(); el.setPointerCapture(e.pointerId); rsPad.on = true; const p = pos(e), x = rsPad.x; x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p.x+0.01,p.y+0.01); x.stroke(); x.beginPath(); x.moveTo(p.x,p.y); box(p); rsPad.tem = true; });
+  el.addEventListener('pointermove', (e)=>{ if(!rsPad || !rsPad.on) return; e.preventDefault(); const p = pos(e), x = rsPad.x; x.lineTo(p.x,p.y); x.stroke(); x.beginPath(); x.moveTo(p.x,p.y); box(p); });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev => el.addEventListener(ev, ()=>{ if(rsPad) rsPad.on = false; }));
+})();
+function rsLimpar(){ if(!rsPad) return; const { c, x } = rsPad; x.save(); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); x.restore(); rsPad.tem = false; rsPad.b = { minX:1e9, minY:1e9, maxX:-1e9, maxY:-1e9 }; }
+function rsRecorta(){
+  const k = 6, d = rsPad.dpr, b = rsPad.b;
+  const sx = Math.max(0, Math.floor((b.minX - k) * d)), sy = Math.max(0, Math.floor((b.minY - k) * d));
+  const ex = Math.min(rsPad.c.width, Math.ceil((b.maxX + k) * d)), ey = Math.min(rsPad.c.height, Math.ceil((b.maxY + k) * d));
+  const t = document.createElement('canvas'); t.width = Math.max(1, ex - sx); t.height = Math.max(1, ey - sy);
+  t.getContext('2d').drawImage(rsPad.c, sx, sy, t.width, t.height, 0, 0, t.width, t.height);
+  return t.toDataURL('image/png');
+}
+function rsAtualizaContagem(){
+  const ativos = colaboradores.filter(c => String(c.status || '').toUpperCase() === 'ATIVO');
+  const os = ativos.filter(c => c.os_link && extDoLink(c.os_link) === 'pdf' && assinadosSet.has(`${c.id}|os|${c.os_link}`) && !sesmtSet.has(`${c.id}|${c.os_link}`) && !docOculto(c, 'os'));
+  const epi = ativos.filter(c => { const f = epiResumo[String(c.id)]; return f && f.ass > 0 && !rsFichasComResp.has(String(c.id)) && !docOculto(c, 'epi'); });
+  rsLoteOs = os; rsLoteEpi = epi;
+  document.getElementById('rsLoteOsTxt').textContent = `OS assinadas pelo colaborador, aguardando o Segurança do Trabalho: ${os.length}`;
+  document.getElementById('rsLoteEpiTxt').textContent = `Fichas de EPI com itens assinados, sem o Responsável Legal: ${epi.length}`;
+  document.getElementById('rsLoteOs').disabled = !os.length || !(minhaAssin && minhaAssin.img);
+  document.getElementById('rsLoteEpi').disabled = !epi.length || !(minhaAssin && minhaAssin.img);
+}
+let rsLoteOs = [], rsLoteEpi = [], rsFichasComResp = new Set();
+async function abrirMinhaAssin(){
+  await carregarMinhaAssin(true);
+  document.getElementById('rsNome').value = (minhaAssin && minhaAssin.nome) || epiNomeUsuario();
+  document.getElementById('rsCargo').value = (minhaAssin && minhaAssin.cargo) || '';
+  const im = document.getElementById('rsAtual');
+  im.style.display = minhaAssin && minhaAssin.img ? 'block' : 'none'; if(minhaAssin && minhaAssin.img) im.src = minhaAssin.img;
+  document.getElementById('modalRespOverlay').classList.add('open');
+  requestAnimationFrame(rsIniciaPad);
+  try{ await painelCarregarAssinaturas(); const f = await epiBuscarTudo('epi_fichas', 'colaborador_id,resp_em'); rsFichasComResp = new Set(f.filter(x => x.resp_em).map(x => String(x.colaborador_id))); }catch(e){ console.warn(e); }
+  rsAtualizaContagem();
+}
+window.abrirMinhaAssin = abrirMinhaAssin;
+document.getElementById('btnMinhaAssin').addEventListener('click', abrirMinhaAssin);
+document.getElementById('rsFechar').addEventListener('click', ()=>{ document.getElementById('modalRespOverlay').classList.remove('open'); rsPad = null; });
+document.getElementById('rsLimpar').addEventListener('click', rsLimpar);
+document.getElementById('rsSalvar').addEventListener('click', async ()=>{
+  const nome = document.getElementById('rsNome').value.trim(), cargo = document.getElementById('rsCargo').value.trim();
+  if(!nome){ toast('Preencha o nome.'); return; }
+  if(!cargo){ toast('Preencha o cargo / registro (ex.: Técnico de Segurança do Trabalho - MTE 0000).'); return; }
+  const img = rsPad && rsPad.tem ? rsRecorta() : (minhaAssin && minhaAssin.img);
+  if(!img){ toast('Faça a assinatura no quadro.'); return; }
+  const { data: s } = await supabaseClient.auth.getSession();
+  const uid = s && s.session && s.session.user && s.session.user.id;
+  if(!uid){ toast('Sessão expirada. Entre de novo.'); return; }
+  const { error } = await supabaseClient.from('assinatura_responsavel').upsert({ user_id: uid, nome, cargo, img, atualizado_em: new Date().toISOString() }, { onConflict:'user_id' });
+  if(error){ toast('Não foi possível salvar (rode o SQL supabase_responsavel.sql no Supabase): ' + error.message, 7000); return; }
+  minhaAssin = { user_id: uid, nome, cargo, img }; minhaAssinCarregada = true;
+  const im = document.getElementById('rsAtual'); im.src = img; im.style.display = 'block'; rsLimpar();
+  rsAtualizaContagem();
+  toast('Sua assinatura foi salva.');
+});
+
+/* carimba a assinatura salva no campo "Segurança do Trabalho / SESMT" de uma OS já assinada pelo colaborador */
+async function sesmtAplicar(c){
+  const link = c.os_link;
+  const resp = await fetchDocTemp(link);
+  if(!resp.ok) throw new Error(`não foi possível baixar a OS (${resp.status})`);
+  const buf = await resp.arrayBuffer();
+  const hashOriginal = await sha256Hex(buf);
+  const bytes = new Uint8Array(buf.slice(0));
+  const jsDoc = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
+  const ach = await acharCampoAssinatura(jsDoc, 'os', ['SESMT', 'SEGURANCA DO TRABALHO']);
+  if(!ach) throw new Error('não achei o campo "Segurança do Trabalho / SESMT" na OS');
+  const pdfDoc = await PDFLib.PDFDocument.load(bytes, { ignoreEncryption:true });
+  const pag = pdfDoc.getPage(ach.pagina - 1), { width:pw, height:ph } = pag.getSize();
+  const fonte = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica), fonteN = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const limpa = (t)=>{ try{ fonte.widthOfTextAtSize(t, 8); return t; }catch(e){ return semAcentos(t); } };
+  const agora = new Date();
+  const dataTxt = `${agora.toLocaleDateString('pt-BR')} ${agora.toLocaleTimeString('pt-BR',{ hour:'2-digit', minute:'2-digit' })}`;
+  const img = await pdfDoc.embedPng(dataUrlParaBytes(minhaAssin.img));
+  const centroX = ach.cx * pw, linhaY = ph - ach.base * ph;     // base da caixa = linha de assinatura
+  const maxW = pw * 0.26, maxH = 24, esc = Math.min(maxW / img.width, maxH / img.height), iw = img.width * esc, ih = img.height * esc;
+  pag.drawImage(img, { x: centroX - iw / 2, y: linhaY + 1, width: iw, height: ih });
+  const linhas = [
+    { t: limpa(String(minhaAssin.nome).toUpperCase()), f: fonteN },
+    { t: limpa(String(minhaAssin.cargo)), f: fonte },
+    { t: limpa(`${dataTxt} - Cod. ${hashOriginal.slice(0, 10)}`), f: fonte }
+  ];
+  let tam = 7; const larg = (tm)=> Math.max(...linhas.map(l => l.f.widthOfTextAtSize(l.t, tm)));
+  while(larg(tam) > pw * 0.34 && tam > 4) tam -= 0.5;
+  const al = tam * 1.2;
+  linhas.slice().reverse().forEach((l, i)=>{
+    const w = l.f.widthOfTextAtSize(l.t, tam);
+    pag.drawText(l.t, { x: centroX - w / 2, y: linhaY + ih + 3 + i * al, size: tam, font: l.f, color: PDFLib.rgb(0.07, 0.2, 0.45) });
+  });
+  const signed = await pdfDoc.save(), hashAss = await sha256Hex(signed);
+  const caminho = `os/${c.id}.pdf`;
+  const up = await supabaseClient.storage.from('documentos').upload(caminho, new Blob([signed], { type:'application/pdf' }), { upsert:true, contentType:'application/pdf' });
+  if(up.error) throw up.error;
+  const { data: u } = supabaseClient.storage.from('documentos').getPublicUrl(caminho);
+  const novoLink = `${u.publicUrl}?v=${Date.now()}`;
+  const upd = await supabaseClient.from('colaboradores').update({ os_link: novoLink }).eq('id', c.id);
+  if(upd.error) throw upd.error;
+  const antigo = caminhoStorageDoLink(link);
+  if(antigo && antigo !== caminho) await supabaseClient.storage.from('documentos').remove([antigo]).catch(()=>{});
+  const aud = await supabaseClient.from('assinaturas').insert([{
+    colaborador_id: String(c.id), tipo_doc: 'os_sesmt', coletado_por: document.getElementById('usuarioLogadoEmail').textContent,
+    dispositivo: (navigator.userAgent || '').slice(0, 250), hash_original: hashOriginal, hash_assinado: hashAss, link_assinado: novoLink, pagina: ach.pagina
+  }]);
+  if(aud.error) throw aud.error;
+  c.os_link = novoLink; assinadosSet.add(`${c.id}|os|${novoLink}`); sesmtSet.add(`${c.id}|${novoLink}`);
+}
+async function sesmtAssinarUm(id){
+  const c = colaboradores.find(x => String(x.id) === String(id));
+  if(!c) return;
+  await carregarMinhaAssin(); if(!minhaAssin || !minhaAssin.img){ toast('Cadastre antes a sua assinatura em "✍️ Minha assinatura".', 6000); return; }
+  if(!assinadosSet.has(`${c.id}|os|${c.os_link}`)){ await painelCarregarAssinaturas(); }
+  if(!assinadosSet.has(`${c.id}|os|${c.os_link}`)){ toast('O colaborador ainda não assinou esta OS.', 5000); return; }
+  if(sesmtSet.has(`${c.id}|${c.os_link}`)){ toast('Esta OS já tem a assinatura do Segurança do Trabalho.'); return; }
+  if(!confirm(`Assinar a OS de ${c.nome} como ${minhaAssin.nome} (Segurança do Trabalho)?`)) return;
+  try{ toast('Assinando...'); await sesmtAplicar(c); toast('OS assinada pelo Segurança do Trabalho.'); await loadColaboradores(); abrirDocumentos(c.id); }
+  catch(e){ console.error(e); toast('Erro: ' + (e.message || e), 7000); }
+}
+window.sesmtAssinarUm = sesmtAssinarUm;
+document.getElementById('rsLoteOs').addEventListener('click', async ()=>{
+  const lista = rsLoteOs.slice(); if(!lista.length) return;
+  if(!confirm(`Assinar ${lista.length} OS como ${minhaAssin.nome} (Segurança do Trabalho)?`)) return;
+  let ok = 0, falhas = [];
+  for(const c of lista){ document.getElementById('rsLoteOsTxt').textContent = `Assinando ${ok + falhas.length + 1} de ${lista.length}...`; try{ await sesmtAplicar(c); ok++; }catch(e){ falhas.push(`${c.nome}: ${e.message || e}`); } }
+  await loadColaboradores(); rsAtualizaContagem();
+  toast(`${ok} OS assinada(s).${falhas.length ? ' Falhas: ' + falhas.slice(0, 3).join(' | ') : ''}`, 9000);
+});
+document.getElementById('rsLoteEpi').addEventListener('click', async ()=>{
+  const lista = rsLoteEpi.slice(); if(!lista.length) return;
+  if(!confirm(`Assinar ${lista.length} ficha(s) de EPI como ${minhaAssin.nome} (Responsável Legal pela Entrega)?`)) return;
+  const agora = new Date().toISOString();
+  const { error } = await supabaseClient.from('epi_fichas').upsert(lista.map(c => ({ colaborador_id: String(c.id), resp_img: minhaAssin.img, resp_nome: minhaAssin.nome, resp_em: agora })), { onConflict:'colaborador_id' });
+  if(error){ toast('Erro: ' + error.message, 7000); return; }
+  lista.forEach(c => rsFichasComResp.add(String(c.id))); rsAtualizaContagem();
+  toast(`${lista.length} ficha(s) assinada(s) como responsável.`, 5000);
+});
 
 /* ---------- Anexar direto na tela "Ver Documentos" (já salva no colaborador) ---------- */
 document.addEventListener('change', async (e)=>{
@@ -5369,8 +5577,17 @@ function epiAssinarTodas(){
 }
 window.epiAssinarTodas = epiAssinarTodas;
 
-function epiAssinarResp(){
+async function epiAssinarResp(){
   if(!epiFicha.colabId){ toast('Escolha o colaborador primeiro.'); return; }
+  await carregarMinhaAssin();
+  if(minhaAssin && minhaAssin.img){
+    if(!confirm(`Assinar como Responsável Legal pela Entrega usando a assinatura salva de ${minhaAssin.nome}?`)) return;
+    epiFicha.resp = { img: minhaAssin.img, at: new Date().toISOString(), nome: minhaAssin.nome };
+    epiRenderFicha();
+    const ok = await epiSalvarFicha(true);
+    if(ok) toast('Assinatura do responsável registrada e ficha salva.');
+    return;
+  }
   epiAbrirAssin([], 'resp');
 }
 window.epiAssinarResp = epiAssinarResp;
@@ -5544,12 +5761,17 @@ document.getElementById('linkCompartilhar').addEventListener('click', ()=>{
    PAINEL — documentos aguardando assinatura
    ========================================================= */
 let assinadosSet = new Set();
+let sesmtSet = new Set();
 
 /* guarda quais documentos (OS / NR06) já têm assinatura registrada para o arquivo atual */
 async function painelCarregarAssinaturas(){
   try{
     const linhas = await epiBuscarTudo('assinaturas', 'colaborador_id,tipo_doc,link_assinado');
-    assinadosSet = new Set(linhas.map(a => `${a.colaborador_id}|${a.tipo_doc}|${a.link_assinado}`));
+    assinadosSet = new Set(); sesmtSet = new Set();
+    linhas.forEach(a=>{
+      if(a.tipo_doc === 'os_sesmt'){ assinadosSet.add(`${a.colaborador_id}|os|${a.link_assinado}`); sesmtSet.add(`${a.colaborador_id}|${a.link_assinado}`); }
+      else assinadosSet.add(`${a.colaborador_id}|${a.tipo_doc}|${a.link_assinado}`);
+    });
   }catch(e){ assinadosSet = new Set(); console.warn('Assinaturas indisponíveis:', e.message || e); }
 }
 
