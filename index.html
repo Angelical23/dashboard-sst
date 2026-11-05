@@ -925,12 +925,20 @@
       <div class="acessos-box">
         <b>Administrador:</b> vê e edita tudo (inclusive CPF e arquivo do ASO).<br>
         <b>Líder:</b> somente consulta. Não vê o CPF nem abre/baixa o arquivo do ASO (vê apenas o status) e não altera nada.<br>
-        <b>Criar um login novo:</b> no Supabase, vá em Authentication &gt; Users &gt; Add user. O novo usuário entra como <b>Líder</b>; depois ajuste o perfil aqui.
+        <b>Líder com local:</b> vê somente os colaboradores e documentos do local definido. Sem local = vê todos.
+      </div>
+      <div class="table-panel" style="margin-bottom:14px;">
+        <div class="table-header"><h3>CRIAR LOGINS DE LÍDERES (usuário = CPF, senha inicial = CPF)</h3></div>
+        <div style="padding:14px;">
+          <p style="font-size:13px;color:#526173;margin:0 0 8px;">Uma pessoa por linha: <b>CPF ; Nome ; Local</b> (pode colar direto do Excel). O local deve ser igual ao cadastrado nos colaboradores. No primeiro acesso a pessoa será obrigada a trocar a senha.</p>
+          <textarea id="lidLista" rows="6" style="width:100%;box-sizing:border-box;font-family:monospace;" placeholder="123.456.789-00; João da Silva; CEAGESP"></textarea>
+          <div style="margin-top:8px;"><button type="button" class="btn primary" id="lidCriar">Criar logins</button> <span id="lidMsg" style="font-size:13px;margin-left:8px;"></span></div>
+        </div>
       </div>
       <div class="table-panel">
         <div class="table-header"><h3>USUÁRIOS</h3></div>
-        <div class="table-scroll"><table class="tbl-ativos"><thead><tr><th>USUÁRIO (E-MAIL)</th><th>PERFIL</th><th>ÚLTIMO ACESSO</th></tr></thead>
-          <tbody id="acessosBody"><tr><td colspan="3" class="empty">Carregando...</td></tr></tbody></table></div>
+        <div class="table-scroll"><table class="tbl-ativos"><thead><tr><th>USUÁRIO</th><th>NOME</th><th>LOCAL (só líder)</th><th>PERFIL</th><th>ÚLTIMO ACESSO</th><th></th></tr></thead>
+          <tbody id="acessosBody"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody></table></div>
       </div>
     </section>
 
@@ -1353,6 +1361,31 @@
   </div>
 </div>
 
+<!-- TROCA DE SENHA OBRIGATÓRIA (1º acesso) -->
+<div class="modal-overlay" id="modalTrocaSenha" style="z-index:300;">
+  <div class="modal" style="max-width:420px;">
+    <h2>Crie sua senha</h2>
+    <p style="font-size:13px;color:#526173;">Por segurança, troque a senha inicial (seu CPF) por uma senha só sua. Mínimo 6 caracteres e diferente do CPF.</p>
+    <label>NOVA SENHA</label><input type="password" id="tsSenha1" autocomplete="new-password">
+    <label>REPITA A NOVA SENHA</label><input type="password" id="tsSenha2" autocomplete="new-password">
+    <div id="tsErro" style="color:#b91c1c;font-size:13px;min-height:18px;"></div>
+    <div class="modal-actions"><button type="button" class="btn primary" id="tsSalvar">Salvar senha</button></div>
+  </div>
+</div>
+<script>
+document.getElementById('tsSalvar').addEventListener('click', async ()=>{
+  const a = document.getElementById('tsSenha1').value, b = document.getElementById('tsSenha2').value, er = document.getElementById('tsErro');
+  const { data: s } = await supabaseClient.auth.getSession();
+  const cpf = ((s && s.session && s.session.user.email) || '').split('@')[0];
+  if(a.length < 6){ er.textContent = 'A senha precisa ter pelo menos 6 caracteres.'; return; }
+  if(a === cpf || /^(\d)\1+$/.test(a)){ er.textContent = 'Escolha uma senha diferente do CPF.'; return; }
+  if(a !== b){ er.textContent = 'As senhas não são iguais.'; return; }
+  const { error } = await supabaseClient.auth.updateUser({ password: a, data: { trocar_senha: false } });
+  if(error){ er.textContent = 'Não foi possível salvar: ' + error.message; return; }
+  document.getElementById('modalTrocaSenha').classList.remove('open'); toast('Senha criada. Bem-vindo!');
+});
+</script>
+
 <!-- MODAL MINHA ASSINATURA (Segurança do Trabalho / Responsável Legal) -->
 <div class="modal-overlay" id="modalRespOverlay" style="z-index:125;">
   <div class="modal" style="max-width:560px;">
@@ -1534,7 +1567,8 @@ const appContainer = document.getElementById('appContainer');
 function mostrarApp(session){
   loginScreen.style.display = 'none';
   appContainer.style.display = 'block';
-  document.getElementById('usuarioLogadoEmail').textContent = session.user.email.split('@')[0];
+  document.getElementById('usuarioLogadoEmail').textContent = (session.user.user_metadata && session.user.user_metadata.nome) || session.user.email.split('@')[0];
+  if(session.user.user_metadata && session.user.user_metadata.trocar_senha) document.getElementById('modalTrocaSenha').classList.add('open');
   carregarPerfil(session).then(()=> loadColaboradores());
 }
 
@@ -1570,9 +1604,16 @@ async function carregarAcessos(){
   const { data, error } = await supabaseClient.rpc('listar_acessos');
   if(error){ tb.innerHTML = `<tr><td colspan="3" class="empty">Não foi possível listar (${error.message}). Rode o arquivo supabase_perfis.sql no Supabase.</td></tr>`; return; }
   const esc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-  tb.innerHTML = (data || []).map(u => `<tr><td><b>${esc(u.email)}</b></td>
+  const locais = [...new Set(colaboradores.map(c => (c.local || '').trim()).filter(Boolean))].sort();
+  tb.innerHTML = (data || []).map(u => {
+    const lider = u.papel === 'lider', cpfLogin = /^\d{11}@/.test(u.email);
+    const opts = ['<option value="">Todos os locais</option>'].concat(locais.concat(u.local && !locais.includes(u.local) ? [u.local] : []).map(l => `<option value="${esc(l)}"${l === u.local ? ' selected' : ''}>${esc(l)}</option>`)).join('');
+    return `<tr><td><b>${esc(u.email.split('@')[0])}</b></td><td>${esc(u.nome || '')}</td>
+    <td>${lider ? `<select onchange="mudarLocalLider('${u.user_id}', this)">${opts}</select>` : '—'}</td>
     <td><select onchange="mudarPapel('${u.user_id}', this)"><option value="admin"${u.papel === 'admin' ? ' selected' : ''}>Administrador</option><option value="lider"${u.papel === 'lider' ? ' selected' : ''}>Líder</option></select></td>
-    <td>${u.ultimo_acesso ? new Date(u.ultimo_acesso).toLocaleString('pt-BR') : 'nunca entrou'}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">Nenhum usuário.</td></tr>';
+    <td>${u.ultimo_acesso ? new Date(u.ultimo_acesso).toLocaleString('pt-BR') : 'nunca entrou'}</td>
+    <td>${lider && cpfLogin ? `<button type="button" class="btn" style="font-size:11px;padding:4px 8px;" onclick="redefinirSenhaLider('${u.user_id}','${esc(u.nome || u.email)}')">Voltar senha p/ CPF</button>` : ''}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Nenhum usuário.</td></tr>';
 }
 async function mudarPapel(id, sel){
   const { error } = await supabaseClient.rpc('definir_papel', { p_user: id, p_papel: sel.value });
@@ -1580,6 +1621,40 @@ async function mudarPapel(id, sel){
   toast('Perfil atualizado.');
 }
 window.mudarPapel = mudarPapel;
+async function mudarLocalLider(id, sel){
+  const { error } = await supabaseClient.rpc('definir_local_lider', { p_user: id, p_local: sel.value });
+  if(error){ toast('Não foi possível alterar: ' + error.message, 6000); carregarAcessos(); return; }
+  toast('Local atualizado.');
+}
+window.mudarLocalLider = mudarLocalLider;
+async function redefinirSenhaLider(id, nome){
+  if(!confirm(`Voltar a senha de ${nome} para o CPF? Ele terá de criar outra no próximo acesso.`)) return;
+  const { error } = await supabaseClient.rpc('redefinir_senha_lider', { p_user: id });
+  if(error){ toast('Erro: ' + error.message, 6000); return; }
+  toast('Senha redefinida para o CPF.');
+}
+window.redefinirSenhaLider = redefinirSenhaLider;
+document.getElementById('lidCriar').addEventListener('click', async ()=>{
+  const linhas = document.getElementById('lidLista').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const msg = document.getElementById('lidMsg');
+  if(!linhas.length){ msg.textContent = 'Cole a lista primeiro.'; return; }
+  const locaisOk = new Set(colaboradores.map(c => (c.local || '').trim().toLowerCase()));
+  const itens = linhas.map(l => { const p = l.split(/\t|;|,/).map(x => x.trim()); return { cpf:p[0] || '', nome:p[1] || '', local:p.slice(2).join(', ') }; });
+  const semLocal = itens.filter(i => i.local && !locaisOk.has(i.local.toLowerCase()));
+  if(semLocal.length && !confirm(`${semLocal.length} linha(s) têm local que não existe nos colaboradores (ex.: "${semLocal[0].local}"). O líder não verá ninguém nesses casos. Continuar?`)) return;
+  if(!confirm(`Criar ${itens.length} login(s)?`)) return;
+  let ok = 0, exist = 0, erros = [];
+  for(let i = 0; i < itens.length; i++){
+    msg.textContent = `Criando ${i + 1} de ${itens.length}...`;
+    if(!itens[i].nome){ erros.push(`linha ${i + 1}: falta o nome`); continue; }
+    const { data, error } = await supabaseClient.rpc('criar_lider', { p_cpf: itens[i].cpf, p_nome: itens[i].nome, p_local: itens[i].local });
+    if(error) erros.push(`${itens[i].nome}: ${error.message}`);
+    else if(data === 'criado') ok++; else if(/existia/.test(data)) exist++; else erros.push(`${itens[i].nome}: ${data}`);
+  }
+  msg.textContent = `${ok} criado(s), ${exist} já existia(m).` + (erros.length ? ` Problemas: ${erros.slice(0, 4).join(' | ')}` : '');
+  if(!erros.length) document.getElementById('lidLista').value = '';
+  carregarAcessos();
+});
 
 function mostrarLogin(){
   if(typeof mobOcultar === 'function') mobOcultar();
@@ -1609,7 +1684,9 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
 // digitado é convertido para um e-mail interno fixo (invisível pro usuário final).
 const DOMINIO_LOGIN_INTERNO = 'dashboard-sst.local';
 function usuarioParaEmail(usuario){
-  return `${usuario.trim().toLowerCase()}@${DOMINIO_LOGIN_INTERNO}`;
+  let u = usuario.trim().toLowerCase();
+  if(/^[\d.\-\s]+$/.test(u)) u = u.replace(/\D/g, '');   // CPF digitado com pontos e traço
+  return `${u}@${DOMINIO_LOGIN_INTERNO}`;
 }
 
 document.getElementById('formLogin').addEventListener('submit', async (e)=>{
@@ -2854,7 +2931,7 @@ const MOB_TOQUE = window.matchMedia('(pointer: coarse)');
 const mobEhCelular = ()=> MOB_QUERY.matches || (MOB_TOQUE.matches && Math.min(screen.width, screen.height) <= 820);
 let mobForcarCompleto = false, mobLogado = false;
 let mobTela = 'lista', mobFiltro = 'todos', mobBusca = '', mobColab = null, mobItens = [], mobTipo = 'E', mobAposSalvar = 'assinar', mobIds = [];
-let mobPad = null, mobInativo = null;
+let mobPad = null, mobInativo = null, mobResp = null;
 const mobE = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const MOB_SVG = {
   voltar:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>',
@@ -2929,6 +3006,7 @@ function mobRender(){
   else if(mobTela === 'nova') mobRenderNova(app);
   else if(mobTela === 'assinar') mobRenderAssinar(app);
   else if(mobTela === 'assinarDoc') mobRenderAssinarDoc(app);
+  else if(mobTela === 'minha') mobRenderMinha(app);
 }
 
 /* ---------- 1. lista ---------- */
@@ -2963,6 +3041,7 @@ function mobNav(ativa){
   return `<nav class="mb-nav">
     <button class="${ativa === 'lista' ? 'on' : ''}" onclick="mobSetFiltro('todos')">${MOB_SVG.pessoas}Colaboradores</button>
     <button class="${ativa === 'pend' ? 'on' : ''}" onclick="mobIrPend()">${MOB_SVG.escudo}Pendências</button>
+    <button class="${ativa === 'minha' ? 'on' : ''}" onclick="mobIrMinha()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Assinatura</button>
     <button onclick="mobVersaoCompleta()">${MOB_SVG.tela}Versão completa</button>
     <button onclick="document.getElementById('btnLogout').click()">${MOB_SVG.sair}Sair</button></nav>`;
 }
@@ -3009,9 +3088,58 @@ async function mobAbrirFicha(id){
   mobColab = colaboradores.find(c => String(c.id) === String(id));
   if(!mobColab) return;
   auditar('ver_ficha_epi', mobColab.id, `${mobColab.nome} — abriu a ficha de EPI (celular)`);
-  if(await mobCarregarItens()){ mobTela = 'ficha'; mobRender(); }
+  mobResp = null;
+  if(await mobCarregarItens()){ await mobCarregarResp(); mobTela = 'ficha'; mobRender(); }
 }
 window.mobAbrirFicha = mobAbrirFicha;
+async function mobCarregarResp(){
+  try{
+    const { data } = await supabaseClient.from('epi_fichas').select('resp_nome,resp_em').eq('colaborador_id', String(mobColab.id)).maybeSingle();
+    mobResp = data && data.resp_em ? data : null;
+  }catch(e){ mobResp = null; }
+}
+async function mobAssinarResp(){
+  await carregarMinhaAssin(true);
+  if(!minhaAssin || !minhaAssin.img){ toast('Primeiro cadastre a sua assinatura.', 5000); mobVoltarPara = 'ficha'; mobIrMinha(); return; }
+  if(!confirm(`Assinar como Responsável Legal pela Entrega, como ${minhaAssin.nome}?`)) return;
+  const { error } = await supabaseClient.rpc('app_assinar_resp', { p_colab: String(mobColab.id) });
+  if(error){ toast('Não foi possível assinar: ' + error.message, 7000); return; }
+  auditar('assinar_responsavel_epi', mobColab.id, `${mobColab.nome} — assinou como responsável legal (celular)`);
+  await mobCarregarResp(); toast('Assinatura do responsável registrada.'); mobRender();
+}
+window.mobAssinarResp = mobAssinarResp;
+let mobVoltarPara = 'lista';
+function mobIrMinha(){ mobTela = 'minha'; mobRender(); }
+window.mobIrMinha = mobIrMinha;
+async function mobRenderMinha(app){
+  await carregarMinhaAssin(true);
+  const m = minhaAssin || {};
+  app.innerHTML = `
+    <div class="mb-top"><button class="mb-back" onclick="mobTela=mobVoltarPara;mobVoltarPara='lista';mobRender()">${MOB_SVG.voltar}Voltar</button><div><h1>Minha assinatura</h1><div class="mb-sub">Usada como Responsável Legal pela Entrega do EPI</div></div></div>
+    <div class="mb-body">
+      <label class="mb-lb">Nome completo<input class="mb-in" id="mobRsNome" autocomplete="off" value="${mobE(m.nome || (document.getElementById('usuarioLogadoEmail').firstChild || {}).textContent || '')}"></label>
+      <label class="mb-lb">Cargo<input class="mb-in" id="mobRsCargo" autocomplete="off" placeholder="Ex.: Líder de Produção" value="${mobE(m.cargo || '')}"></label>
+      ${m.img ? `<div class="mb-lb">Assinatura salva<div style="background:#fff;border:1px dashed #94a3b8;border-radius:12px;padding:8px;text-align:center"><img src="${m.img}" alt="Assinatura salva" style="max-height:80px;max-width:100%"></div></div>` : ''}
+      <div class="mb-lb">${m.img ? 'Desenhe de novo só se quiser trocar' : 'Assine com o dedo no quadro abaixo'}<div class="mb-pad"><canvas id="mobPad" aria-label="Quadro de assinatura"></canvas></div></div>
+    </div>
+    <div class="mb-bar"><button class="mb-btn p" onclick="mobSalvarMinha()">Salvar minha assinatura</button><button class="mb-btn g" onclick="mobLimparPad()">Limpar</button></div>
+    ${mobNav('minha')}`;
+  mobIniciaPad();
+}
+async function mobSalvarMinha(){
+  const nome = document.getElementById('mobRsNome').value.trim(), cargo = document.getElementById('mobRsCargo').value.trim();
+  if(!nome || !cargo){ toast('Preencha nome e cargo.'); return; }
+  const img = mobPad && mobPad.tem ? mobRecortar() : (minhaAssin && minhaAssin.img);
+  if(!img){ toast('Faça a assinatura no quadro.'); return; }
+  const { data: s } = await supabaseClient.auth.getSession(), uid = s && s.session && s.session.user.id;
+  if(!uid){ toast('Sessão expirada. Entre de novo.'); return; }
+  const { error } = await supabaseClient.from('assinatura_responsavel').upsert({ user_id: uid, nome, cargo, img, atualizado_em: new Date().toISOString() }, { onConflict:'user_id' });
+  if(error){ toast('Não foi possível salvar: ' + error.message, 7000); return; }
+  minhaAssin = { user_id: uid, nome, cargo, img }; minhaAssinCarregada = true;
+  toast('Assinatura salva.');
+  if(mobVoltarPara === 'ficha' && mobColab){ mobVoltarPara = 'lista'; mobTela = 'ficha'; mobRender(); } else mobRenderMinha(document.getElementById('mobApp'));
+}
+window.mobSalvarMinha = mobSalvarMinha;
 const mobTipoNome = { E:'Entrega inicial', S:'Substituição', D:'Devolução' };
 function mobRenderFicha(app){
   const c = mobColab, d = mobDocs(c), pend = mobItens.filter(i => !i.assinado_em), ass = mobItens.length - pend.length;
@@ -3037,6 +3165,8 @@ function mobRenderFicha(app){
       <div class="mb-doc ${d.epi.k}"><div class="mb-row"><span class="mb-info"><b>Ficha de EPI</b><small>${mobItens.length} ${mobItens.length === 1 ? 'item' : 'itens'} · ${ass} ${ass === 1 ? 'assinado' : 'assinados'}</small></span><span class="mb-pill ${cls(d.epi.k)}">${d.epi.k === 'pend' ? mobPl(d.epi.qtd, 'pendente', 'pendentes') : d.epi.k === 'ok' ? 'Assinado' : 'Sem ficha'}</span></div>
         <div class="mb-docbtns"><button class="mb-btn p sm" ${pend.length ? '' : 'disabled'} onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('epi')">Colher assinatura</button><button class="mb-btn s" onclick="mobIrNova()">+ Nova entrega</button>
         <button class="mb-btn g" ${pend.length ? '' : 'disabled'} onclick="epiEnviarLink('${c.id}')">Enviar link</button></div></div>
+      ${d.epi.k === 'oc' ? '' : `<div class="mb-doc ${mobResp ? 'ok' : 'pend'}"><div class="mb-row"><span class="mb-info"><b>Responsável Legal pela Entrega</b><small>${mobResp ? mobE(mobResp.resp_nome || '') + ' · ' + mobE(epiDataHoraBR(mobResp.resp_em)) : 'Assinatura do responsável ainda não colocada'}</small></span><span class="mb-pill ${mobResp ? 'g' : 'w'}">${mobResp ? 'Assinado' : 'Pendente'}</span></div>
+        <div class="mb-docbtns"><button class="mb-btn ${mobResp ? 'g' : 'p sm'}" onclick="mobAssinarResp()">${mobResp ? 'Assinar novamente' : 'Assinar como responsável'}</button></div></div>`}
       ${cartaoDoc('os')}
       ${cartaoDoc('nr06')}
       ${mobItens.length ? '<div class="mb-h" style="margin-top:6px">Itens da ficha de EPI</div>' : ''}
