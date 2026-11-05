@@ -3147,7 +3147,7 @@ async function mobIrAssinarDoc(tipo){
   const c = mobColab, textos = ASSIN_TEXTOS[tipo], link = c[tipo + '_link'];
   if(!link){ toast('O documento não está anexado. Peça ao administrador.', 5000); mobProximo(); return; }
   const ext = extDoLink(link);
-  if(!['pdf', 'jpg', 'jpeg', 'png'].includes(ext)){ toast('Só é possível assinar PDF, JPG ou PNG. O administrador precisa anexar de novo em PDF.', 7000); return; }
+  if(!['pdf', 'jpg', 'jpeg', 'png', 'docx'].includes(ext)){ toast('Formato não aceito para assinar. O administrador precisa anexar em Word (.docx) ou PDF.', 7000); return; }
   if(typeof PDFLib === 'undefined' || typeof pdfjsLib === 'undefined'){ toast('As bibliotecas de assinatura não carregaram. Atualize a página.', 6000); return; }
   toast('Carregando documento...');
   try{
@@ -3155,7 +3155,7 @@ async function mobIrAssinarDoc(tipo){
     if(!resp.ok) throw new Error(`não foi possível baixar o documento (${resp.status})`);
     const origBuf = await resp.arrayBuffer();
     const hashOriginal = await sha256Hex(origBuf);
-    const pdfBytes = ext === 'pdf' ? new Uint8Array(origBuf.slice(0)) : await imagemParaPdf(origBuf, ext);
+    const pdfBytes = ext === 'pdf' ? new Uint8Array(origBuf.slice(0)) : (ext === 'docx' ? await docxParaPdf(origBuf) : await imagemParaPdf(origBuf, ext));
     const jsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
     let pos = { pagina:1, x:0.58, y:0.80, w:0.30 };
     try{
@@ -3172,6 +3172,14 @@ async function mobIrAssinarDoc(tipo){
   }catch(e){ console.error(e); toast('Erro ao abrir o documento: ' + (e.message || e), 7000); }
 }
 window.mobIrAssinarDoc = mobIrAssinarDoc;
+function mobAbrirLeitura(){
+  if(mobDoc && mobDoc.pdfBytes && extDoLink(mobDoc.link) === 'docx'){
+    const u = URL.createObjectURL(new Blob([mobDoc.pdfBytes], { type:'application/pdf' }));
+    const w = window.open(u, '_blank'); if(!w) window.location.href = u; return;
+  }
+  abrirLinkTemp(mobDoc.link);
+}
+window.mobAbrirLeitura = mobAbrirLeitura;
 
 function mobRenderAssinarDoc(app){
   const d = mobDoc, c = mobColab;
@@ -3179,7 +3187,7 @@ function mobRenderAssinarDoc(app){
     <div class="mb-top"><button class="mb-back" onclick="mobFila=[];mobFilaTotal=0;mobTela='ficha';mobRender()">${MOB_SVG.voltar}Cancelar</button><div><h1>${mobE(d.nome)}</h1>${mobSubFila()}</div></div>
     <div class="mb-body">
       <div class="mb-info-box">Passe o celular para <b>${mobE(c.nome)}</b></div>
-      <button class="mb-btn s" onclick="abrirLinkTemp(mobDoc.link)">Abrir e ler o documento</button>
+      <button class="mb-btn s" onclick="mobAbrirLeitura()">Abrir e ler o documento</button>
       <label class="mb-check"><input type="checkbox" id="mobLi" onchange="mobDoc.lido=this.checked"><span>Li o documento. ${mobE(d.decl)}</span></label>
       <div class="mb-lb">${d.achou ? 'Onde a assinatura vai ficar (toque no documento para mover)' : 'Não achei o campo sozinho: toque no documento onde a assinatura deve ficar'}
         <div class="mb-pdfwrap" id="mobPdfWrap"><canvas id="mobPdf"></canvas><div id="mobBox"></div></div></div>
@@ -3346,6 +3354,379 @@ async function marcarAssinados(colab){
   }catch(e){ console.warn('Assinaturas:', e); }
 }
 
+/* ===== Word (.docx) -> PDF, direto no navegador =====
+   Mantém texto, negrito/itálico/sublinhado, cor, tamanho, alinhamento, recuos, listas,
+   tabelas (bordas e sombreamento) e imagens (PNG/JPG). Não precisa de servidor. */
+async function docxParaPdf(buf){
+  if(typeof JSZip === 'undefined') throw new Error('a biblioteca de leitura de Word não carregou');
+  if(typeof PDFLib === 'undefined') throw new Error('a biblioteca de PDF não carregou');
+  let zip;
+  try{ zip = await JSZip.loadAsync(buf); }catch(e){ throw new Error('arquivo Word inválido. Use .docx (Word antigo .doc não é aceito).'); }
+  if(!zip.file('word/document.xml')) throw new Error('arquivo Word inválido. Use .docx (Word antigo .doc não é aceito).');
+  const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const parse = async (n)=>{ const f = zip.file(n); return f ? new DOMParser().parseFromString(await f.async('string'), 'application/xml') : null; };
+  const doc = await parse('word/document.xml'), sty = await parse('word/styles.xml'), numX = await parse('word/numbering.xml'), rels = await parse('word/_rels/document.xml.rels');
+  const filhos = (el, n)=> el ? Array.from(el.childNodes).filter(x => x.localName === n) : [];
+  const filho = (el, n)=> filhos(el, n)[0] || null;
+  const atr = (el, n)=>{ if(!el) return null; const v = el.getAttributeNS(W, n); return v === null ? el.getAttribute('w:' + n) : v; };
+  const flag = (el)=>{ if(!el) return undefined; const v = atr(el, 'val'); return !(v === '0' || v === 'false' || v === 'off'); };
+
+  /* ---- estilos ---- */
+  const lerRpr = (rpr)=>{
+    const o = {}; if(!rpr) return o;
+    const b = filho(rpr, 'b'), i = filho(rpr, 'i'), sz = filho(rpr, 'sz'), u = filho(rpr, 'u'), cor = filho(rpr, 'color'), caps = filho(rpr, 'caps'), van = filho(rpr, 'vanish');
+    if(b) o.b = flag(b); if(i) o.i = flag(i); if(sz) o.sz = Number(atr(sz, 'val')) / 2;
+    if(u) o.u = atr(u, 'val') !== 'none'; if(cor){ const v = atr(cor, 'val'); if(v && v !== 'auto') o.cor = v; }
+    if(caps) o.caps = flag(caps); if(van) o.oculto = flag(van);
+    return o;
+  };
+  const lerPpr = (ppr)=>{
+    const o = {}; if(!ppr) return o;
+    const jc = filho(ppr, 'jc'), ind = filho(ppr, 'ind'), sp = filho(ppr, 'spacing'), np = filho(ppr, 'numPr');
+    if(jc) o.jc = atr(jc, 'val');
+    if(ind){ const n = (k)=> atr(ind, k) !== null ? Number(atr(ind, k)) / 20 : undefined; o.esq = n('left') ?? n('start'); o.dir = n('right') ?? n('end'); o.prim = n('firstLine'); o.pend = n('hanging'); }
+    if(sp){ const n = (k)=> atr(sp, k) !== null ? Number(atr(sp, k)) : undefined; o.antes = n('before') !== undefined ? n('before') / 20 : undefined; o.depois = n('after') !== undefined ? n('after') / 20 : undefined; o.linha = n('line'); }
+    if(filho(ppr, 'contextualSpacing')) o.contexto = flag(filho(ppr, 'contextualSpacing'));
+    if(np){ const id = filho(np, 'numId'), lv = filho(np, 'ilvl'); o.numId = id ? atr(id, 'val') : undefined; o.ilvl = lv ? Number(atr(lv, 'val')) : 0; }
+    if(filho(ppr, 'pageBreakBefore')) o.quebra = flag(filho(ppr, 'pageBreakBefore'));
+    return o;
+  };
+  const estilos = {}; let padraoP = {}, padraoR = { sz:11 }, estiloNormal = null;
+  if(sty){
+    const dd = filho(sty.documentElement, 'docDefaults');
+    if(dd){ padraoR = { sz:11, ...lerRpr(filho(filho(dd, 'rPrDefault'), 'rPr')) }; padraoP = lerPpr(filho(filho(dd, 'pPrDefault'), 'pPr')); }
+    filhos(sty.documentElement, 'style').forEach(s=>{
+      const id = atr(s, 'styleId'), bo = filho(s, 'basedOn');
+      estilos[id] = { id, tipo: atr(s, 'type'), base: bo ? atr(bo, 'val') : null, p: lerPpr(filho(s, 'pPr')), r: lerRpr(filho(s, 'rPr')) };
+      if(atr(s, 'type') === 'paragraph' && atr(s, 'default') === '1') estiloNormal = id;
+    });
+  }
+  const resolve = (id)=>{
+    if(!id || !estilos[id]) return { p:{}, r:{} };
+    const cadeia = []; let x = id, n = 0;
+    while(x && estilos[x] && n++ < 8){ cadeia.unshift(estilos[x]); x = estilos[x].base; }
+    return cadeia.reduce((a, s)=> ({ p:{ ...a.p, ...s.p }, r:{ ...a.r, ...s.r } }), { p:{}, r:{} });
+  };
+
+  /* ---- numeração (listas) ---- */
+  const nums = {}, abstratos = {};
+  if(numX){
+    filhos(numX.documentElement, 'abstractNum').forEach(a=>{
+      const lv = {}; filhos(a, 'lvl').forEach(l=>{
+        const ind = filho(filho(l, 'pPr'), 'ind');
+        lv[Number(atr(l, 'ilvl'))] = { fmt: atr(filho(l, 'numFmt'), 'val'), txt: atr(filho(l, 'lvlText'), 'val') || '', esq: ind && atr(ind, 'left') !== null ? Number(atr(ind, 'left')) / 20 : undefined, pend: ind && atr(ind, 'hanging') !== null ? Number(atr(ind, 'hanging')) / 20 : undefined };
+      });
+      abstratos[atr(a, 'abstractNumId')] = lv;
+    });
+    filhos(numX.documentElement, 'num').forEach(n=>{ const a = filho(n, 'abstractNumId'); nums[atr(n, 'numId')] = a ? atr(a, 'val') : null; });
+  }
+  const contadores = {};
+  const rotuloLista = (numId, ilvl)=>{
+    const lv = abstratos[nums[numId]]; if(!lv || !lv[ilvl]) return null;
+    const c = contadores[numId] = contadores[numId] || [];
+    c[ilvl] = (c[ilvl] || 0) + 1; for(let k = ilvl + 1; k < 9; k++) c[k] = 0;
+    const fmtN = (n, f)=>{
+      if(f === 'lowerLetter') return String.fromCharCode(96 + ((n - 1) % 26) + 1);
+      if(f === 'upperLetter') return String.fromCharCode(64 + ((n - 1) % 26) + 1);
+      if(f === 'lowerRoman' || f === 'upperRoman'){ const t = [[10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']]; let r = '', m = n; t.forEach(([v, s])=>{ while(m >= v){ r += s; m -= v; } }); return f === 'upperRoman' ? r.toUpperCase() : r; }
+      return String(n);
+    };
+    const d = lv[ilvl];
+    if(d.fmt === 'bullet') return { txt:'•', esq:d.esq, pend:d.pend };
+    return { txt: d.txt.replace(/%(\d)/g, (m, k)=> fmtN((c[k - 1] || 1), (lv[k - 1] || {}).fmt)), esq:d.esq, pend:d.pend };
+  };
+
+  /* ---- imagens ---- */
+  const alvos = {};
+  if(rels) Array.from(rels.getElementsByTagName('Relationship')).forEach(r=>{ alvos[r.getAttribute('Id')] = r.getAttribute('Target'); });
+  const pdf = await PDFLib.PDFDocument.create();
+  const F = { r: await pdf.embedFont(PDFLib.StandardFonts.Helvetica), b: await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold), i: await pdf.embedFont(PDFLib.StandardFonts.HelveticaOblique), bi: await pdf.embedFont(PDFLib.StandardFonts.HelveticaBoldOblique) };
+  const cacheImg = {}; let alvosAtual = alvos, parteAtual = 'doc';
+  const imagem = async (rid)=>{
+    const chave = parteAtual + ':' + rid;
+    if(cacheImg[chave] !== undefined) return cacheImg[chave];
+    let img = null;
+    try{
+      const alvo = (alvosAtual[rid] || '').replace(/^\//, ''); const f = zip.file(alvo.startsWith('word/') ? alvo : 'word/' + alvo);
+      if(f){ const b = await f.async('uint8array'), ext = alvo.split('.').pop().toLowerCase(); if(ext === 'png') img = await pdf.embedPng(b); else if(ext === 'jpg' || ext === 'jpeg') img = await pdf.embedJpg(b); }
+    }catch(e){ console.warn('imagem ignorada:', e); }
+    return (cacheImg[chave] = img);
+  };
+
+  /* ---- página ---- */
+  const sects = Array.from(doc.getElementsByTagNameNS(W, 'sectPr')), sect = sects[sects.length - 1];
+  const pgSz = filho(sect, 'pgSz'), pgMar = filho(sect, 'pgMar');
+  const tw = (el, k, pad)=> el && atr(el, k) !== null ? Number(atr(el, k)) / 20 : pad;
+  const PW = tw(pgSz, 'w', 595.28), PH = tw(pgSz, 'h', 841.89);
+  const mE = Math.max(tw(pgMar, 'left', 56.7), 20), mD = Math.max(tw(pgMar, 'right', 56.7), 20), mT = Math.max(tw(pgMar, 'top', 56.7), 20), mB = Math.max(tw(pgMar, 'bottom', 56.7), 20);
+  const LARG = PW - mE - mD;
+  const distCab = tw(pgMar, 'header', 35.4), distRod = tw(pgMar, 'footer', 35.4);
+  const paginas = []; let pag, y, topoCorpo = PH - mT, limB = mB, emParte = false, ctxCampo = { pagina:1, total:1 };
+  const novaPagina = ()=>{ pag = pdf.addPage([PW, PH]); paginas.push(pag); y = topoCorpo; };
+
+  const conj = new Set(F.r.getCharacterSet());
+  const limpa = (t)=> Array.from(t.replace(/[‘’‚]/g, "'").replace(/[“”„]/g, '"').replace(/[‐‑−]/g, '-').replace(/ /g, ' ').replace(/\t/g, '    ').replace(/…/g, '...'))
+    .map(ch=>{ const cp = ch.codePointAt(0); if(conj.has(cp)) return ch; const s = ch.normalize('NFD').replace(/[̀-ͯ]/g, ''); return (s && conj.has(s.codePointAt(0))) ? s[0] : ''; }).join('');
+  const cor = (hex)=> hex ? PDFLib.rgb(parseInt(hex.slice(0, 2), 16) / 255, parseInt(hex.slice(2, 4), 16) / 255, parseInt(hex.slice(4, 6), 16) / 255) : PDFLib.rgb(0, 0, 0);
+
+  /* ---- segmentos de um parágrafo ---- */
+  const corridas = (el, saida)=>{
+    Array.from(el.childNodes).forEach(n=>{
+      const nm = n.localName;
+      if(nm === 'r') saida.push(n);
+      else if(nm === 'fldSimple' && /\b(NUMPAGES|PAGE)\b/i.test(atr(n, 'instr') || '')) saida.push({ campo: /NUMPAGES/i.test(atr(n, 'instr')) ? 'total' : 'pagina', rpr: filho(filho(n, 'r'), 'rPr') });
+      else if(['hyperlink', 'fldSimple', 'smartTag', 'ins', 'sdt', 'sdtContent', 'customXml'].includes(nm)) corridas(n, saida);
+    });
+    return saida;
+  };
+  const segmentos = async (p, estP)=>{
+    const segs = []; let fld = null;
+    for(const r of corridas(p, [])){
+      if(r.campo){
+        const rp0 = { ...padraoR, ...estP.r, ...lerRpr(r.rpr) };
+        segs.push({ t: String(ctxCampo[r.campo]), font: F[rp0.b ? 'b' : 'r'], sz: rp0.sz || 11, cor: rp0.cor, u: rp0.u }); continue;
+      }
+      const rp = { ...padraoR, ...estP.r, ...resolve(atr(filho(filho(r, 'rPr'), 'rStyle'), 'val')).r, ...lerRpr(filho(r, 'rPr')) };
+      if(rp.oculto) continue;
+      const fonte = F[rp.b && rp.i ? 'bi' : rp.b ? 'b' : rp.i ? 'i' : 'r'], sz = rp.sz || 11;
+      for(const n of Array.from(r.childNodes)){
+        const nm = n.localName;
+        if(nm === 'fldChar'){ const tp = atr(n, 'fldCharType'); if(tp === 'begin') fld = { est:'instr', instr:'' }; else if(tp === 'separate' && fld) fld.est = 'res'; else if(tp === 'end'){ if(fld && !fld.feito){ const I = fld.instr.toUpperCase(); if(/\bNUMPAGES\b/.test(I) || /\bPAGE\b/.test(I)) segs.push({ t: String(/NUMPAGES/.test(I) ? ctxCampo.total : ctxCampo.pagina), font:fonte, sz, cor:rp.cor, u:rp.u }); } fld = null; } continue; }
+        if(nm === 'instrText'){ if(fld && fld.est === 'instr') fld.instr += n.textContent; continue; }
+        if(fld && (nm === 't' || nm === 'tab')){
+          if(fld.est === 'instr') continue;
+          const I = fld.instr.toUpperCase();
+          if(/\bNUMPAGES\b/.test(I) || /\bPAGE\b/.test(I)){ if(!fld.feito){ fld.feito = true; segs.push({ t: String(/NUMPAGES/.test(I) ? ctxCampo.total : ctxCampo.pagina), font:fonte, sz, cor:rp.cor, u:rp.u }); } continue; }
+        }
+        if(nm === 't' || nm === 'tab' || nm === 'noBreakHyphen'){
+          let t = nm === 't' ? n.textContent : nm === 'tab' ? '\t' : '-'; if(rp.caps) t = t.toUpperCase();
+          t = limpa(t); if(t) segs.push({ t, font:fonte, sz, cor:rp.cor, u:rp.u });
+        }else if(nm === 'br' || nm === 'cr'){
+          segs.push(atr(n, 'type') === 'page' ? { pg:true } : { br:true, sz });
+        }else if(nm === 'drawing' || nm === 'pict'){
+          const blip = n.getElementsByTagNameNS('http://schemas.openxmlformats.org/drawingml/2006/main', 'blip')[0];
+          const ext = n.getElementsByTagNameNS('http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing', 'extent')[0];
+          const rid = blip && (blip.getAttributeNS(R, 'embed') || blip.getAttribute('r:embed'));
+          if(rid){
+            const img = await imagem(rid);
+            if(img){ let w = ext ? Number(ext.getAttribute('cx')) / 12700 : img.width * 0.75, h = ext ? Number(ext.getAttribute('cy')) / 12700 : img.height * 0.75; segs.push({ img, w, h }); }
+          }
+        }
+      }
+    }
+    return segs;
+  };
+
+  /* ---- quebra de linhas ---- */
+  const montarLinhas = (segs, larg, larg1, szPadrao)=>{
+    const linhas = []; let L = { fr:[], w:0, h:0 }, lim = larg1;
+    const fecha = ()=>{ if(!L.h) L.h = szPadrao * 1.2; linhas.push(L); L = { fr:[], w:0, h:0 }; lim = larg; };
+    for(const s of segs){
+      if(s.pg){ L.pg = true; continue; }
+      if(s.br){ L.h = Math.max(L.h, s.sz * 1.2); fecha(); continue; }
+      if(s.img){
+        let { w, h } = s; const max = Math.max(lim, 30); if(w > max){ h = h * max / w; w = max; }
+        if(L.w + w > lim && L.fr.length) fecha();
+        L.fr.push({ img:s.img, w, hh:h }); L.w += w; L.h = Math.max(L.h, h); continue;
+      }
+      for(const tk of s.t.split(/( +)/)){
+        if(!tk) continue;
+        const esp = tk[0] === ' ';
+        if(esp && L.w === 0) continue;
+        let w = s.font.widthOfTextAtSize(tk, s.sz);
+        if(!esp && L.w + w > lim && L.fr.length){ fecha(); }
+        if(!esp && w > lim){   // palavra maior que a linha
+          let resto = tk;
+          while(resto){ let n = resto.length; while(n > 1 && s.font.widthOfTextAtSize(resto.slice(0, n), s.sz) > lim) n--; const parte = resto.slice(0, n); L.fr.push({ t:parte, font:s.font, sz:s.sz, w:s.font.widthOfTextAtSize(parte, s.sz), cor:s.cor, u:s.u }); L.w += s.font.widthOfTextAtSize(parte, s.sz); L.h = Math.max(L.h, s.sz * 1.2); resto = resto.slice(n); if(resto) fecha(); }
+          continue;
+        }
+        L.fr.push({ t:tk, font:s.font, sz:s.sz, w, cor:s.cor, u:s.u }); L.w += w; L.h = Math.max(L.h, s.sz * 1.2);
+      }
+    }
+    if(L.fr.length || !linhas.length || L.pg){ if(!L.h) L.h = szPadrao * 1.2; linhas.push(L); }
+    return linhas;
+  };
+  const larguraUtil = (l)=>{ let w = l.w; for(let k = l.fr.length - 1; k >= 0 && l.fr[k].t && !l.fr[k].t.trim(); k--) w -= l.fr[k].w; return w; };
+  const desenhaLinha = (l, x, larg, jc, topo)=>{
+    const w = larguraUtil(l);
+    let xi = x + (jc === 'center' ? (larg - w) / 2 : (jc === 'right' || jc === 'end') ? larg - w : 0);
+    const base = topo - l.h * 0.8;
+    l.fr.forEach(f=>{
+      if(f.img){ pag.drawImage(f.img, { x:xi, y:topo - f.hh, width:f.w, height:f.hh }); }
+      else if(f.t.trim()){
+        pag.drawText(f.t, { x:xi, y:base, size:f.sz, font:f.font, color:cor(f.cor) });
+        if(f.u) pag.drawLine({ start:{ x:xi, y:base - 1.5 }, end:{ x:xi + f.w, y:base - 1.5 }, thickness:0.5, color:cor(f.cor) });
+      }
+      xi += f.w;
+    });
+  };
+
+  /* ---- parágrafo ---- */
+  const infoParagrafo = async (p, baseT)=>{
+    const idEst = atr(filho(filho(p, 'pPr'), 'pStyle'), 'val') || estiloNormal;
+    const e0 = resolve(idEst), bt = baseT || { p:{}, r:{} };
+    const est = { p: { ...bt.p, ...e0.p }, r: { ...bt.r, ...e0.r } };
+    const pp = { ...padraoP, ...est.p, ...lerPpr(filho(p, 'pPr')) };
+    pp.contexto = !!filho(filho(p, 'pPr'), 'contextualSpacing') || !!est.p.contexto; pp.idEst = idEst;
+    const segs = await segmentos(p, est);
+    let esq = pp.esq ?? 0, prim = (pp.prim ?? 0) - (pp.pend ?? 0), rotulo = null;
+    if(pp.numId && pp.numId !== '0'){
+      rotulo = rotuloLista(pp.numId, pp.ilvl || 0);
+      if(rotulo){ if(pp.esq === undefined && rotulo.esq !== undefined) esq = rotulo.esq; const pend = pp.pend ?? rotulo.pend ?? 18; prim = -pend; }
+    }
+    const szBase = (segs.find(s => s.sz) || { sz:(est.r.sz || padraoR.sz || 11) }).sz;
+    return { pp, segs, esq, prim, rotulo, szBase, antes: pp.antes ?? 0, depois: pp.depois ?? 0, mult: pp.linha && pp.linha > 240 ? Math.min(pp.linha / 240, 2) : 1 };
+  };
+  const medirParagrafo = (info, largDisp)=>{
+    const direita = info.pp.dir ?? 0;
+    const larg = Math.max(largDisp - info.esq - direita, 30);
+    let largRot = 0;
+    if(info.rotulo){ largRot = F.r.widthOfTextAtSize(limpa(info.rotulo.txt), info.szBase) + 4; }
+    const x0 = info.rotulo ? Math.max(info.esq, info.esq + info.prim + largRot) : info.esq;
+    const linhas = montarLinhas(info.segs, Math.max(largDisp - x0 - direita, 30), Math.max(largDisp - (info.rotulo ? x0 : info.esq + info.prim) - direita, 30), info.szBase);
+    linhas.forEach(l => { l.h = l.h * info.mult; });
+    return { linhas, x0, x1: info.rotulo ? x0 : info.esq + info.prim, larg: Math.max(largDisp - x0 - direita, 30), largRot };
+  };
+  const alturaParagrafo = (info, m)=> info.antes + m.linhas.reduce((a, l) => a + l.h, 0) + info.depois;
+
+  let ultimoEst = null;
+  const desenhaParagrafoFluxo = async (p, prox)=>{
+    const info = await infoParagrafo(p);
+    if(info.pp.contexto){
+      if(ultimoEst === info.pp.idEst) info.antes = 0;
+      if(prox && prox.localName === 'p' && (atr(filho(filho(prox, 'pPr'), 'pStyle'), 'val') || estiloNormal) === info.pp.idEst) info.depois = 0;
+    }
+    ultimoEst = info.pp.idEst;
+    if(info.pp.quebra && !emParte && y < topoCorpo - 1) novaPagina();
+    const m = medirParagrafo(info, LARG);
+    y -= info.antes;
+    let primeira = true;
+    for(const l of m.linhas){
+      if(!emParte && y - l.h < limB){ novaPagina(); }
+      if(primeira && info.rotulo){ pag.drawText(limpa(info.rotulo.txt), { x:mE + info.esq + info.prim, y:y - l.h * 0.8, size:info.szBase, font:F.r, color:PDFLib.rgb(0, 0, 0) }); }
+      desenhaLinha(l, mE + m.x0, m.larg, info.pp.jc, y);
+      y -= l.h; primeira = false;
+      if(l.pg && !emParte) novaPagina();
+    }
+    y -= info.depois;
+  };
+
+  /* ---- tabela ---- */
+  const tabela = async (tbl, largDisp)=>{
+    const tp = filho(tbl, 'tblPr'), grade = filhos(filho(tbl, 'tblGrid'), 'gridCol').map(g => Number(atr(g, 'w')) / 20);
+    const bordasEl = filho(tp, 'tblBorders'), estT = atr(filho(tp, 'tblStyle'), 'val') || '';
+    let bordas = false;
+    if(bordasEl) bordas = Array.from(bordasEl.childNodes).some(b => b.localName && !['none', 'nil'].includes(atr(b, 'val')));
+    else if(/grid/i.test(estT)) bordas = true;
+    else if(estilos[estT]) bordas = false;
+    const linhasTr = filhos(tbl, 'tr'), estTab = resolve(estT);
+    ultimoEst = null;
+    let cols = grade.length ? grade : null;
+    if(!cols){ const n = Math.max(1, ...linhasTr.map(tr => filhos(tr, 'tc').length)); cols = Array(n).fill(largDisp / n); }
+    const soma = cols.reduce((a, b) => a + b, 0), esc = soma > largDisp ? largDisp / soma : 1;
+    cols = cols.map(c => c * esc);
+    const indT = tw(filho(tp, 'tblInd'), 'w', 0);
+    const PAD_X = 4, PAD_Y = 2;
+    for(const tr of linhasTr){
+      const celulas = []; let col = 0;
+      for(const tc of filhos(tr, 'tc')){
+        const pr = filho(tc, 'tcPr'), span = Number(atr(filho(pr, 'gridSpan'), 'val') || 1);
+        const larg = cols.slice(col, col + span).reduce((a, b) => a + b, 0) || cols[col] || 50;
+        const x = cols.slice(0, col).reduce((a, b) => a + b, 0);
+        const sh = filho(pr, 'shd'), fill = sh && atr(sh, 'fill') && atr(sh, 'fill') !== 'auto' ? atr(sh, 'fill') : null;
+        const bc = filho(pr, 'tcBorders');
+        const semBorda = bc && Array.from(bc.childNodes).filter(b => b.localName).every(b => ['none', 'nil'].includes(atr(b, 'val')));
+        const itens = []; let h = PAD_Y * 2;
+        const coletar = async (cont)=>{
+          for(const n of Array.from(cont.childNodes)){
+            if(n.localName === 'p'){ const info = await infoParagrafo(n, estTab), m = medirParagrafo(info, larg - PAD_X * 2); itens.push({ info, m }); h += alturaParagrafo(info, m); }
+            else if(n.localName === 'tbl'){ for(const sub of Array.from(n.getElementsByTagNameNS(W, 'p'))){ const info = await infoParagrafo(sub, estTab), m = medirParagrafo(info, larg - PAD_X * 2); itens.push({ info, m }); h += alturaParagrafo(info, m); } }
+            else if(n.localName === 'sdt'){ const c2 = filho(n, 'sdtContent'); if(c2) await coletar(c2); }
+          }
+        };
+        await coletar(tc);
+        celulas.push({ x, larg, fill, borda: bordas && !semBorda || (!bordas && bc && !semBorda), itens, h });
+        col += span;
+      }
+      const hMin = (()=>{ const t = filho(filho(tr, 'trPr'), 'trHeight'); return t ? Number(atr(t, 'val')) / 20 : 0; })();
+      const alturaLinha = Math.max(hMin, ...celulas.map(c => c.h), 8);
+      if(!emParte && y - alturaLinha < limB && y < topoCorpo - 1) novaPagina();
+      const x0 = mE + indT;
+      celulas.forEach(c=>{
+        if(c.fill) pag.drawRectangle({ x:x0 + c.x, y:y - alturaLinha, width:c.larg, height:alturaLinha, color:cor(c.fill) });
+        if(c.borda) pag.drawRectangle({ x:x0 + c.x, y:y - alturaLinha, width:c.larg, height:alturaLinha, borderColor:PDFLib.rgb(0, 0, 0), borderWidth:0.6 });
+        let yy = y - PAD_Y;
+        c.itens.forEach(({ info, m })=>{
+          yy -= info.antes;
+          m.linhas.forEach((l, k)=>{
+            if(k === 0 && info.rotulo) pag.drawText(limpa(info.rotulo.txt), { x:x0 + c.x + PAD_X + info.esq + info.prim, y:yy - l.h * 0.8, size:info.szBase, font:F.r, color:PDFLib.rgb(0, 0, 0) });
+            desenhaLinha(l, x0 + c.x + PAD_X + m.x0, m.larg, info.pp.jc, yy); yy -= l.h;
+          });
+          yy -= info.depois;
+        });
+      });
+      y -= alturaLinha;
+    }
+    y -= 4;
+  };
+
+  /* ---- corpo do documento ---- */
+  const corpo = filho(doc.documentElement, 'body');
+  const bloco = async (el, prox)=>{
+    const nm = el.localName;
+    if(nm !== 'p') ultimoEst = null;
+    if(nm === 'p') await desenhaParagrafoFluxo(el, prox);
+    else if(nm === 'tbl') await tabela(el, LARG);
+    else if(nm === 'sdt'){ const c = filho(el, 'sdtContent'); if(c) for(const f of Array.from(c.childNodes)) await bloco(f); }
+  };
+  /* ---- cabeçalho e rodapé (logo, código do documento, número da página) ---- */
+  const refParte = (tag, tipo)=>{
+    const r = filhos(sect, tag).find(x => atr(x, 'type') === tipo), id = r && (r.getAttributeNS(R, 'id') || r.getAttribute('r:id'));
+    const alvo = id && alvos[id]; return alvo ? 'word/' + alvo.replace(/^\//, '').replace(/^word\//, '') : null;
+  };
+  const lerParte = async (caminho)=>{
+    if(!caminho || !zip.file(caminho)) return null;
+    const x = await parse(caminho), nome = caminho.split('/').pop(), rr = await parse('word/_rels/' + nome + '.rels'), mapa = {};
+    if(rr) Array.from(rr.getElementsByTagName('Relationship')).forEach(e => { mapa[e.getAttribute('Id')] = e.getAttribute('Target'); });
+    return { corpo:x.documentElement, mapa, id:nome, altura:0 };
+  };
+  const desenhaParte = async (parte, yTopo)=>{
+    const sv = { alvos:alvosAtual, parte:parteAtual, y, em:emParte, ult:ultimoEst };
+    alvosAtual = parte.mapa; parteAtual = parte.id; y = yTopo; emParte = true;
+    const fil = Array.from(parte.corpo.childNodes).filter(n => n.localName);
+    for(let k = 0; k < fil.length; k++) await bloco(fil[k], fil[k + 1]);
+    const fim = y; alvosAtual = sv.alvos; parteAtual = sv.parte; y = sv.y; emParte = sv.em; ultimoEst = sv.ult;
+    return fim;
+  };
+  const medir = async (parte)=>{
+    if(!parte) return;
+    const tmp = pdf.addPage([PW, PH]), anterior = pag; pag = tmp;
+    const fim = await desenhaParte(parte, PH - 40);
+    parte.altura = (PH - 40) - fim; pag = anterior; pdf.removePage(pdf.getPageCount() - 1);
+  };
+  const titlePg = !!filho(sect, 'titlePg');
+  const hDef = await lerParte(refParte('headerReference', 'default')), hPri = titlePg ? await lerParte(refParte('headerReference', 'first')) : null;
+  const fDef = await lerParte(refParte('footerReference', 'default')), fPri = titlePg ? await lerParte(refParte('footerReference', 'first')) : null;
+  for(const parte of [hDef, hPri, fDef, fPri]) await medir(parte);
+  const altCab = Math.max(hDef ? hDef.altura : 0, hPri ? hPri.altura : 0), altRod = Math.max(fDef ? fDef.altura : 0, fPri ? fPri.altura : 0);
+  if(altCab) topoCorpo = Math.min(PH - mT, PH - distCab - altCab - 6);
+  if(altRod) limB = Math.max(mB, distRod + altRod + 6);
+
+  novaPagina();
+  const lista = Array.from(corpo.childNodes).filter(n => n.localName);
+  for(let k = 0; k < lista.length; k++) await bloco(lista[k], lista[k + 1]);
+
+  ctxCampo.total = paginas.length;
+  for(let i = 0; i < paginas.length; i++){
+    ctxCampo.pagina = i + 1; pag = paginas[i];
+    const prim = titlePg && i === 0, hp = prim ? hPri : hDef, fp = prim ? fPri : fDef;
+    if(hp) await desenhaParte(hp, PH - distCab);
+    if(fp) await desenhaParte(fp, distRod + fp.altura);
+  }
+  return await pdf.save();
+}
+
 async function imagemParaPdf(buf, ext){
   const pdf = await PDFLib.PDFDocument.create();
   const img = ext === 'png' ? await pdf.embedPng(buf) : await pdf.embedJpg(buf);
@@ -3363,8 +3744,8 @@ async function iniciarAssinatura(key){
   if(!textos || !link){ toast('Anexe o documento antes de assinar.'); return; }
 
   const ext = extDoLink(link);
-  if(!['pdf','jpg','jpeg','png'].includes(ext)){
-    toast('Só é possível assinar PDF, JPG ou PNG. Converta o arquivo (ex.: Word → PDF) e anexe de novo.', 6000);
+  if(!['pdf','jpg','jpeg','png','docx'].includes(ext)){
+    toast('Só é possível assinar Word (.docx), PDF, JPG ou PNG. Word antigo (.doc): salve como .docx e anexe de novo.', 6000);
     return;
   }
   if(typeof PDFLib === 'undefined' || typeof pdfjsLib === 'undefined'){
@@ -3378,7 +3759,7 @@ async function iniciarAssinatura(key){
     if(!resp.ok) throw new Error(`não foi possível baixar o documento (${resp.status})`);
     const origBuf = await resp.arrayBuffer();
     const hashOriginal = await sha256Hex(origBuf);
-    const pdfBytes = ext === 'pdf' ? new Uint8Array(origBuf.slice(0)) : await imagemParaPdf(origBuf, ext);
+    const pdfBytes = ext === 'pdf' ? new Uint8Array(origBuf.slice(0)) : (ext === 'docx' ? await docxParaPdf(origBuf) : await imagemParaPdf(origBuf, ext));
     const jsDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice(0) }).promise;
 
     // posição salva para este tipo de documento
