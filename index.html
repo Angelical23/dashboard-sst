@@ -624,6 +624,7 @@
       <input type="password" id="loginSenha" required autocomplete="current-password">
       <button type="submit" class="btn primary" id="btnLogin">Entrar</button>
       <div class="login-erro" id="loginErro"></div>
+      <p style="margin:14px 0 0;font-size:12px;line-height:1.5;color:#526173;text-align:center;">Esqueceu a senha? Procure o <b>Administrador</b> ou o seu <b>Líder</b> para redefinir o acesso.</p>
     </form>
   </div>
 </div>
@@ -670,6 +671,16 @@
         <span class="side-badge red" id="badgeInativos">0</span>
       </button>
 
+
+      <button class="side-link" data-view="treinamentos">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </span>
+          Treinamentos
+        </span>
+      </button>
+
       <div class="side-sec">Controles</div>
       <button class="side-link" data-view="epi">
         <span class="side-link-content">
@@ -680,14 +691,6 @@
         </span>
       </button>
 
-      <button class="side-link" data-view="treinamentos">
-        <span class="side-link-content">
-          <span class="side-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          </span>
-          Treinamentos
-        </span>
-      </button>
 
       <button class="side-link" data-view="acessos" id="navAcessos" style="display:none;">
         <span class="side-link-content">
@@ -877,6 +880,9 @@
           <select id="selectFiltroLocal" class="search-select">
             <option value="">Todos os Locais</option>
           </select>
+          <select id="selectFiltroFuncao" class="search-select">
+            <option value="">Todas as Funções</option>
+          </select>
           <select id="selectFiltroDoc" class="search-select">
             <option value="">Qualquer documento</option>
             <option value="aso">ASO</option>
@@ -897,7 +903,7 @@
 
       <div class="table-panel">
         <div class="table-header">
-          <h3>VISÃO GERAL DE DOCUMENTAÇÃO POR COLABORADOR</h3>
+          <h3>VISÃO GERAL DE DOCUMENTAÇÃO POR COLABORADOR <span id="ativosContagem" style="font-weight:400;color:#526173;margin-left:8px;"></span></h3>
         </div>
         <div class="table-scroll">
           <table class="tbl-ativos">
@@ -953,7 +959,7 @@
       <div class="aud-filtros">
         <div><label>De</label><input type="date" id="audDe"></div>
         <div><label>Até</label><input type="date" id="audAte"></div>
-        <div><label>Ação</label><select id="audAcao"><option value="">Todas</option><option value="ver_documento">Visualizou documento</option><option value="ver_ficha_epi">Abriu ficha de EPI</option><option value="criou">Criou</option><option value="alterou">Alterou</option><option value="excluiu">Excluiu</option><option value="exportar">Exportou</option><option value="gerar_link">Gerou link</option><option value="assinar_doc">Assinou documento</option></select></div>
+        <div><label>Ação</label><select id="audAcao"><option value="">Todas</option><option value="ver_documento">Visualizou documento</option><option value="ver_ficha_epi">Abriu ficha de EPI</option><option value="criou">Criou</option><option value="alterou">Alterou</option><option value="excluiu">Excluiu</option><option value="exportar">Exportou</option><option value="gerar_link">Gerou link</option><option value="assinar_responsavel_epi">Assinou como responsável (EPI)</option><option value="criar_fichas_epi_lote">Criou fichas de EPI em lote</option><option value="assinar_doc">Assinou documento</option></select></div>
         <div><label>Usuário</label><input type="text" id="audUsuario" placeholder="parte do e-mail"></div>
         <div><label>Texto (nome, campo...)</label><input type="text" id="audTexto" placeholder="ex.: Angelica"></div>
         <button class="btn primary" id="audBuscar">Buscar</button>
@@ -1862,8 +1868,13 @@ function popularFiltroLocais(){
   const select = document.getElementById('selectFiltroLocal');
   const valorAtual = select.value;
   const locais = [...new Set(colaboradores.map(c => (c.local || '').trim()).filter(Boolean))].sort();
-  select.innerHTML = '<option value="">Todos os Locais</option>' + locais.map(l => `<option value="${l}">${l}</option>`).join('');
+  const aq = (t)=> String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  select.innerHTML = '<option value="">Todos os Locais</option>' + locais.map(l => `<option value="${aq(l)}">${aq(l)}</option>`).join('');
   select.value = valorAtual;
+  const sf = document.getElementById('selectFiltroFuncao'), fAtual = sf.value;
+  const funcoes = [...new Set(colaboradores.filter(c => c.status !== 'INATIVO').map(c => (c.funcao || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  sf.innerHTML = '<option value="">Todas as Funções</option>' + funcoes.map(f => `<option value="${aq(f)}">${aq(f)}</option>`).join('');
+  sf.value = funcoes.includes(fAtual) ? fAtual : '';
 }
 
 function renderTudo(){
@@ -1935,11 +1946,13 @@ inputBuscaAtivos.addEventListener('input', renderTabelaAtivos);
 selectFiltroLocal.addEventListener('change', renderTabelaAtivos);
 selectFiltroDoc.addEventListener('change', renderTabelaAtivos);
 selectFiltroStatus.addEventListener('change', renderTabelaAtivos);
+document.getElementById('selectFiltroFuncao').addEventListener('change', renderTabelaAtivos);
 document.getElementById('btnLimparFiltros').addEventListener('click', ()=>{
   inputBuscaAtivos.value = '';
   selectFiltroLocal.value = '';
   selectFiltroDoc.value = '';
   selectFiltroStatus.value = '';
+  document.getElementById('selectFiltroFuncao').value = '';
   renderTabelaAtivos();
 });
 inputBuscaInativos.addEventListener('input', renderTabelaInativos);
@@ -1958,6 +1971,7 @@ function renderTabelaAtivos(){
   const local = selectFiltroLocal.value;
   const docSel = selectFiltroDoc.value;
   const statusSel = selectFiltroStatus.value;
+  const funcaoSel = document.getElementById('selectFiltroFuncao').value;
   const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
 
   const filtrados = ativos.filter(c => {
@@ -1966,8 +1980,10 @@ function renderTabelaAtivos(){
       || normalizarTexto(c.funcao).includes(termo)
       || (termoNumerico && (c.cpf || '').replace(/\D/g, '').includes(termoNumerico));
     const localOk = !local || (c.local || '').trim() === local;
+    const funcaoOk = !funcaoSel || (c.funcao || '').trim() === funcaoSel;
 
     let statusOk = true;
+    if(docSel && !statusSel) statusOk = !docOculto(c, docSel);        // só um documento escolhido: quem controla esse documento
     if(statusSel){
       const docs = (docSel ? DOC_FIELDS.filter(d => d.key === docSel) : DOC_FIELDS).filter(d => !docOculto(c, d.key));
       const statusDe = d => statusDoc(d, c).chave;
@@ -1978,9 +1994,10 @@ function renderTabelaAtivos(){
         : docs.some(d => statusDe(d) === statusSel);
     }
 
-    return textoOk && localOk && statusOk;
+    return textoOk && localOk && funcaoOk && statusOk;
   });
 
+  document.getElementById('ativosContagem').textContent = `${filtrados.length} de ${ativos.length}`;
   document.getElementById('badgeAtivos').textContent = ativos.length;
   const tbody = document.getElementById('tableBody');
   if(!filtrados.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>'; return; }
@@ -2595,7 +2612,7 @@ function caminhoStorageDoLink(link){
 /* ===== Documentos privados: o arquivo só abre com link temporário (vale 10 min) ===== */
 async function urlTemp(link, baixar){
   const caminho = caminhoStorageDoLink(link);
-  if(!caminho) return link; // link externo (OneDrive etc.) segue como está
+  if(!caminho){ auditarArquivo(link); return link; } // link externo (OneDrive etc.) segue como está, mas fica registrado
   auditarArquivo(caminho);
   const { data, error } = await supabaseClient.storage.from('documentos').createSignedUrl(caminho, 600, baixar ? { download:true } : undefined);
   if(error || !data) throw new Error('não foi possível liberar o documento (' + ((error && error.message) || 'sem acesso') + ')');
@@ -2605,7 +2622,7 @@ async function fetchDocTemp(link){
   return fetch(await urlTemp(link), { cache:'no-store' });
 }
 async function montarUrlPreviewTemp(link){
-  if(ehLinkOneDriveOuSharePoint(link)) return link;
+  if(ehLinkOneDriveOuSharePoint(link)){ auditarArquivo(link); return link; }
   const ext = link.split('?')[0].split('.').pop().toLowerCase();
   const u = await urlTemp(link);
   if(EXTENSOES_OFFICE.includes(ext)) return 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(u);
@@ -2792,7 +2809,7 @@ function auditarArquivo(caminho){
   auditar('ver_documento', colab ? colab.id : null, `${colab ? colab.nome + ' — ' : ''}${pasta} | ${caminho}`);
 }
 
-const AUD_ACOES = { criou:'Criou', alterou:'Alterou', excluiu:'Excluiu', ver_documento:'Visualizou documento', ver_ficha_epi:'Abriu ficha de EPI', exportar:'Exportou', gerar_link:'Gerou link', assinar_doc:'Assinou documento' };
+const AUD_ACOES = { criou:'Criou', alterou:'Alterou', excluiu:'Excluiu', ver_documento:'Visualizou documento', ver_ficha_epi:'Abriu ficha de EPI', exportar:'Exportou', gerar_link:'Gerou link', assinar_doc:'Assinou documento', assinar_responsavel_epi:'Assinou como responsável (EPI)', criar_fichas_epi_lote:'Criou fichas de EPI em lote' };
 const AUD_TABELAS = { colaboradores:'Colaboradores', treinamentos:'Treinamentos', epi_entregas:'Ficha de EPI (itens)', epi_fichas:'Ficha de EPI', assinaturas:'Assinaturas' };
 let audLinhas = [];
 const audEsc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
@@ -5128,6 +5145,7 @@ function statusDocCampo(campo, c, d){
   if(campo === 'epi'){
     const r = epiResumo[String(c.id)];
     if(r && r.n && r.ass === r.n) return { chave:'ok', texto:'Assinado', classe:'ok', icone:'✔' };
+    if(r && r.n) return { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' };     // ficha criada; falta só colher as assinaturas
   }
   const doc = d || DOC_FIELDS.find(x => x.key === campo);
   return statusDocumento(c[campo + '_data'], c[campo + '_link'], doc ? doc.expira : true);
@@ -5180,7 +5198,9 @@ function detalheDocsHtml(c){
     const s = statusDoc(d, c);
     let botoes = '';
     if(d.key === 'epi'){
+      const re = epiResumo[String(c.id)];
       botoes += `<button class="btn btn-sm primary" onclick="irParaEpi('${c.id}')">Abrir</button>`;
+      if(re && re.n && re.ass < re.n) botoes += `<button class="btn btn-sm" onclick="assinarEpiDireto('${c.id}')">✍️ Assinar</button>`;
     } else {
       botoes += s.chave === 'nodate'
         ? `<button class="btn btn-sm primary" onclick="editarColaborador('${c.id}')">Cadastrar</button>`
@@ -5192,6 +5212,13 @@ function detalheDocsHtml(c){
   }).join('');
   return `<tr class="at-detalhe"><td></td><td colspan="7"><div class="at-dhead"><span>${cab}</span><span>${formatCPF(c.cpf)} · ${c.local || '-'}</span></div><div class="at-docs">${cards}</div></td></tr>`;
 }
+
+async function assinarEpiDireto(id){
+  mostrarView('epi');
+  await epiAbrirFicha(String(id));
+  epiAssinarTodas();
+}
+window.assinarEpiDireto = assinarEpiDireto;
 
 function toggleDocsAtivo(id){
   id = String(id);
