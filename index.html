@@ -1014,6 +1014,7 @@
             <div class="epi-sub">Uma ficha por colaborador, no modelo da empresa (SST-EPI-002). Abra a ficha para registrar entregas, coletar assinaturas e imprimir.</div>
           </div>
           <div class="toolbar">
+            <button class="btn" id="epiBtnLote" type="button">📋 Criar fichas em lote</button>
             <button class="btn primary" onclick="epiAbrirFicha('')">+ Nova ficha</button>
           </div>
         </div>
@@ -1361,6 +1362,21 @@
       <button type="button" class="btn" id="epiAssinCancelar">Cancelar</button>
       <button type="button" class="btn primary" id="epiAssinOk">✔ Confirmar assinatura</button>
     </div>
+  </div>
+</div>
+
+<!-- CRIAR FICHAS DE EPI EM LOTE -->
+<div class="modal-overlay" id="modalEpiLote" style="z-index:130;">
+  <div class="modal" style="max-width:600px;">
+    <h2>📋 Criar fichas de EPI em lote</h2>
+    <p style="font-size:13px;color:#526173;">Cria a ficha de EPI dos colaboradores ativos de uma função e local. Os itens são copiados de uma ficha modelo e a data de entrega de cada item é a <b>data de admissão</b> do colaborador. Ficam <b>pendentes de assinatura</b>.</p>
+    <label>FUNÇÃO (contém)</label><input type="text" id="elFuncao" value="Agente de Higienização" autocomplete="off">
+    <label>LOCAL DE TRABALHO</label><select id="elLocal"></select>
+    <label>FICHA MODELO (colaborador cuja ficha digital será copiada)</label>
+    <input type="text" id="elModelo" list="elModeloLista" placeholder="Digite o nome do colaborador" autocomplete="off">
+    <datalist id="elModeloLista"></datalist>
+    <div id="elResumo" style="margin-top:12px;font-size:13px;line-height:1.5;background:#f1f5f9;border-radius:8px;padding:10px 12px;">Preencha os campos.</div>
+    <div class="modal-actions"><button type="button" class="btn" id="elFechar">Fechar</button><button type="button" class="btn primary" id="elCriar" disabled>Criar fichas</button></div>
   </div>
 </div>
 
@@ -4312,7 +4328,64 @@ async function confirmarAssinatura(){
 }
 document.getElementById('assinConfirmar').addEventListener('click', confirmarAssinatura);
 
-/* ---------- Minha assinatura (Segurança do Trabalho / Responsável Legal) ---------- */
+/* ---------- Fichas de EPI em lote ---------- */
+const elNorm = (t)=> String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+let elAlvos = [], elItens = [];
+async function elAtualizar(){
+  const rs = document.getElementById('elResumo'), btn = document.getElementById('elCriar');
+  btn.disabled = true; elAlvos = []; elItens = [];
+  const fn = elNorm(document.getElementById('elFuncao').value), loc = elNorm(document.getElementById('elLocal').value);
+  const nomeModelo = elNorm(document.getElementById('elModelo').value);
+  if(!fn || !loc){ rs.textContent = 'Informe a função e o local.'; return; }
+  const cand = colaboradores.filter(c => String(c.status || '').toUpperCase() === 'ATIVO' && elNorm(c.funcao).includes(fn) && elNorm(c.local) === loc && !docOculto(c, 'epi'));
+  const jaTem = cand.filter(c => (epiResumo[String(c.id)] || {}).n > 0);
+  const semAdm = cand.filter(c => !(epiResumo[String(c.id)] || {}).n && !c.admissao_data);
+  elAlvos = cand.filter(c => !(epiResumo[String(c.id)] || {}).n && c.admissao_data);
+  let txt = `Encontrados: <b>${cand.length}</b> colaborador(es) ativo(s).<br>Receberão a ficha: <b>${elAlvos.length}</b><br>Já têm ficha (ignorados): ${jaTem.length}<br>Sem data de admissão (ignorados): ${semAdm.length}`;
+  if(semAdm.length) txt += `<br><span style="color:#b45309">Sem admissão: ${semAdm.slice(0, 5).map(c => epiEsc(c.nome)).join(', ')}${semAdm.length > 5 ? '…' : ''}</span>`;
+  const modelo = nomeModelo ? colaboradores.find(c => elNorm(c.nome) === nomeModelo && (epiResumo[String(c.id)] || {}).n > 0) : null;
+  if(!modelo){ rs.innerHTML = txt + '<br><span style="color:#b45309">Escolha a ficha modelo (nome de quem já tem ficha digital).</span>'; return; }
+  const { data, error } = await supabaseClient.from('epi_entregas').select('descricao,ca,qtde,tipo,visto,ordem,data_entrega').eq('colaborador_id', String(modelo.id)).order('ordem', { ascending:true }).order('data_entrega', { ascending:true });
+  if(error){ rs.innerHTML = txt + '<br>Erro ao ler o modelo: ' + epiEsc(error.message); return; }
+  elItens = data || [];
+  txt += `<br>Itens da ficha modelo: <b>${elItens.length}</b>` + (elItens.length ? '<br>' + elItens.slice(0, 6).map(i => epiEsc(`${i.descricao || ''} (C.A. ${i.ca || '-'}, ${i.qtde || '-'} ${i.tipo || ''})`)).join('<br>') + (elItens.length > 6 ? '<br>…' : '') : '');
+  rs.innerHTML = txt;
+  btn.disabled = !elAlvos.length || !elItens.length;
+}
+function elAbrir(){
+  const locais = [...new Set(colaboradores.map(c => (c.local || '').trim()).filter(Boolean))].sort();
+  const sel = document.getElementById('elLocal');
+  sel.innerHTML = locais.map(l => `<option value="${epiEsc(l)}"${/ceagesp/i.test(l) && l.length < 12 ? ' selected' : ''}>${epiEsc(l)}</option>`).join('');
+  const comFicha = colaboradores.filter(c => (epiResumo[String(c.id)] || {}).n > 0).sort((a, b) => a.nome.localeCompare(b.nome));
+  document.getElementById('elModeloLista').innerHTML = comFicha.map(c => `<option value="${epiEsc(c.nome)}"></option>`).join('');
+  document.getElementById('elModelo').value = '';
+  document.getElementById('modalEpiLote').classList.add('open');
+  elAtualizar();
+}
+document.getElementById('epiBtnLote').addEventListener('click', elAbrir);
+document.getElementById('elFechar').addEventListener('click', ()=> document.getElementById('modalEpiLote').classList.remove('open'));
+['elFuncao', 'elLocal', 'elModelo'].forEach(id => document.getElementById(id).addEventListener(id === 'elLocal' ? 'change' : 'input', ()=>{ clearTimeout(window.__elT); window.__elT = setTimeout(elAtualizar, 350); }));
+document.getElementById('elCriar').addEventListener('click', async ()=>{
+  if(!elAlvos.length || !elItens.length) return;
+  if(!confirm(`Criar a ficha de EPI de ${elAlvos.length} colaborador(es), com ${elItens.length} item(ns) cada, datados na admissão de cada um?`)) return;
+  const btn = document.getElementById('elCriar'); btn.disabled = true;
+  const linhas = [];
+  elAlvos.forEach(c => elItens.forEach((it, i) => linhas.push({ colaborador_id: String(c.id), data_entrega: c.admissao_data, descricao: it.descricao, ca: it.ca, qtde: it.qtde, tipo: it.tipo || 'E', visto: it.visto || null, ordem: i })));
+  try{
+    for(let i = 0; i < linhas.length; i += 200){
+      btn.textContent = `Criando ${Math.min(i + 200, linhas.length)}/${linhas.length}...`;
+      const { error } = await supabaseClient.from('epi_entregas').insert(linhas.slice(i, i + 200));
+      if(error) throw error;
+    }
+    auditar('criar_fichas_epi_lote', null, `${elAlvos.length} fichas criadas (função ${document.getElementById('elFuncao').value}, local ${document.getElementById('elLocal').value})`);
+    toast(`${elAlvos.length} ficha(s) criada(s), pendentes de assinatura.`, 6000);
+    document.getElementById('modalEpiLote').classList.remove('open');
+    await epiCarregarResumo(); epiRenderLista();
+  }catch(e){ toast('Erro: ' + (e.message || e) + ' — confira se alguma ficha foi criada pela metade.', 9000); }
+  btn.textContent = 'Criar fichas';
+});
+
+/* ---------- Minha assinatura (Segurança do Trabalho / Responsável Legal) ----------
 let minhaAssin = null, minhaAssinCarregada = false, rsPad = null;
 async function carregarMinhaAssin(forcar){
   if(minhaAssinCarregada && !forcar) return minhaAssin;
