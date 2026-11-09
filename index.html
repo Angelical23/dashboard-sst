@@ -5510,7 +5510,8 @@ async function epiAbrirFicha(id){
         try{
           const r = await epiLerDocx(c.epi_link);
           if(r.itens.length){
-            epiFicha.rows = r.itens.map(i => ({ d:i.d, desc:i.desc, ca:i.ca, qt:i.qt, tp:i.tp, sig:null, visto:i.visto }));
+            epiFicha.semData = r.itens.filter(i => !i.d).length;
+            epiFicha.rows = r.itens.map(i => ({ d:i.d || c.admissao_data || '', desc:i.desc, ca:i.ca, qt:i.qt, tp:i.tp, sig:null, visto:i.visto }));
             if(!epiFicha.funcao) epiFicha.funcao = r.funcao;
             if(!epiFicha.setor) epiFicha.setor = r.setor;
             if(!epiFicha.cbo) epiFicha.cbo = r.cbo;
@@ -5588,7 +5589,7 @@ function epiRenderFicha(){
       <button class="btn" onclick="epiGerarLink()">🔗 Link de assinatura</button>
       <button class="btn primary" id="epiBtnSalvar" onclick="epiSalvarFicha()">Salvar ficha</button>
     </div>
-    ${f.importado ? `<div class="epi-aviso epi-np" style="background:#eefaf2;border-color:#b7e4c7;color:#166534;">✔ ${f.importado} ${f.importado === 1 ? 'item importado' : 'itens importados'} do documento Word anexado. Confira os dados e clique em <b>Salvar ficha</b>; depois já é possível assinar ou enviar o link ao colaborador.</div>` : ''}
+    ${f.importado ? `<div class="epi-aviso epi-np" style="background:#eefaf2;border-color:#b7e4c7;color:#166534;">✔ ${f.importado} ${f.importado === 1 ? 'item importado' : 'itens importados'} do documento Word anexado${f.semData ? ` (${f.semData} sem data na ficha: foi usada a data de admissão)` : ''}. Confira os dados e clique em <b>Salvar ficha</b>; depois já é possível assinar ou enviar o link ao colaborador.</div>` : ''}
     ${f.avisoAnexo ? `<div class="epi-aviso epi-np">${epiEsc(f.avisoAnexo)}</div>` : ''}
     <div class="epi-hint epi-np">A folha abaixo é o modelo que será impresso. Os botões azuis dentro dela aparecem só na tela. Assinaturas já coletadas ficam travadas; para corrigir uma linha, cancele a assinatura dela.</div>
     <div class="epi-paper-wrap"><div id="epiPaper">
