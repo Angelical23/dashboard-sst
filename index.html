@@ -4352,8 +4352,20 @@ async function elAtualizar(){
   const rs = document.getElementById('elResumo'), btn = document.getElementById('elCriar');
   btn.disabled = true; elAlvos = []; elItens = [];
   const fn = elNorm(document.getElementById('elFuncao').value), loc = elNorm(document.getElementById('elLocal').value);
-  const nomeModelo = elNorm(document.getElementById('elModelo').value);
   if(!fn || !loc){ rs.textContent = 'Informe a função e o local.'; return; }
+  try{ await elAtualizar2(rs, btn, fn, loc); }
+  catch(e){ console.error(e); rs.innerHTML = '<span style="color:#b91c1c">Erro ao preparar o lote: ' + epiEsc(e.message || String(e)) + '</span>'; }
+}
+async function elAtualizar2(rs, btn, fn, loc){
+  const campoModelo = document.getElementById('elModelo');
+  const comFichaDe = (c)=> (epiResumo[String(c.id)] || {}).n > 0;
+  // se ninguém foi escolhido, sugere sozinho uma ficha pronta da mesma função e local (depois, qualquer do mesmo local)
+  if(!campoModelo.value.trim()){
+    const sug = colaboradores.find(c => comFichaDe(c) && elNorm(c.funcao).includes(fn) && elNorm(c.local) === loc)
+             || colaboradores.find(c => comFichaDe(c) && elNorm(c.local) === loc);
+    if(sug) campoModelo.value = sug.nome;
+  }
+  const nomeModelo = elNorm(campoModelo.value);
   const cand = colaboradores.filter(c => String(c.status || '').toUpperCase() === 'ATIVO' && elNorm(c.funcao).includes(fn) && elNorm(c.local) === loc && !docOculto(c, 'epi'));
   const jaTem = cand.filter(c => (epiResumo[String(c.id)] || {}).n > 0);
   const semAdm = cand.filter(c => !(epiResumo[String(c.id)] || {}).n && !c.admissao_data);
