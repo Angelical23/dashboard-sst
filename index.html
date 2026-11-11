@@ -593,7 +593,8 @@
   .mb-pills .mb-pill{font-size:11.5px;padding:2px 9px;}
   .mb-doc{background:#fff;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;border-left:4px solid #d97706;}
   .mb-doc.ok{border-left-color:#16a34a;} .mb-doc.sem{border-left-color:#cbd5e1;background:#f8fafc;box-shadow:none;} .mb-doc.sem b{color:#64748b;}
-  .mb-pill.w::before{content:'✍ ';} .mb-pill.g::before{content:'✔ ';} .mb-pill.n{color:#64748b;background:#eef2f6;}
+  .mb-doc.neu{border-left-color:#94a3b8;}
+  .mb-pill.n::before{content:'';} .mb-pill.w::before{content:'✍ ';} .mb-pill.g::before{content:'✔ ';} .mb-pill.n{color:#64748b;background:#eef2f6;}
   .mb-doc b{font-size:15px;} .mb-doc small{font-size:12px;color:#526173;}
   .mb-docbtns{display:flex;gap:8px;flex-wrap:wrap;}
   .mb-docbtns .mb-btn{height:44px;font-size:14px;flex:1;min-width:120px;}
@@ -3015,15 +3016,39 @@ let mobLocal = '', mobOrigem = 'lista', mobPendTipo = 'todas', mobFila = [], mob
 const MOB_DOCNOME = { epi:'Ficha de EPI', os:'Ordem de Serviço (OS)', nr06:'Certificado NR06' };
 
 /* situação de cada um dos 3 documentos do colaborador */
+const mobQuebrados = new Set(), mobVerificados = new Set();
+async function mobVerificaArquivos(){
+  try{
+    const pares = [];
+    mobAtivos().forEach(c => ['os_link', 'nr06_link'].forEach(k => {
+      const l = String(c[k] || '').trim();
+      const cam = l && typeof caminhoStorageDoLink === 'function' ? caminhoStorageDoLink(l) : null;
+      if(cam && !mobVerificados.has(l)) pares.push([l, cam]);
+    }));
+    if(!pares.length) return;
+    let mudou = false;
+    for(let i = 0; i < pares.length; i += 100){
+      const lote = pares.slice(i, i + 100);
+      const { data, error } = await supabaseClient.storage.from('documentos').createSignedUrls(lote.map(p => p[1]), 60);
+      if(error || !data) continue;
+      data.forEach((r, j)=>{
+        const link = lote[j][0];
+        if(r.error && /not found/i.test(String(r.error))){ mobQuebrados.add(link); mudou = true; }
+        if(!r.error || /not found/i.test(String(r.error))) mobVerificados.add(link);
+      });
+    }
+    if(mudou && document.body.classList.contains('mob-on') && mobTela !== 'assinar' && mobTela !== 'assinarDoc' && mobTela !== 'nova') mobRender();
+  }catch(e){ console.warn('verificação de arquivos', e); }
+}
 function mobDocs(c){
   const r = epiResumo[String(c.id)] || {}, n = r.n || 0, pe = n - (r.ass || 0);
   const epi = docOculto(c, 'epi') ? { k:'oc', txt:'' } : !n ? { k:'sem', txt:'EPI · sem ficha' }
     : pe > 0 ? { k:'pend', txt:`EPI · ${pe} ${pe === 1 ? 'pendente' : 'pendentes'}`, qtd:pe } : { k:'ok', txt:'EPI ✓' };
   const doc = (key, rot)=>{
     const bruto = String(c[key + '_link'] || '').trim();
-    const link = (bruto.length > 6 && /[\/.]/.test(bruto) && !/^(n\/?a|sem|nao|não|-+)$/i.test(bruto)) ? bruto : '';
+    const link = (bruto.length > 6 && /[\/.]/.test(bruto) && !/^(n\/?a|sem|nao|não|-+)$/i.test(bruto) && !mobQuebrados.has(bruto)) ? bruto : '';
     if(docOculto(c, key)) return { k:'oc', txt:'' };
-    if(!link) return { k:'sem', txt:`${rot} · sem documento` };
+    if(!link) return { k:'sem', txt:`${rot} · sem anexo` };
     return assinadosSet.has(`${c.id}|${key}|${c[key + '_link']}`) ? { k:'ok', txt:`${rot} ✓` } : { k:'pend', txt:`${rot} · a assinar` };
   };
   return { epi, os: doc('os', 'OS'), nr06: doc('nr06', 'NR-06') };
@@ -3196,11 +3221,11 @@ function mobRenderFicha(app){
   const cls = (k)=> k === 'pend' ? 'w' : k === 'ok' ? 'g' : 'n';
   const cartaoDoc = (t)=>{
     const s = d[t], link = c[t + '_link'];
-    const rot = s.k === 'pend' ? 'A assinar' : s.k === 'ok' ? 'Assinado' : 'Sem documento';
+    const rot = s.k === 'pend' ? 'A assinar' : s.k === 'ok' ? 'Assinado' : 'Sem anexo';
     let btn = '';
     if(s.k === 'pend') btn = `<button class="mb-btn p sm" onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('${t}')">Colher assinatura</button><button class="mb-btn g" onclick="gerarLinkAssinatura('${t}','${c.id}')">Enviar link</button>`;
     else if(s.k === 'ok') btn = `<button class="mb-btn g" onclick="abrirLinkTemp(mobColab['${t}_link'])">Ver documento</button>`;
-    else btn = `<div class="mb-vazio" style="padding:0;text-align:left;font-size:12.5px">Não há documento anexado, então não há nada para assinar. O administrador precisa anexar no sistema.</div>`;
+    else btn = `<div class="mb-vazio" style="padding:0;text-align:left;font-size:12.5px">Sem anexo: não há documento para assinar. O administrador precisa anexar no sistema.</div>`;
     if(s.k === 'oc') return '';
     return `<div class="mb-doc ${s.k}"><div class="mb-row"><span class="mb-info"><b>${MOB_DOCNOME[t]}</b><small>${t === 'epi' ? '' : (c.funcao ? mobE(c.funcao) : '')}</small></span><span class="mb-pill ${cls(s.k)}">${rot}</span></div><div class="mb-docbtns">${btn}</div></div>`;
   };
@@ -3212,7 +3237,7 @@ function mobRenderFicha(app){
       <div class="mb-doc ${d.epi.k}"><div class="mb-row"><span class="mb-info"><b>Ficha de EPI</b><small>${mobItens.length} ${mobItens.length === 1 ? 'item' : 'itens'} · ${ass} ${ass === 1 ? 'assinado' : 'assinados'}</small></span><span class="mb-pill ${cls(d.epi.k)}">${d.epi.k === 'sem' ? 'Sem ficha' : d.epi.k === 'pend' ? mobPl(d.epi.qtd, 'pendente', 'pendentes') : d.epi.k === 'ok' ? 'Assinado' : 'Sem ficha'}</span></div>
         <div class="mb-docbtns"><button class="mb-btn p sm" ${pend.length ? '' : 'disabled'} onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('epi')">Colher assinatura</button><button class="mb-btn s" onclick="mobIrNova()">+ Nova entrega</button>
         <button class="mb-btn g" ${pend.length ? '' : 'disabled'} onclick="epiEnviarLink('${c.id}')">Enviar link</button></div></div>
-      ${d.epi.k === 'oc' ? '' : `<div class="mb-doc ${mobResp ? 'ok' : 'pend'}"><div class="mb-row"><span class="mb-info"><b>Responsável Legal pela Entrega</b><small>${mobResp ? mobE(mobResp.resp_nome || '') + ' · ' + mobE(epiDataHoraBR(mobResp.resp_em)) : 'Assinatura do responsável ainda não colocada'}</small></span><span class="mb-pill ${mobResp ? 'g' : 'w'}">${mobResp ? 'Assinado' : 'Pendente'}</span></div>
+      ${d.epi.k === 'oc' ? '' : `<div class="mb-doc ${mobResp ? 'ok' : 'neu'}"><div class="mb-row"><span class="mb-info"><b>Responsável Legal pela Entrega</b><small>${mobResp ? mobE(mobResp.resp_nome || '') + ' · ' + mobE(epiDataHoraBR(mobResp.resp_em)) : 'Assinatura do responsável ainda não colocada'}</small></span><span class="mb-pill ${mobResp ? 'g' : 'n'}">${mobResp ? 'Assinado' : 'Pendente'}</span></div>
         <div class="mb-docbtns"><button class="mb-btn ${mobResp ? 'g' : 'p sm'}" onclick="mobAssinarResp()">${mobResp ? 'Assinar novamente' : 'Assinar como responsável'}</button></div></div>`}
       ${cartaoDoc('os')}
       ${cartaoDoc('nr06')}
@@ -3496,7 +3521,7 @@ window.mobConfirmarDoc = mobConfirmarDoc;
 /* atualiza a lista quando os dados são recarregados */
 (function(){
   const orig = renderTudo;
-  renderTudo = function(){ orig.apply(this, arguments); mobLogado = true; if(document.body.classList.contains('mob-on') && mobTela === 'lista') mobRender(); else mobAvaliar(); };
+  renderTudo = function(){ orig.apply(this, arguments); mobLogado = true; if(document.body.classList.contains('mob-on') && mobTela === 'lista') mobRender(); else mobAvaliar(); mobVerificaArquivos(); };
 })();
 
 /* PWA: registra o service worker (sem cache: o sistema sempre abre a versão mais nova) */
