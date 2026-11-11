@@ -3017,6 +3017,7 @@ const MOB_DOCNOME = { epi:'Ficha de EPI', os:'Ordem de Serviço (OS)', nr06:'Cer
 
 /* situação de cada um dos 3 documentos do colaborador */
 const mobQuebrados = new Set(), mobVerificados = new Set();
+let mobResumoOk = false, mobResumoTentativas = 0;
 async function mobVerificaArquivos(){
   try{
     const pares = [];
@@ -3041,6 +3042,7 @@ async function mobVerificaArquivos(){
   }catch(e){ console.warn('verificação de arquivos', e); }
 }
 function mobDocs(c){
+  if(!mobResumoOk){ const w = { k:'sem', txt:'carregando…' }; return { epi:docOculto(c, 'epi') ? { k:'oc', txt:'' } : { ...w, txt:'EPI · carregando…' }, os:docOculto(c, 'os') ? { k:'oc', txt:'' } : { ...w, txt:'OS · carregando…' }, nr06:docOculto(c, 'nr06') ? { k:'oc', txt:'' } : { ...w, txt:'NR-06 · carregando…' } }; }
   const r = epiResumo[String(c.id)] || {}, n = r.n || 0, pe = n - (r.ass || 0);
   const epi = docOculto(c, 'epi') ? { k:'oc', txt:'' } : !n ? { k:'sem', txt:'EPI · sem ficha' }
     : pe > 0 ? { k:'pend', txt:`EPI · ${pe} ${pe === 1 ? 'pendente' : 'pendentes'}`, qtd:pe } : { k:'ok', txt:'EPI ✓' };
@@ -3221,7 +3223,7 @@ function mobRenderFicha(app){
   const cls = (k)=> k === 'pend' ? 'w' : k === 'ok' ? 'g' : 'n';
   const cartaoDoc = (t)=>{
     const s = d[t], link = c[t + '_link'];
-    const rot = s.k === 'pend' ? 'A assinar' : s.k === 'ok' ? 'Assinado' : 'Sem anexo';
+    const rot = !mobResumoOk ? 'Carregando…' : s.k === 'pend' ? 'A assinar' : s.k === 'ok' ? 'Assinado' : 'Sem anexo';
     let btn = '';
     if(s.k === 'pend') btn = `<button class="mb-btn p sm" onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('${t}')">Colher assinatura</button><button class="mb-btn g" onclick="gerarLinkAssinatura('${t}','${c.id}')">Enviar link</button>`;
     else if(s.k === 'ok') btn = `<button class="mb-btn g" onclick="abrirLinkTemp(mobColab['${t}_link'])">Ver documento</button>`;
@@ -3234,7 +3236,7 @@ function mobRenderFicha(app){
       <div><h1>${mobE(c.nome)}</h1><div class="mb-sub">${mobE(c.local || '-')}${c.funcao ? ' · ' + mobE(c.funcao) : ''}</div></div></div>
     <div class="mb-body">
       <div class="mb-h">Documentos do colaborador</div>
-      <div class="mb-doc ${d.epi.k}"><div class="mb-row"><span class="mb-info"><b>Ficha de EPI</b><small>${mobItens.length} ${mobItens.length === 1 ? 'item' : 'itens'} · ${ass} ${ass === 1 ? 'assinado' : 'assinados'}</small></span><span class="mb-pill ${cls(d.epi.k)}">${d.epi.k === 'sem' ? 'Sem ficha' : d.epi.k === 'pend' ? mobPl(d.epi.qtd, 'pendente', 'pendentes') : d.epi.k === 'ok' ? 'Assinado' : 'Sem ficha'}</span></div>
+      <div class="mb-doc ${d.epi.k}"><div class="mb-row"><span class="mb-info"><b>Ficha de EPI</b><small>${mobItens.length} ${mobItens.length === 1 ? 'item' : 'itens'} · ${ass} ${ass === 1 ? 'assinado' : 'assinados'}</small></span><span class="mb-pill ${cls(d.epi.k)}">${d.epi.k === 'sem' ? (mobResumoOk ? 'Sem ficha' : 'Carregando…') : d.epi.k === 'pend' ? mobPl(d.epi.qtd, 'pendente', 'pendentes') : d.epi.k === 'ok' ? 'Assinado' : 'Sem ficha'}</span></div>
         <div class="mb-docbtns"><button class="mb-btn p sm" ${pend.length ? '' : 'disabled'} onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('epi')">Colher assinatura</button><button class="mb-btn s" onclick="mobIrNova()">+ Nova entrega</button>
         <button class="mb-btn g" ${pend.length ? '' : 'disabled'} onclick="epiEnviarLink('${c.id}')">Enviar link</button></div></div>
       ${d.epi.k === 'oc' ? '' : `<div class="mb-doc ${mobResp ? 'ok' : 'neu'}"><div class="mb-row"><span class="mb-info"><b>Responsável Legal pela Entrega</b><small>${mobResp ? mobE(mobResp.resp_nome || '') + ' · ' + mobE(epiDataHoraBR(mobResp.resp_em)) : 'Assinatura do responsável ainda não colocada'}</small></span><span class="mb-pill ${mobResp ? 'g' : 'n'}">${mobResp ? 'Assinado' : 'Pendente'}</span></div>
@@ -5363,8 +5365,12 @@ async function epiCarregarResumo(){
       if(l.data_entrega && l.data_entrega > r.ultima) r.ultima = l.data_entrega;
     });
     await painelCarregarAssinaturas();
+    mobResumoOk = true; mobResumoTentativas = 0;
     renderTudo();
-  }catch(err){ console.warn('Resumo de EPI indisponível:', err.message || err); }
+  }catch(err){
+    console.warn('Resumo de EPI indisponível:', err.message || err);
+    if(!mobResumoOk && mobResumoTentativas++ < 4) setTimeout(()=>{ if(!mobResumoOk) epiCarregarResumo(); }, 2000);
+  }
 }
 
 async function loadEpi(){
@@ -5378,6 +5384,7 @@ async function loadEpi(){
       if(l.data_entrega && l.data_entrega > r.ultima) r.ultima = l.data_entrega;
     });
     epiErro = null;
+    mobResumoOk = true;
     renderTudo();
   }catch(err){
     epiResumo = {};
