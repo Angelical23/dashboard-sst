@@ -592,7 +592,8 @@
   .mb-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
   .mb-pills .mb-pill{font-size:11.5px;padding:2px 9px;}
   .mb-doc{background:#fff;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;border-left:4px solid #d97706;}
-  .mb-doc.ok{border-left-color:#16a34a;} .mb-doc.sem{border-left-color:#94a3b8;}
+  .mb-doc.ok{border-left-color:#16a34a;} .mb-doc.sem{border-left-color:#cbd5e1;background:#f8fafc;box-shadow:none;} .mb-doc.sem b{color:#64748b;}
+  .mb-pill.w::before{content:'✍ ';} .mb-pill.g::before{content:'✔ ';} .mb-pill.n{color:#64748b;background:#eef2f6;}
   .mb-doc b{font-size:15px;} .mb-doc small{font-size:12px;color:#526173;}
   .mb-docbtns{display:flex;gap:8px;flex-wrap:wrap;}
   .mb-docbtns .mb-btn{height:44px;font-size:14px;flex:1;min-width:120px;}
@@ -935,6 +936,15 @@
         <b>Administrador:</b> vê e edita tudo (inclusive CPF e arquivo do ASO).<br>
         <b>Líder:</b> somente consulta. Não vê o CPF nem abre/baixa o arquivo do ASO (vê apenas o status) e não altera nada.<br>
         <b>Líder com local:</b> vê somente os colaboradores e documentos do local definido. Sem local = vê todos.
+      </div>
+      <div class="table-panel" style="margin-bottom:14px;">
+        <div class="table-header"><h3>LINK DO APP PARA OS LÍDERES</h3></div>
+        <div style="padding:14px;">
+          <p style="font-size:13px;color:#526173;margin:0 0 8px;">Envie este link e a mensagem abaixo para cada líder. O líder entra com o CPF e troca a senha no primeiro acesso.</p>
+          <input type="text" id="appLink" style="width:100%;box-sizing:border-box;margin-bottom:8px;">
+          <textarea id="appMsg" rows="8" readonly style="width:100%;box-sizing:border-box;font-size:13px;"></textarea>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn" id="appCopLink">Copiar link</button><button type="button" class="btn primary" id="appCopMsg">Copiar mensagem</button><a class="btn" id="appWpp" target="_blank" rel="noopener" style="text-decoration:none;">Enviar por WhatsApp</a></div>
+        </div>
       </div>
       <div class="table-panel" style="margin-bottom:14px;">
         <div class="table-header"><h3>CRIAR LOGINS DE LÍDERES (usuário = CPF, senha inicial = CPF)</h3></div>
@@ -3010,10 +3020,11 @@ function mobDocs(c){
   const epi = docOculto(c, 'epi') ? { k:'oc', txt:'' } : !n ? { k:'sem', txt:'EPI · sem ficha' }
     : pe > 0 ? { k:'pend', txt:`EPI · ${pe} ${pe === 1 ? 'pendente' : 'pendentes'}`, qtd:pe } : { k:'ok', txt:'EPI ✓' };
   const doc = (key, rot)=>{
-    const link = c[key + '_link'];
+    const bruto = String(c[key + '_link'] || '').trim();
+    const link = (bruto.length > 6 && /[\/.]/.test(bruto) && !/^(n\/?a|sem|nao|não|-+)$/i.test(bruto)) ? bruto : '';
     if(docOculto(c, key)) return { k:'oc', txt:'' };
-    if(!link) return { k:'sem', txt:`${rot} · sem arquivo` };
-    return assinadosSet.has(`${c.id}|${key}|${link}`) ? { k:'ok', txt:`${rot} ✓` } : { k:'pend', txt:`${rot} · pendente` };
+    if(!link) return { k:'sem', txt:`${rot} · sem documento` };
+    return assinadosSet.has(`${c.id}|${key}|${c[key + '_link']}`) ? { k:'ok', txt:`${rot} ✓` } : { k:'pend', txt:`${rot} · a assinar` };
   };
   return { epi, os: doc('os', 'OS'), nr06: doc('nr06', 'NR-06') };
 }
@@ -3078,13 +3089,13 @@ function mobNav(ativa){
     <button class="${ativa === 'lista' ? 'on' : ''}" onclick="mobSetFiltro('todos')">${MOB_SVG.pessoas}Colaboradores</button>
     <button class="${ativa === 'pend' ? 'on' : ''}" onclick="mobIrPend()">${MOB_SVG.escudo}Pendências</button>
     <button class="${ativa === 'minha' ? 'on' : ''}" onclick="mobIrMinha()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Assinatura</button>
-    <button onclick="mobVersaoCompleta()">${MOB_SVG.tela}Versão completa</button>
+    ${ehAdmin() ? `<button onclick="mobVersaoCompleta()">${MOB_SVG.tela}Versão completa</button>` : ''}
     <button onclick="document.getElementById('btnLogout').click()">${MOB_SVG.sair}Sair</button></nav>`;
 }
 function mobSetFiltro(f){ mobFiltro = f; mobTela = 'lista'; mobRender(); }
 function mobIrPend(){ mobTela = 'pend'; mobRender(); }
 function mobVoltarLista(){ mobFila = []; mobFilaTotal = 0; mobTela = mobOrigem === 'pend' ? 'pend' : 'lista'; mobRender(); }
-function mobVersaoCompleta(){ mobForcarCompleto = true; mobAvaliar(); }
+function mobVersaoCompleta(){ if(!ehAdmin()) return; mobForcarCompleto = true; mobAvaliar(); }
 window.mobSetFiltro = mobSetFiltro; window.mobIrPend = mobIrPend; window.mobVoltarLista = mobVoltarLista; window.mobVersaoCompleta = mobVersaoCompleta;
 
 /* ---------- pendências por documento ---------- */
@@ -3185,11 +3196,11 @@ function mobRenderFicha(app){
   const cls = (k)=> k === 'pend' ? 'w' : k === 'ok' ? 'g' : 'n';
   const cartaoDoc = (t)=>{
     const s = d[t], link = c[t + '_link'];
-    const rot = s.k === 'pend' ? 'Pendente' : s.k === 'ok' ? 'Assinado' : 'Sem arquivo';
+    const rot = s.k === 'pend' ? 'A assinar' : s.k === 'ok' ? 'Assinado' : 'Sem documento';
     let btn = '';
     if(s.k === 'pend') btn = `<button class="mb-btn p sm" onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('${t}')">Colher assinatura</button><button class="mb-btn g" onclick="gerarLinkAssinatura('${t}','${c.id}')">Enviar link</button>`;
     else if(s.k === 'ok') btn = `<button class="mb-btn g" onclick="abrirLinkTemp(mobColab['${t}_link'])">Ver documento</button>`;
-    else btn = `<div class="mb-vazio" style="padding:0;text-align:left;font-size:12.5px">O documento ainda não foi anexado. O administrador precisa anexar no sistema.</div>`;
+    else btn = `<div class="mb-vazio" style="padding:0;text-align:left;font-size:12.5px">Não há documento anexado, então não há nada para assinar. O administrador precisa anexar no sistema.</div>`;
     if(s.k === 'oc') return '';
     return `<div class="mb-doc ${s.k}"><div class="mb-row"><span class="mb-info"><b>${MOB_DOCNOME[t]}</b><small>${t === 'epi' ? '' : (c.funcao ? mobE(c.funcao) : '')}</small></span><span class="mb-pill ${cls(s.k)}">${rot}</span></div><div class="mb-docbtns">${btn}</div></div>`;
   };
@@ -3198,7 +3209,7 @@ function mobRenderFicha(app){
       <div><h1>${mobE(c.nome)}</h1><div class="mb-sub">${mobE(c.local || '-')}${c.funcao ? ' · ' + mobE(c.funcao) : ''}</div></div></div>
     <div class="mb-body">
       <div class="mb-h">Documentos do colaborador</div>
-      <div class="mb-doc ${d.epi.k}"><div class="mb-row"><span class="mb-info"><b>Ficha de EPI</b><small>${mobItens.length} ${mobItens.length === 1 ? 'item' : 'itens'} · ${ass} ${ass === 1 ? 'assinado' : 'assinados'}</small></span><span class="mb-pill ${cls(d.epi.k)}">${d.epi.k === 'pend' ? mobPl(d.epi.qtd, 'pendente', 'pendentes') : d.epi.k === 'ok' ? 'Assinado' : 'Sem ficha'}</span></div>
+      <div class="mb-doc ${d.epi.k}"><div class="mb-row"><span class="mb-info"><b>Ficha de EPI</b><small>${mobItens.length} ${mobItens.length === 1 ? 'item' : 'itens'} · ${ass} ${ass === 1 ? 'assinado' : 'assinados'}</small></span><span class="mb-pill ${cls(d.epi.k)}">${d.epi.k === 'sem' ? 'Sem ficha' : d.epi.k === 'pend' ? mobPl(d.epi.qtd, 'pendente', 'pendentes') : d.epi.k === 'ok' ? 'Assinado' : 'Sem ficha'}</span></div>
         <div class="mb-docbtns"><button class="mb-btn p sm" ${pend.length ? '' : 'disabled'} onclick="mobFila=[];mobFilaTotal=0;mobIniciarTipo('epi')">Colher assinatura</button><button class="mb-btn s" onclick="mobIrNova()">+ Nova entrega</button>
         <button class="mb-btn g" ${pend.length ? '' : 'disabled'} onclick="epiEnviarLink('${c.id}')">Enviar link</button></div></div>
       ${d.epi.k === 'oc' ? '' : `<div class="mb-doc ${mobResp ? 'ok' : 'pend'}"><div class="mb-row"><span class="mb-info"><b>Responsável Legal pela Entrega</b><small>${mobResp ? mobE(mobResp.resp_nome || '') + ' · ' + mobE(epiDataHoraBR(mobResp.resp_em)) : 'Assinatura do responsável ainda não colocada'}</small></span><span class="mb-pill ${mobResp ? 'g' : 'w'}">${mobResp ? 'Assinado' : 'Pendente'}</span></div>
@@ -6041,5 +6052,27 @@ function contaAguardandoAssinatura(lista){
 atualizarMigalha();
 </script>
 
+<script>
+(function(){
+  const LINK_PADRAO = 'https://angelical23.github.io/dashboard-sst/';
+  const inp = document.getElementById('appLink'), msg = document.getElementById('appMsg');
+  if(!inp) return;
+  inp.value = /^https?:/.test(location.protocol) ? location.origin + location.pathname.replace(/[^\/]*$/, '') : LINK_PADRAO;
+  const monta = ()=>{
+    const l = inp.value.trim();
+    msg.value = 'Olá! Segue o acesso ao App SST (Segurança do Trabalho) para a coleta de assinaturas.\n\n' +
+      '1) Abra o link no celular: ' + l + '\n' +
+      '2) Usuário: seu CPF (somente números)\n' +
+      '3) Senha inicial: seu CPF (somente números). O sistema pedirá para você criar uma nova senha.\n' +
+      '4) Para ficar com o ícone na tela: no Chrome (Android) toque nos três pontinhos > Instalar aplicativo; no iPhone (Safari) toque em Compartilhar > Adicionar à Tela de Início.\n\n' +
+      'Em caso de dúvida ou esquecimento da senha, procure o Administrador.';
+    document.getElementById('appWpp').href = 'https://wa.me/?text=' + encodeURIComponent(msg.value);
+  };
+  inp.addEventListener('input', monta); monta();
+  const copia = async (t, ok)=>{ try{ await navigator.clipboard.writeText(t); toast(ok, 2500); }catch(e){ msg.select(); inp.select(); toast('Selecione e copie manualmente.', 3500); } };
+  document.getElementById('appCopLink').addEventListener('click', ()=> copia(inp.value.trim(), 'Link copiado.'));
+  document.getElementById('appCopMsg').addEventListener('click', ()=> copia(msg.value, 'Mensagem copiada.'));
+})();
+</script>
 </body>
 </html>
