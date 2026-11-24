@@ -1406,6 +1406,10 @@
     <h2>📥 Importar WhatsApps dos colaboradores</h2>
     <div class="epi-sub" style="max-width:none;">Envie a planilha (.xlsx ou .csv) com <b>nome, CPF e telefone</b>. O cruzamento é feito pelo CPF. Nada é gravado antes da sua confirmação.</div>
     <label>PLANILHA</label>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn primary" type="button" id="waImpEscolher">📄 Escolher planilha…</button>
+      <span id="waImpNome" class="epi-sub" style="margin:0;">Nenhum arquivo escolhido</span>
+    </div>
     <input type="file" id="waImpArq" accept=".xlsx,.xls,.csv">
     <div id="waImpCols" style="display:none;">
       <div style="display:flex;gap:10px;">
@@ -6495,16 +6499,19 @@ let waImp = { cab:[], dados:[], linhas:[] };
 function waImpAbrir(){
   waImp = { cab:[], dados:[], linhas:[] };
   document.getElementById('waImpArq').value = '';
+  document.getElementById('waImpNome').textContent = 'Nenhum arquivo escolhido';
   document.getElementById('waImpCols').style.display = 'none';
   document.getElementById('waImpBaixar').style.display = 'none';
   document.getElementById('waImpGravar').disabled = true; document.getElementById('waImpGravar').textContent = 'Gravar';
   document.getElementById('modalWaImp').classList.add('open');
 }
 document.getElementById('waBtnImportar').addEventListener('click', waImpAbrir);
+document.getElementById('waImpEscolher').addEventListener('click', ()=> document.getElementById('waImpArq').click());
 document.getElementById('waImpCancelar').addEventListener('click', ()=> document.getElementById('modalWaImp').classList.remove('open'));
 
 document.getElementById('waImpArq').addEventListener('change', async (e)=>{
   const f = e.target.files[0]; if(!f) return;
+  document.getElementById('waImpNome').textContent = f.name;
   try{
     const wb = XLSX.read(await f.arrayBuffer(), { type:'array' });
     const linhas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:'' });
