@@ -596,6 +596,8 @@
   .mb-stat b{font-size:22px;} .mb-stat span{font-size:12px;color:#526173;}
   .mb-item{background:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;border-left:4px solid #d97706;}
   .mb-item.ok{border-left-color:#16a34a;}
+  .mb-x{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:1px solid #fecaca;background:#fff1f2;color:#b91c1c;font-size:22px;line-height:1;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;}
+  .mb-x:active{background:#fecaca;}
   .mb-item .t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;} .mb-item b{font-size:14px;} .mb-item small{font-size:12px;color:#526173;}
   .mb-bar{background:#fff;border-top:1px solid #e2e8f0;padding:12px 16px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;flex:none;}
   .mb-btn{all:unset;box-sizing:border-box;cursor:pointer;border-radius:12px;height:50px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;text-align:center;flex:none;}
@@ -1128,6 +1130,7 @@
           <div class="epi-sub">Assinaturas pendentes de Ficha de EPI, OS e Certificado NR-06. Um clique abre o WhatsApp já no contato certo, com a mensagem e o link prontos.</div>
         </div>
         <div class="toolbar">
+          <button class="btn" id="waBtnAtualizar" type="button">🔄 Atualizar</button>
           <button class="btn" id="waBtnImportar" type="button">📥 Importar WhatsApps</button>
           <button class="btn" id="waBtnMsg" type="button">✏️ Editar mensagem</button>
         </div>
@@ -1918,6 +1921,7 @@ function mostrarView(alvo){
     treinamentosCarregados = true;
     loadTreinamentos();
   }
+  waAutoAtualizar(alvo === 'whatsapp');
   if(alvo === 'whatsapp') waCarregar();
   if(alvo === 'acessos') carregarAcessos();
   if(alvo === 'auditoria') carregarAuditoria();
@@ -3346,11 +3350,27 @@ async function mobSalvarMinha(){
   if(mobVoltarPara === 'ficha' && mobColab){ mobVoltarPara = 'lista'; mobTela = 'ficha'; mobRender(); } else mobRenderMinha(document.getElementById('mobApp'));
 }
 window.mobSalvarMinha = mobSalvarMinha;
+/* exclui um item pendente da ficha (quando o colaborador não retirou o EPI). Item já assinado nunca é excluído. */
+async function mobExcluirItem(id){
+  const it = mobItens.find(i => String(i.id) === String(id));
+  if(!it || it.assinado_em) return;
+  const nome = `${it.descricao} · ${it.qtde || ''} un.`;
+  if(!confirm(`Excluir "${nome}" da ficha de ${mobColab.nome}?\n\nUse quando o colaborador NÃO retirou este item. Não dá para desfazer.`)) return;
+  const { data, error } = await supabaseClient.from('epi_entregas').delete().eq('id', it.id).is('assinado_em', null).select('id');
+  if(error){ toast('Não foi possível excluir: ' + error.message, 6000); return; }
+  if(!data || !data.length){ toast('Sem permissão para excluir. Peça ao administrador para rodar o arquivo supabase_epi_excluir_pendente.sql no Supabase.', 9000); return; }
+  auditar('excluiu', mobColab.id, `${mobColab.nome} — item de EPI excluído (não retirou): ${it.descricao}${it.ca && it.ca !== 'N/A' ? ' C.A. ' + it.ca : ''}`);
+  await mobCarregarItens();
+  mobRender();
+  epiCarregarResumo();
+  toast('Item excluído da ficha.', 2500);
+}
+window.mobExcluirItem = mobExcluirItem;
 const mobTipoNome = { E:'Entrega inicial', S:'Substituição', D:'Devolução' };
 function mobRenderFicha(app){
   const c = mobColab, d = mobDocs(c), pend = mobItens.filter(i => !i.assinado_em), ass = mobItens.length - pend.length;
   const totalPend = [d.epi, d.os, d.nr06].filter(x => x.k === 'pend').length;
-  const item = (i)=> `<div class="mb-item${i.assinado_em ? ' ok' : ''}"><span class="t"><b>${mobE(i.descricao)} · ${mobE(i.qtde || '')} un.${i.ca && i.ca !== 'N/A' ? ' · C.A. ' + mobE(i.ca) : ''}</b><small>${mobTipoNome[i.tipo] || 'Entrega'} · ${mobE(epiDataBR(i.data_entrega))}</small></span><span class="mb-pill ${i.assinado_em ? 'g' : 'w'}">${i.assinado_em ? 'Assinado' : 'Pendente'}</span></div>`;
+  const item = (i)=> `<div class="mb-item${i.assinado_em ? ' ok' : ''}"><span class="t"><b>${mobE(i.descricao)} · ${mobE(i.qtde || '')} un.${i.ca && i.ca !== 'N/A' ? ' · C.A. ' + mobE(i.ca) : ''}</b><small>${mobTipoNome[i.tipo] || 'Entrega'} · ${mobE(epiDataBR(i.data_entrega))}</small></span><span class="mb-pill ${i.assinado_em ? 'g' : 'w'}">${i.assinado_em ? 'Assinado' : 'Pendente'}</span>${i.assinado_em ? '' : `<button type="button" class="mb-x" title="Excluir este item (o colaborador não retirou)" aria-label="Excluir item" onclick="mobExcluirItem('${i.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>`}</div>`;
   const recentes = mobItens.filter(i => i.assinado_em).slice(-3);
   const cls = (k)=> k === 'pend' ? 'w' : k === 'ok' ? 'g' : 'n';
   const cartaoDoc = (t)=>{
@@ -3712,6 +3732,8 @@ async function marcarAssinados(colab){
       const el = document.getElementById(`assinInfo_${tdoc}`);
       if(!el) return;
       const d = new Date(a.assinado_em);
+      const card = el.closest('.doc-item'), pill = card && card.querySelector('.status-pill');
+      if(pill && !card.querySelector('.status-pill.assinado')) pill.insertAdjacentHTML('afterend', ' <span class="status-pill ok assinado">✍️ Assinado</span>');
       el.textContent = `✍️ Assinado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
     });
   }catch(e){ console.warn('Assinaturas:', e); }
@@ -6277,6 +6299,7 @@ async function waUsuarioEmail(){
 }
 
 async function waCarregar(){
+  try{ await epiCarregarResumo(); }catch(e){ console.warn(e); }      // traz as assinaturas mais recentes (OS, NR-06, EPI)
   try{
     const [nums, envs] = await Promise.all([
       epiBuscarTudo('colaborador_whatsapp', 'id,colaborador_id,whatsapp'),
@@ -6395,6 +6418,18 @@ function waRender(){
 }
 window.waRender = waRender;
 
+/* atualiza sozinho enquanto a tela está aberta (para ver as assinaturas que chegam pelo celular dos colaboradores) */
+let waTimer = null;
+function waAutoAtualizar(ligar){
+  clearInterval(waTimer); waTimer = null;
+  if(ligar) waTimer = setInterval(()=>{
+    if(document.hidden || waOcupado || document.querySelector('.modal-overlay.open')) return;
+    waCarregar();
+  }, 30000);
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && waTimer && !waOcupado) waCarregar(); });
+
+document.getElementById('waBtnAtualizar').addEventListener('click', async ()=>{ await waCarregar(); toast('Lista atualizada.', 1800); });
 document.getElementById('waBusca').addEventListener('input', ()=>{ waLimite = 100; waRender(); });
 document.getElementById('waLocal').addEventListener('change', ()=>{ waLimite = 100; waRender(); });
 document.getElementById('waChips').addEventListener('click', (e)=>{
