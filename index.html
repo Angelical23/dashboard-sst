@@ -416,6 +416,39 @@
   .epi-chip{border:1px solid var(--cinza-borda);background:#fff;border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;font-family:inherit;}
   .epi-chip.on{background:#115266;border-color:#115266;color:#fff;}
   .epi-chip b{font-weight:600;margin-left:5px;font-size:11.5px;}
+  /* ===== WhatsApp ===== */
+  .wa-card{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:14px 18px;margin-bottom:14px;}
+  .wa-bh{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px;font-size:13px;}
+  .wa-bh span{color:var(--cinza-texto);font-size:12px;}
+  .wa-bs{display:flex;gap:26px;flex-wrap:wrap;}
+  .wa-b{flex:1;min-width:210px;}
+  .wa-bt{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;gap:8px;}
+  .wa-bt span{color:var(--cinza-texto);font-size:12px;}
+  .wa-bar{height:12px;border-radius:6px;background:#e1e6ec;overflow:hidden;display:flex;}
+  .wa-bar i{display:block;height:100%;}
+  .wa-bl{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:11.5px;margin-top:6px;color:var(--cinza-texto);}
+  .wa-bl .g{color:#13763e;}.wa-bl .a{color:#a76a00;}
+  .wa-prog{display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+  .wa-prog .pg{flex:1;min-width:240px;}
+  .wa-prog .pg .l{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;gap:8px;}
+  .wa-num{text-align:center;}.wa-num b{display:block;font-size:20px;}.wa-num span{font-size:11.5px;color:var(--cinza-texto);}
+  .btn.wa-go{background:#25d366;border-color:#25d366;color:#fff;font-weight:600;}
+  .btn.wa-go:hover{background:#1fb858;}
+  .btn.wa-go.feito{background:#e8f8ee;border-color:#b9e8cb;color:#13763e;}
+  .wa-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;margin:1px 3px 1px 0;white-space:nowrap;}
+  .wa-tag.doc{background:#e4f0f6;color:#115266;}.wa-tag.ok{background:#e3f7ec;color:#13763e;}.wa-tag.am{background:#fff3d6;color:#a76a00;border:1px solid #f0d48a;}
+  .wa-tag.cz{background:#eef2f5;color:#5a6b7b;}.wa-tag.vm{background:#fdecea;color:#b4233f;}
+  .wa-ed{border:none;background:none;cursor:pointer;font-size:13px;padding:0 0 0 4px;}
+  .wa-who{display:flex;align-items:center;gap:10px;}
+  .wa-av{flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#c9d6df;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:var(--azul-header);}
+  .wa-aviso{background:#fff8e6;border:1px solid #f0d48a;color:#7a4e00;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:14px;line-height:1.5;}
+  .wa-imp-res{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;}
+  .wa-imp-tb{max-height:230px;overflow:auto;border:1px solid var(--cinza-borda);border-radius:8px;}
+  .wa-imp-tb table{width:100%;min-width:0;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
+  .wa-imp-tb td{word-break:break-word;}
+  .wa-imp-tb .wa-tag{white-space:normal;}
+  .wa-imp-tb th{position:sticky;top:0;background:#fafcfd;text-align:left;padding:7px 9px;font-size:10.5px;letter-spacing:.4px;color:#115266;border-bottom:1px solid var(--cinza-borda);}
+  .wa-imp-tb td{padding:6px 9px;border-bottom:1px solid #eef2f5;}
   .epi-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
   .epi-bar .sp{flex:1;}
   .epi-hint{font-size:12px;color:var(--cinza-texto);margin-bottom:12px;}
@@ -694,6 +727,16 @@
       </button>
 
 
+      <button class="side-link" data-view="whatsapp" id="navWhatsapp" style="display:none;">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25d366" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>
+          </span>
+          WhatsApp
+        </span>
+        <span class="side-badge" id="badgeWa">0</span>
+      </button>
+
       <button class="side-link" data-view="acessos" id="navAcessos" style="display:none;">
         <span class="side-link-content">
           <span class="side-icon">
@@ -970,7 +1013,7 @@
       <div class="aud-filtros">
         <div><label>De</label><input type="date" id="audDe"></div>
         <div><label>Até</label><input type="date" id="audAte"></div>
-        <div><label>Ação</label><select id="audAcao"><option value="">Todas</option><option value="ver_documento">Visualizou documento</option><option value="ver_ficha_epi">Abriu ficha de EPI</option><option value="criou">Criou</option><option value="alterou">Alterou</option><option value="excluiu">Excluiu</option><option value="exportar">Exportou</option><option value="gerar_link">Gerou link</option><option value="assinar_responsavel_epi">Assinou como responsável (EPI)</option><option value="criar_fichas_epi_lote">Criou fichas de EPI em lote</option><option value="assinar_doc">Assinou documento</option></select></div>
+        <div><label>Ação</label><select id="audAcao"><option value="">Todas</option><option value="ver_documento">Visualizou documento</option><option value="enviar_whatsapp">Enviou WhatsApp</option><option value="importar_whatsapp">Importou WhatsApps</option><option value="ver_ficha_epi">Abriu ficha de EPI</option><option value="criou">Criou</option><option value="alterou">Alterou</option><option value="excluiu">Excluiu</option><option value="exportar">Exportou</option><option value="gerar_link">Gerou link</option><option value="assinar_responsavel_epi">Assinou como responsável (EPI)</option><option value="criar_fichas_epi_lote">Criou fichas de EPI em lote</option><option value="assinar_doc">Assinou documento</option></select></div>
         <div><label>Usuário</label><input type="text" id="audUsuario" placeholder="parte do e-mail"></div>
         <div><label>Texto (nome, campo...)</label><input type="text" id="audTexto" placeholder="ex.: Angelica"></div>
         <button class="btn primary" id="audBuscar">Buscar</button>
@@ -1075,6 +1118,43 @@
       <div id="epiTelaFicha" style="display:none;"></div>
       <datalist id="epiDlColab"></datalist>
       <datalist id="epiDlCat"></datalist>
+    </section>
+
+    <!-- VIEW: WHATSAPP -->
+    <section id="viewWhatsapp" style="display:none;">
+      <div class="view-header">
+        <div>
+          <h1>WhatsApp</h1>
+          <div class="epi-sub">Assinaturas pendentes de Ficha de EPI, OS e Certificado NR-06. Um clique abre o WhatsApp já no contato certo, com a mensagem e o link prontos.</div>
+        </div>
+        <div class="toolbar">
+          <button class="btn" id="waBtnImportar" type="button">📥 Importar WhatsApps</button>
+          <button class="btn" id="waBtnMsg" type="button">✏️ Editar mensagem</button>
+        </div>
+      </div>
+      <div id="waAviso"></div>
+      <div class="wa-card" id="waBarras"></div>
+      <div class="wa-card wa-prog" id="waProg"></div>
+      <div class="search-card">
+        <div class="search-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="waBusca" placeholder="Buscar por Nome ou CPF...">
+        </div>
+        <div class="search-filter-wrap">
+          <select id="waLocal" class="search-select"><option value="">Todos os Locais</option></select>
+          <div class="epi-chips" id="waChips"></div>
+        </div>
+      </div>
+      <div class="table-panel">
+        <div class="table-header"><h3>COLABORADORES COM ASSINATURA PENDENTE</h3></div>
+        <div class="table-scroll">
+          <table class="tbl-ativos">
+            <thead><tr><th>COLABORADOR</th><th class="col-loc">LOCAL DE TRABALHO</th><th>WHATSAPP</th><th>DOCUMENTOS PENDENTES</th><th>ÚLTIMO ENVIO</th><th>Ações</th></tr></thead>
+            <tbody id="waCorpo"><tr><td colspan="6" class="loading">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="waMais" style="text-align:center;margin:14px 0;"></div>
     </section>
 
     <!-- VIEW: INATIVOS / DESLIGADOS -->
@@ -1320,6 +1400,49 @@
 </div>
 
 <!-- MODAL LINK DE ASSINATURA -->
+<!-- IMPORTAR WHATSAPPS -->
+<div class="modal-overlay" id="modalWaImp">
+  <div class="modal" style="max-width:860px;">
+    <h2>📥 Importar WhatsApps dos colaboradores</h2>
+    <div class="epi-sub" style="max-width:none;">Envie a planilha (.xlsx ou .csv) com <b>nome, CPF e telefone</b>. O cruzamento é feito pelo CPF. Nada é gravado antes da sua confirmação.</div>
+    <label>PLANILHA</label>
+    <input type="file" id="waImpArq" accept=".xlsx,.xls,.csv">
+    <div id="waImpCols" style="display:none;">
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1"><label>COLUNA DO CPF</label><select id="waImpColCpf"></select></div>
+        <div style="flex:1"><label>COLUNA DO TELEFONE</label><select id="waImpColTel"></select></div>
+        <div style="flex:1"><label>COLUNA DO NOME (conferência)</label><select id="waImpColNome"></select></div>
+      </div>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="waImpSubst" style="width:auto;"> Substituir números já cadastrados que forem diferentes</label>
+      <label>PRÉVIA DO CRUZAMENTO</label>
+      <div class="wa-imp-res" id="waImpRes"></div>
+      <div class="wa-imp-tb"><table><thead><tr><th style="width:24%">NOME</th><th style="width:15%">CPF</th><th style="width:17%">TELEFONE (planilha)</th><th style="width:17%">GRAVARÁ COMO</th><th style="width:27%">SITUAÇÃO</th></tr></thead><tbody id="waImpCorpo"></tbody></table></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" type="button" id="waImpCancelar">Cancelar</button>
+      <button class="btn" type="button" id="waImpBaixar" style="display:none;">⬇ Baixar lista dos não cruzados</button>
+      <button class="btn primary" type="button" id="waImpGravar" disabled>Gravar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENSAGEM DO WHATSAPP -->
+<div class="modal-overlay" id="modalWaMsg">
+  <div class="modal" style="max-width:560px;">
+    <h2>✏️ Mensagem enviada no WhatsApp</h2>
+    <div class="epi-sub" style="max-width:none;">Use <b>{nome}</b> para o primeiro nome do colaborador e <b>{links}</b> para a lista de links de assinatura (um por documento pendente).</div>
+    <label>MENSAGEM</label>
+    <textarea id="waMsgTxt" rows="7"></textarea>
+    <label>PRÉVIA</label>
+    <div id="waMsgPrev" style="white-space:pre-wrap;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;font-size:13px;"></div>
+    <div class="modal-actions">
+      <button class="btn" type="button" id="waMsgPadrao">Restaurar padrão</button>
+      <button class="btn" type="button" id="waMsgCancelar">Cancelar</button>
+      <button class="btn primary" type="button" id="waMsgSalvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalLinkOverlay" style="z-index:150;">
   <div class="modal" style="max-width:520px;">
     <h2>Link de assinatura</h2>
@@ -1386,9 +1509,9 @@
 <div class="modal-overlay" id="modalEpiLote" style="z-index:130;">
   <div class="modal" style="max-width:600px;">
     <h2>📋 Criar fichas de EPI em lote</h2>
-    <p style="font-size:13px;color:#526173;">Cria a ficha de EPI dos colaboradores ativos de uma função e local. Os itens são copiados de uma ficha modelo e a data de entrega de cada item é a <b>data de admissão</b> do colaborador. Ficam <b>pendentes de assinatura</b>.</p>
+    <p style="font-size:13px;color:#526173;">Cria a ficha de EPI dos colaboradores ativos de uma função, em <b>todos os locais de uma vez</b> (ou só em um local, se escolher). Os itens são copiados de uma ficha modelo e a data de entrega de cada item é a <b>data de admissão</b> do colaborador. Ficam <b>pendentes de assinatura</b>.</p>
     <label>FUNÇÃO (contém)</label><input type="text" id="elFuncao" value="Agente de Higienização" autocomplete="off">
-    <label>LOCAL DE TRABALHO</label><select id="elLocal"></select>
+    <label>LOCAL DE TRABALHO (opcional)</label><select id="elLocal"></select>
     <label>FICHA MODELO (colaborador cuja ficha digital será copiada)</label>
     <input type="text" id="elModelo" list="elModeloLista" placeholder="Digite o nome do colaborador" autocomplete="off">
     <datalist id="elModeloLista"></datalist>
@@ -1626,13 +1749,15 @@ async function carregarPerfil(session){
   document.body.classList.toggle('lider', papel !== 'admin');
   const nav = document.getElementById('navAcessos');
   if(nav) nav.style.display = papel === 'admin' ? '' : 'none';
+  const navW = document.getElementById('navWhatsapp');
+  if(navW) navW.style.display = papel === 'admin' ? '' : 'none';
   const navA = document.getElementById('navAuditoria');
   if(navA) navA.style.display = papel === 'admin' ? '' : 'none';
   const navB = document.getElementById('navBackup');
   if(navB) navB.style.display = papel === 'admin' ? '' : 'none';
   const el = document.getElementById('usuarioLogadoEmail');
   if(el && !el.querySelector('.perfil-tag')) el.insertAdjacentHTML('beforeend', `<span class="perfil-tag">${papel === 'admin' ? 'ADMIN' : 'LÍDER'}</span>`);
-  if(papel !== 'admin' && (viewAtual === 'acessos' || viewAtual === 'auditoria' || viewAtual === 'backup')) mostrarView('painel');
+  if(papel !== 'admin' && (viewAtual === 'acessos' || viewAtual === 'auditoria' || viewAtual === 'backup' || viewAtual === 'whatsapp')) mostrarView('painel');
 }
 
 async function carregarAcessos(){
@@ -1764,12 +1889,13 @@ const VIEWS = {
   colaboradores: document.getElementById('viewColaboradores'),
   inativos: document.getElementById('viewInativos'),
   epi: document.getElementById('viewEpi'),
+  whatsapp: document.getElementById('viewWhatsapp'),
   treinamentos: document.getElementById('viewTreinamentos'),
   acessos: document.getElementById('viewAcessos'),
   auditoria: document.getElementById('viewAuditoria'),
   backup: document.getElementById('viewBackup')
 };
-const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', treinamentos:'Treinamentos', acessos:'Acessos e perfis', auditoria:'Auditoria', backup:'Backup e segurança' };
+const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', whatsapp:'WhatsApp', treinamentos:'Treinamentos', acessos:'Acessos e perfis', auditoria:'Auditoria', backup:'Backup e segurança' };
 let viewAtual = 'painel';
 
 function atualizarMigalha(){
@@ -1788,6 +1914,7 @@ function mostrarView(alvo){
     treinamentosCarregados = true;
     loadTreinamentos();
   }
+  if(alvo === 'whatsapp') waCarregar();
   if(alvo === 'acessos') carregarAcessos();
   if(alvo === 'auditoria') carregarAuditoria();
   if(alvo === 'backup') backupMostrarUltimos();
@@ -1892,6 +2019,7 @@ function renderTudo(){
   renderTabelaAtivos();
   renderTabelaInativos();
   renderPainel();
+  if(typeof waAtualizarBadge === 'function' && document.getElementById('badgeWa')) waAtualizarBadge();
 }
 
 /* ---------- Painel Geral com filtro por Local de trabalho ---------- */
@@ -2820,7 +2948,7 @@ function auditarArquivo(caminho){
   auditar('ver_documento', colab ? colab.id : null, `${colab ? colab.nome + ' — ' : ''}${pasta} | ${caminho}`);
 }
 
-const AUD_ACOES = { criou:'Criou', alterou:'Alterou', excluiu:'Excluiu', ver_documento:'Visualizou documento', ver_ficha_epi:'Abriu ficha de EPI', exportar:'Exportou', gerar_link:'Gerou link', assinar_doc:'Assinou documento', assinar_responsavel_epi:'Assinou como responsável (EPI)', criar_fichas_epi_lote:'Criou fichas de EPI em lote' };
+const AUD_ACOES = { criou:'Criou', alterou:'Alterou', excluiu:'Excluiu', ver_documento:'Visualizou documento', ver_ficha_epi:'Abriu ficha de EPI', exportar:'Exportou', gerar_link:'Gerou link', enviar_whatsapp:'Enviou WhatsApp', importar_whatsapp:'Importou WhatsApps', assinar_doc:'Assinou documento', assinar_responsavel_epi:'Assinou como responsável (EPI)', criar_fichas_epi_lote:'Criou fichas de EPI em lote' };
 const AUD_TABELAS = { colaboradores:'Colaboradores', treinamentos:'Treinamentos', epi_entregas:'Ficha de EPI (itens)', epi_fichas:'Ficha de EPI', assinaturas:'Assinaturas' };
 let audLinhas = [];
 const audEsc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
@@ -4390,7 +4518,7 @@ async function elAtualizar(){
   const rs = document.getElementById('elResumo'), btn = document.getElementById('elCriar');
   btn.disabled = true; elAlvos = []; elItens = [];
   const fn = elNorm(document.getElementById('elFuncao').value), loc = elNorm(document.getElementById('elLocal').value);
-  if(!fn || !loc){ rs.textContent = 'Informe a função e o local.'; return; }
+  if(!fn){ rs.textContent = 'Informe a função.'; return; }
   try{ await elAtualizar2(rs, btn, fn, loc); }
   catch(e){ console.error(e); rs.innerHTML = '<span style="color:#b91c1c">Erro ao preparar o lote: ' + epiEsc(e.message || String(e)) + '</span>'; }
 }
@@ -4399,17 +4527,24 @@ async function elAtualizar2(rs, btn, fn, loc){
   const comFichaDe = (c)=> (epiResumo[String(c.id)] || {}).n > 0;
   // se ninguém foi escolhido, sugere sozinho uma ficha pronta da mesma função e local (depois, qualquer do mesmo local)
   if(!campoModelo.value.trim()){
-    const sug = colaboradores.find(c => comFichaDe(c) && elNorm(c.funcao).includes(fn) && elNorm(c.local) === loc)
-             || colaboradores.find(c => comFichaDe(c) && elNorm(c.local) === loc);
+    const sug = colaboradores.find(c => comFichaDe(c) && elNorm(c.funcao).includes(fn) && (!loc || elNorm(c.local) === loc))
+             || (loc ? colaboradores.find(c => comFichaDe(c) && elNorm(c.local) === loc) : null)
+             || colaboradores.find(c => comFichaDe(c) && elNorm(c.funcao).includes(fn));
     if(sug) campoModelo.value = sug.nome;
   }
   const nomeModelo = elNorm(campoModelo.value);
-  const cand = colaboradores.filter(c => String(c.status || '').toUpperCase() === 'ATIVO' && elNorm(c.funcao).includes(fn) && elNorm(c.local) === loc && !docOculto(c, 'epi'));
+  const cand = colaboradores.filter(c => String(c.status || '').toUpperCase() === 'ATIVO' && elNorm(c.funcao).includes(fn) && (!loc || elNorm(c.local) === loc) && !docOculto(c, 'epi'));
   const jaTem = cand.filter(c => (epiResumo[String(c.id)] || {}).n > 0);
   const semAdm = cand.filter(c => !(epiResumo[String(c.id)] || {}).n && !c.admissao_data);
   elAlvos = cand.filter(c => !(epiResumo[String(c.id)] || {}).n && c.admissao_data);
   let txt = `Encontrados: <b>${cand.length}</b> colaborador(es) ativo(s).<br>Receberão a ficha: <b>${elAlvos.length}</b><br>Já têm ficha (ignorados): ${jaTem.length}<br>Sem data de admissão (ignorados): ${semAdm.length}`;
   if(semAdm.length) txt += `<br><span style="color:#b45309">Sem admissão: ${semAdm.slice(0, 5).map(c => epiEsc(c.nome)).join(', ')}${semAdm.length > 5 ? '…' : ''}</span>`;
+  if(!loc && elAlvos.length){
+    const porLocal = {};
+    elAlvos.forEach(c => { const l = (c.local || '').trim() || '(sem local)'; porLocal[l] = (porLocal[l] || 0) + 1; });
+    const nomes = Object.keys(porLocal).sort();
+    txt += `<br><br><b>Fichas por local (${nomes.length}):</b><div style="max-height:110px;overflow:auto;margin-top:2px;">` + nomes.map(l => `${epiEsc(l)}: <b>${porLocal[l]}</b>`).join('<br>') + '</div>';
+  }
   const modelo = nomeModelo ? colaboradores.find(c => elNorm(c.nome) === nomeModelo && (epiResumo[String(c.id)] || {}).n > 0) : null;
   if(!modelo){ rs.innerHTML = txt + '<br><span style="color:#b45309">Escolha a ficha modelo (nome de quem já tem ficha digital).</span>'; return; }
   const { data, error } = await supabaseClient.from('epi_entregas').select('descricao,ca,qtde,tipo,visto,ordem,data_entrega').eq('colaborador_id', String(modelo.id)).order('ordem', { ascending:true }).order('data_entrega', { ascending:true });
@@ -4422,7 +4557,7 @@ async function elAtualizar2(rs, btn, fn, loc){
 function elAbrir(){
   const locais = [...new Set(colaboradores.map(c => (c.local || '').trim()).filter(Boolean))].sort();
   const sel = document.getElementById('elLocal');
-  sel.innerHTML = locais.map(l => `<option value="${epiEsc(l)}"${/ceagesp/i.test(l) && l.length < 12 ? ' selected' : ''}>${epiEsc(l)}</option>`).join('');
+  sel.innerHTML = '<option value="" selected>★ Todos os locais</option>' + locais.map(l => `<option value="${epiEsc(l)}">${epiEsc(l)}</option>`).join('');
   const comFicha = colaboradores.filter(c => (epiResumo[String(c.id)] || {}).n > 0).sort((a, b) => a.nome.localeCompare(b.nome));
   document.getElementById('elModeloLista').innerHTML = comFicha.map(c => `<option value="${epiEsc(c.nome)}"></option>`).join('');
   document.getElementById('elModelo').value = '';
@@ -4434,7 +4569,8 @@ document.getElementById('elFechar').addEventListener('click', ()=> document.getE
 ['elFuncao', 'elLocal', 'elModelo'].forEach(id => document.getElementById(id).addEventListener(id === 'elLocal' ? 'change' : 'input', ()=>{ clearTimeout(window.__elT); window.__elT = setTimeout(elAtualizar, 350); }));
 document.getElementById('elCriar').addEventListener('click', async ()=>{
   if(!elAlvos.length || !elItens.length) return;
-  if(!confirm(`Criar a ficha de EPI de ${elAlvos.length} colaborador(es), com ${elItens.length} item(ns) cada, datados na admissão de cada um?`)) return;
+  const elLocalTxt = document.getElementById('elLocal').value || 'todos os locais';
+  if(!confirm(`Criar a ficha de EPI de ${elAlvos.length} colaborador(es) (${elLocalTxt}), com ${elItens.length} item(ns) cada, datados na admissão de cada um?`)) return;
   const btn = document.getElementById('elCriar'); btn.disabled = true;
   const linhas = [];
   elAlvos.forEach(c => elItens.forEach((it, i) => linhas.push({ colaborador_id: String(c.id), data_entrega: c.admissao_data, descricao: it.descricao, ca: it.ca, qtde: it.qtde, tipo: it.tipo || 'E', visto: it.visto || null, ordem: i })));
@@ -4444,7 +4580,7 @@ document.getElementById('elCriar').addEventListener('click', async ()=>{
       const { error } = await supabaseClient.from('epi_entregas').insert(linhas.slice(i, i + 200));
       if(error) throw error;
     }
-    auditar('criar_fichas_epi_lote', null, `${elAlvos.length} fichas criadas (função ${document.getElementById('elFuncao').value}, local ${document.getElementById('elLocal').value})`);
+    auditar('criar_fichas_epi_lote', null, `${elAlvos.length} fichas criadas (função ${document.getElementById('elFuncao').value}, local ${document.getElementById('elLocal').value || 'todos'})`);
     toast(`${elAlvos.length} ficha(s) criada(s), pendentes de assinatura.`, 6000);
     document.getElementById('modalEpiLote').classList.remove('open');
     await epiCarregarResumo(); epiRenderLista();
@@ -6080,6 +6216,369 @@ function contaAguardandoAssinatura(lista){
   r.total = r.os + r.nr06 + r.epi;
   return r;
 }
+
+/* =========================================================
+   WHATSAPP — números, fila de envio e andamento por documento
+   ========================================================= */
+const WA_DOCS = [
+  { k:'epi',  nome:'Ficha de EPI',          curto:'Ficha de EPI' },
+  { k:'os',   nome:'Ordem de Serviço (OS)', curto:'OS' },
+  { k:'nr06', nome:'Certificado NR-06',     curto:'NR-06' }
+];
+const WA_MSG_PADRAO = 'Olá {nome}, tudo bem? Segue o link para você assinar (vale por 24 horas):\n\n{links}';
+let waNumeros = {};      // colaborador_id -> 55DDDNUMERO
+let waEnvios = {};       // colaborador_id -> { ultimo: ISO, n }
+let waErro = null, waFiltro = 'todos', waLimite = 100, waOcupado = false;
+
+const waAtivos = ()=> colaboradores.filter(c => c.status !== 'INATIVO');
+const waHoje = (iso)=> new Date(iso).toDateString() === new Date().toDateString();
+const waDias = (iso)=> Math.floor((Date.now() - new Date(iso).getTime()) / 864e5);
+const waFmt = (n)=> n ? `+${n.slice(0,2)} ${n.slice(2,4)} ${n.slice(4,9)}-${n.slice(9)}` : '';
+const waPrimeiroNome = (c)=>{ const p = String(c.nome || '').trim().split(/\s+/)[0] || ''; return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase(); };
+const waMsgTpl = ()=>{ try{ return localStorage.getItem('sst_wa_msg') || WA_MSG_PADRAO; }catch(e){ return WA_MSG_PADRAO; } };
+
+/* 'ok' = assinado | 'ag' = aguardando assinatura | 'sem' = sem documento | null = documento oculto (não controlado) */
+function waSituacao(c, k){
+  if(docOculto(c, k)) return null;
+  if(k === 'epi'){
+    const f = epiResumo[String(c.id)];
+    if(f && f.n) return f.ass >= f.n ? 'ok' : 'ag';
+    return 'sem';
+  }
+  const link = c[k + '_link'];
+  if(!link) return 'sem';
+  return assinadosSet.has(`${c.id}|${k}|${link}`) ? 'ok' : 'ag';
+}
+const waPendentes = (c)=> WA_DOCS.map(d => d.k).filter(k => waSituacao(c, k) === 'ag');
+
+/* telefone → 55 + DDD + 9 dígitos (celular) */
+function waNormTel(v){
+  let d = String(v == null ? '' : v).replace(/\D/g, '');
+  if(!d) return { ok:false, motivo:'Telefone vazio' };
+  d = d.replace(/^0+/, '');
+  if(d.length >= 12 && d.startsWith('55')) d = d.slice(2);
+  if(d.length === 10 && /^[6-9]/.test(d.slice(2))) d = d.slice(0, 2) + '9' + d.slice(2);   // celular antigo sem o 9
+  if(d.length !== 11) return { ok:false, motivo:'Quantidade de dígitos inválida' };
+  if(+d.slice(0, 2) < 11) return { ok:false, motivo:'DDD inválido' };
+  if(d[2] !== '9') return { ok:false, motivo:'Não é celular' };
+  return { ok:true, num:'55' + d };
+}
+function waCpfDig(v){
+  let d = String(v == null ? '' : v).replace(/\D/g, '');
+  if(d && d.length < 11) d = d.padStart(11, '0');     // o Excel costuma comer o zero da frente
+  return d.length === 11 ? d : '';
+}
+async function waUsuarioEmail(){
+  try{ const { data } = await supabaseClient.auth.getSession(); return (data && data.session && data.session.user.email) || ''; }catch(e){ return ''; }
+}
+
+async function waCarregar(){
+  try{
+    const [nums, envs] = await Promise.all([
+      epiBuscarTudo('colaborador_whatsapp', 'id,colaborador_id,whatsapp'),
+      epiBuscarTudo('whatsapp_envios', 'id,colaborador_id,enviado_em')
+    ]);
+    waNumeros = {}; nums.forEach(r => { waNumeros[r.colaborador_id] = r.whatsapp; });
+    waEnvios = {};
+    envs.forEach(r => {
+      const e = waEnvios[r.colaborador_id] || (waEnvios[r.colaborador_id] = { ultimo:'', n:0 });
+      e.n++; if(!e.ultimo || r.enviado_em > e.ultimo) e.ultimo = r.enviado_em;
+    });
+    waErro = null;
+  }catch(err){
+    waErro = err.message || String(err);
+    console.error(err);
+  }
+  waRender();
+}
+
+function waAtualizarBadge(){
+  const el = document.getElementById('badgeWa');
+  if(el) el.textContent = waAtivos().filter(c => waPendentes(c).length).length;
+}
+
+function waRenderBarras(){
+  const ativos = waAtivos();
+  document.getElementById('waBarras').innerHTML =
+    `<div class="wa-bh"><b>Andamento por documento</b><span>🟩 assinado &nbsp; 🟧 aguardando assinatura &nbsp; ⬜ sem documento</span></div><div class="wa-bs">` +
+    WA_DOCS.map(d => {
+      const r = { ok:0, ag:0, sem:0 };
+      ativos.forEach(c => { const s = waSituacao(c, d.k); if(s) r[s]++; });
+      const tot = r.ok + r.ag + r.sem, pc = (n)=> tot ? n * 100 / tot : 0;
+      const pOk = pc(r.ok), txtOk = pOk > 0 && pOk < 1 ? '<1' : Math.round(pOk);
+      return `<div class="wa-b"><div class="wa-bt"><b>${d.nome}</b><span>${tot} colaboradores</span></div>
+        <div class="wa-bar"><i style="width:${pOk}%;background:#2ecc71"></i><i style="width:${pc(r.ag)}%;background:#f5a623"></i><i style="width:${pc(r.sem)}%;background:#c9d3dc"></i></div>
+        <div class="wa-bl"><span class="g"><b>${r.ok}</b> assinados (${txtOk}%)</span><span class="a"><b>${r.ag}</b> aguardando</span><span><b>${r.sem}</b> sem documento</span></div></div>`;
+    }).join('') + '</div>';
+}
+
+let waListaAtual = [];
+function waRender(){
+  waAtualizarBadge();
+  const av = document.getElementById('waAviso');
+  av.innerHTML = waErro ? `<div class="wa-aviso">Não foi possível carregar os números/envios (${epiEsc(waErro)}). Se for a primeira vez, rode o arquivo <b>supabase_whatsapp.sql</b> no Supabase (SQL Editor).</div>` : '';
+  waRenderBarras();
+
+  const todos = waAtivos().map(c => ({ c, pend: waPendentes(c) })).filter(x => x.pend.length);
+  const jaEnviados = todos.filter(x => waEnvios[String(x.c.id)]).length;
+  const semWa = todos.filter(x => !waNumeros[String(x.c.id)]).length;
+  const hoje = Object.values(waEnvios).filter(e => waHoje(e.ultimo)).length;
+  const pct = todos.length ? Math.round(jaEnviados * 100 / todos.length) : 0;
+  document.getElementById('waProg').innerHTML = `
+    <div class="pg"><div class="l"><b>Progresso desta fila</b><span>${jaEnviados} de ${todos.length} já receberam o link (${pct}%)</span></div><div class="wa-bar" style="height:10px"><i style="width:${pct}%;background:#25d366"></i></div></div>
+    <div class="wa-num"><b>${todos.length}</b><span>pendentes</span></div>
+    <div class="wa-num"><b style="color:#13763e">${hoje}</b><span>enviados hoje</span></div>
+    <div class="wa-num"><b style="color:#b4233f">${semWa}</b><span>sem WhatsApp</span></div>
+    <button class="btn wa-go" type="button" onclick="waProximo()" style="padding:9px 16px;">▶ Enviar o próximo</button>`;
+
+  /* filtros */
+  const sel = document.getElementById('waLocal'), atual = sel.value;
+  const locais = [...new Set(todos.map(x => (x.c.local || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  sel.innerHTML = '<option value="">Todos os Locais</option>' + locais.map(l => `<option value="${epiEsc(l)}">${epiEsc(l)}</option>`).join('');
+  sel.value = locais.includes(atual) ? atual : '';
+  const termo = normalizarTexto(document.getElementById('waBusca').value), termoNum = termo.replace(/\D/g, '');
+  const base = todos.filter(x => {
+    if(sel.value && (x.c.local || '').trim() !== sel.value) return false;
+    if(!termo) return true;
+    return normalizarTexto(x.c.nome).includes(termo) || (termoNum && String(x.c.cpf || '').replace(/\D/g, '').includes(termoNum));
+  });
+  const reenv = (x)=>{ const e = waEnvios[String(x.c.id)]; return e && waDias(e.ultimo) >= 3; };
+  const chips = [
+    ['todos', 'Todos', base.length],
+    ...WA_DOCS.map(d => [d.k, d.curto, base.filter(x => x.pend.includes(d.k)).length]),
+    ['nunca', 'Nunca enviados', base.filter(x => !waEnvios[String(x.c.id)]).length],
+    ['reenviar', 'Reenviar (+3 dias)', base.filter(reenv).length],
+    ['sem', 'Sem WhatsApp', base.filter(x => !waNumeros[String(x.c.id)]).length]
+  ];
+  document.getElementById('waChips').innerHTML = chips.map(([k, t, n]) => `<button type="button" class="epi-chip${waFiltro === k ? ' on' : ''}" data-wa="${k}">${t}<b>${n}</b></button>`).join('');
+  let lista = base.filter(x => {
+    if(waFiltro === 'todos') return true;
+    if(waFiltro === 'nunca') return !waEnvios[String(x.c.id)];
+    if(waFiltro === 'reenviar') return reenv(x);
+    if(waFiltro === 'sem') return !waNumeros[String(x.c.id)];
+    return x.pend.includes(waFiltro);
+  });
+  waListaAtual = lista;
+
+  const corpo = document.getElementById('waCorpo');
+  if(!lista.length){
+    corpo.innerHTML = `<tr><td colspan="6" class="empty">${todos.length ? 'Nenhum colaborador neste filtro.' : 'Nenhuma assinatura pendente. 🎉'}</td></tr>`;
+    document.getElementById('waMais').innerHTML = '';
+    return;
+  }
+  corpo.innerHTML = lista.slice(0, waLimite).map(x => {
+    const c = x.c, id = String(c.id), num = waNumeros[id], env = waEnvios[id];
+    const ini = String(c.nome || '?').split(/\s+/).filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase();
+    const tags = x.pend.map(k => `<span class="wa-tag doc">${WA_DOCS.find(d => d.k === k).curto}</span>`).join('');
+    let ult = '<span class="wa-tag cz">Nunca enviado</span>', btn;
+    if(env){
+      const d = waDias(env.ultimo);
+      ult = waHoje(env.ultimo) ? `<span class="wa-tag ok">✔ Enviado hoje ${new Date(env.ultimo).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}</span>`
+          : d >= 3 ? `<span class="wa-tag am">Enviado há ${d} dias</span>` : `<span class="wa-tag ok">Enviado há ${d} dia${d === 1 ? '' : 's'}</span>`;
+    }
+    if(!num) btn = `<button class="btn btn-sm" type="button" onclick="waEditarNumero('${id}')">✏️ Cadastrar nº</button>`;
+    else if(!env) btn = `<button class="btn btn-sm wa-go" type="button" onclick="waEnviar('${id}')">💬 Enviar</button>`;
+    else if(waHoje(env.ultimo)) btn = `<button class="btn btn-sm wa-go feito" type="button" title="Enviar de novo" onclick="waEnviar('${id}')">✔ Enviado</button>`;
+    else btn = `<button class="btn btn-sm" type="button" onclick="waEnviar('${id}')">↻ Reenviar</button>`;
+    return `<tr>
+      <td><div class="wa-who"><span class="wa-av">${epiEsc(ini)}</span><div><b>${epiEsc(c.nome)}</b><div class="epi-sub" style="margin:0;">${epiEsc(c.cpf || '')}</div></div></div></td>
+      <td class="col-loc">${epiEsc(c.local || '')}</td>
+      <td style="white-space:nowrap;">${num ? epiEsc(waFmt(num)) + `<button class="wa-ed" type="button" title="Editar número" onclick="waEditarNumero('${id}')">✏️</button>` : '<span class="wa-tag vm">Sem WhatsApp</span>'}</td>
+      <td>${tags}</td><td>${ult}</td><td class="acoes">${btn}</td></tr>`;
+  }).join('');
+  document.getElementById('waMais').innerHTML = lista.length > waLimite
+    ? `<button class="btn" type="button" onclick="waLimite+=200;waRender()">Mostrar mais (${lista.length - waLimite} restantes)</button>` : '';
+}
+window.waRender = waRender;
+
+document.getElementById('waBusca').addEventListener('input', ()=>{ waLimite = 100; waRender(); });
+document.getElementById('waLocal').addEventListener('change', ()=>{ waLimite = 100; waRender(); });
+document.getElementById('waChips').addEventListener('click', (e)=>{
+  const b = e.target.closest('[data-wa]'); if(!b) return;
+  waFiltro = b.dataset.wa; waLimite = 100; waRender();
+});
+
+/* ---------- cadastro individual do número ---------- */
+async function waEditarNumero(id){
+  const c = epiColab(id); if(!c) return;
+  id = String(id);
+  const atual = waNumeros[id];
+  const v = prompt(`WhatsApp de ${c.nome} (com DDD).\nDeixe em branco para remover o número.`, atual ? waFmt(atual) : '');
+  if(v === null) return;
+  if(!v.trim()){
+    if(!atual) return;
+    const { error } = await supabaseClient.from('colaborador_whatsapp').delete().eq('colaborador_id', id);
+    if(error){ toast('Não foi possível remover: ' + error.message, 6000); return; }
+    delete waNumeros[id]; auditar('alterou', id, `${c.nome} — WhatsApp removido`); waRender(); return;
+  }
+  const r = waNormTel(v);
+  if(!r.ok){ toast('Número inválido: ' + r.motivo + '. Use DDD + número (celular).', 6000); return; }
+  const { error } = await supabaseClient.from('colaborador_whatsapp').upsert({ colaborador_id:id, whatsapp:r.num, atualizado_em:new Date().toISOString(), atualizado_por:await waUsuarioEmail() }, { onConflict:'colaborador_id' });
+  if(error){ toast('Não foi possível salvar: ' + error.message, 6000); return; }
+  waNumeros[id] = r.num; auditar('alterou', id, `${c.nome} — WhatsApp cadastrado`); waRender();
+  toast('Número salvo.');
+}
+window.waEditarNumero = waEditarNumero;
+
+/* ---------- envio ---------- */
+async function waCriarUrl(tipo, c){
+  let { data, error } = await supabaseClient.rpc('criar_link_assinatura', { p_colab:String(c.id), p_tipo:tipo, p_visto:epiIniciais() });
+  if(error && /p_visto|function/i.test(error.message || '')) ({ data, error } = await supabaseClient.rpc('criar_link_assinatura', { p_colab:String(c.id), p_tipo:tipo }));
+  if(error) throw error;
+  const slug = (t)=> (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const url = new URL('assinar.html', location.href); url.search = '';
+  url.hash = slug(c.nome).slice(0, 60) + '-' + data;
+  return url.href;
+}
+function waMontarMsg(c, itens, tpl){
+  const links = itens.map(i => `• ${i.nome}: ${i.url}`).join('\n');
+  return (tpl || waMsgTpl()).replace(/\{nome\}/g, waPrimeiroNome(c)).replace(/\{links\}/g, links);
+}
+
+async function waEnviar(id){
+  if(waOcupado) return;
+  id = String(id);
+  const c = epiColab(id); if(!c) return;
+  const num = waNumeros[id];
+  if(!num){ waEditarNumero(id); return; }
+  const pend = waPendentes(c);
+  if(!pend.length){ toast('Este colaborador não tem mais documentos pendentes.'); waRender(); return; }
+  const env = waEnvios[id];
+  if(env && waHoje(env.ultimo) && !confirm(`O link já foi enviado hoje para ${c.nome}. Enviar de novo?`)) return;
+  waOcupado = true;
+  const w = window.open('about:blank', 'wa_fila');       // abre já no clique (o navegador não bloqueia) e preenche depois
+  if(!w){ waOcupado = false; toast('O navegador bloqueou a janela. Permita pop-ups para este site e tente de novo.', 7000); return; }
+  try{
+    const itens = [];
+    for(const k of pend) itens.push({ nome: WA_DOCS.find(d => d.k === k).nome, url: await waCriarUrl(k, c) });
+    w.location.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(waMontarMsg(c, itens));
+    const { error } = await supabaseClient.from('whatsapp_envios').insert({ colaborador_id:id, documentos:pend.join(','), enviado_por:await waUsuarioEmail() });
+    if(error) toast('Aberto no WhatsApp, mas não consegui registrar o envio: ' + error.message, 7000);
+    else toast(`WhatsApp aberto para ${waPrimeiroNome(c)}. Toque em enviar lá.`, 3500);
+    waEnvios[id] = { ultimo:new Date().toISOString(), n:(env ? env.n : 0) + 1 };
+    auditar('enviar_whatsapp', id, `${c.nome} — ${pend.map(k => WA_DOCS.find(d => d.k === k).curto).join(', ')}`);
+  }catch(err){
+    try{ w.close(); }catch(e){}
+    toast('Não foi possível gerar o link: ' + (err.message || err) + ' (confira se o supabase_links.sql foi executado)', 8000);
+  }finally{ waOcupado = false; waRender(); }
+}
+window.waEnviar = waEnviar;
+
+function waProximo(){
+  const x = waListaAtual.find(x => waNumeros[String(x.c.id)] && !waEnvios[String(x.c.id)]);
+  if(!x){ toast('Ninguém com WhatsApp e ainda sem envio neste filtro.', 4000); return; }
+  waEnviar(x.c.id);
+}
+window.waProximo = waProximo;
+
+/* ---------- mensagem ---------- */
+const waMsgPrev = ()=>{
+  const c = waListaAtual[0] ? waListaAtual[0].c : (colaboradores[0] || { nome:'Maria Souza' });
+  document.getElementById('waMsgPrev').textContent = waMontarMsg(c, [{ nome:'Ficha de EPI', url:'https://…/assinar.html#exemplo-ab12cd' }, { nome:'Ordem de Serviço (OS)', url:'https://…/assinar.html#exemplo-ef34gh' }], document.getElementById('waMsgTxt').value);
+};
+document.getElementById('waBtnMsg').addEventListener('click', ()=>{
+  document.getElementById('waMsgTxt').value = waMsgTpl(); waMsgPrev();
+  document.getElementById('modalWaMsg').classList.add('open');
+});
+document.getElementById('waMsgTxt').addEventListener('input', waMsgPrev);
+document.getElementById('waMsgPadrao').addEventListener('click', ()=>{ document.getElementById('waMsgTxt').value = WA_MSG_PADRAO; waMsgPrev(); });
+document.getElementById('waMsgCancelar').addEventListener('click', ()=> document.getElementById('modalWaMsg').classList.remove('open'));
+document.getElementById('waMsgSalvar').addEventListener('click', ()=>{
+  const t = document.getElementById('waMsgTxt').value.trim();
+  if(!t.includes('{links}')){ toast('A mensagem precisa ter {links}, senão o colaborador não recebe o link.', 5000); return; }
+  try{ localStorage.setItem('sst_wa_msg', t); }catch(e){ toast('Este navegador não permitiu salvar a mensagem.', 4000); }
+  document.getElementById('modalWaMsg').classList.remove('open'); toast('Mensagem salva neste navegador.');
+});
+
+/* ---------- importação da planilha ---------- */
+let waImp = { cab:[], dados:[], linhas:[] };
+function waImpAbrir(){
+  waImp = { cab:[], dados:[], linhas:[] };
+  document.getElementById('waImpArq').value = '';
+  document.getElementById('waImpCols').style.display = 'none';
+  document.getElementById('waImpBaixar').style.display = 'none';
+  document.getElementById('waImpGravar').disabled = true; document.getElementById('waImpGravar').textContent = 'Gravar';
+  document.getElementById('modalWaImp').classList.add('open');
+}
+document.getElementById('waBtnImportar').addEventListener('click', waImpAbrir);
+document.getElementById('waImpCancelar').addEventListener('click', ()=> document.getElementById('modalWaImp').classList.remove('open'));
+
+document.getElementById('waImpArq').addEventListener('change', async (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const wb = XLSX.read(await f.arrayBuffer(), { type:'array' });
+    const linhas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:'' });
+    if(linhas.length < 2){ toast('A planilha está vazia.'); return; }
+    waImp.cab = linhas[0].map(h => String(h).trim());
+    waImp.dados = linhas.slice(1).filter(r => r.some(v => String(v).trim()));
+    const opts = '<option value="-1">(não usar)</option>' + waImp.cab.map((h, i) => `<option value="${i}">${epiEsc(h || 'Coluna ' + (i + 1))}</option>`).join('');
+    const acha = (re)=> { const i = waImp.cab.findIndex(h => re.test(normalizarTexto(h))); return i; };
+    const cpf = document.getElementById('waImpColCpf'), tel = document.getElementById('waImpColTel'), nom = document.getElementById('waImpColNome');
+    cpf.innerHTML = tel.innerHTML = nom.innerHTML = opts;
+    cpf.value = acha(/cpf/); tel.value = acha(/whats|telefone|celular|fone|contato|tel\b/); nom.value = acha(/nome/);
+    document.getElementById('waImpCols').style.display = '';
+    waImpCalc();
+  }catch(err){ console.error(err); toast('Não consegui ler a planilha: ' + (err.message || err), 6000); }
+});
+['waImpColCpf', 'waImpColTel', 'waImpColNome', 'waImpSubst'].forEach(id => document.getElementById(id).addEventListener('change', waImpCalc));
+
+function waImpCalc(){
+  const ic = +document.getElementById('waImpColCpf').value, it = +document.getElementById('waImpColTel').value, inn = +document.getElementById('waImpColNome').value;
+  const subst = document.getElementById('waImpSubst').checked;
+  const porCpf = new Map();
+  colaboradores.forEach(c => { const d = waCpfDig(c.cpf); if(d) porCpf.set(d, c); });
+  waImp.linhas = waImp.dados.map(r => {
+    const cpf = ic >= 0 ? waCpfDig(r[ic]) : '', telRaw = it >= 0 ? String(r[it]).trim() : '', nome = inn >= 0 ? String(r[inn]).trim() : '';
+    const L = { nome, cpfTxt: ic >= 0 ? String(r[ic]).trim() : '', telRaw, c:null, num:'', st:'', motivo:'' };
+    L.c = cpf ? porCpf.get(cpf) : null;
+    if(!L.c){ L.st = 'cpf'; L.motivo = cpf ? 'CPF não está no sistema' : 'CPF inválido'; return L; }
+    const t = waNormTel(telRaw);
+    if(!t.ok){ L.st = 'tel'; L.motivo = t.motivo; return L; }
+    L.num = t.num;
+    const atual = waNumeros[String(L.c.id)];
+    L.st = !atual ? 'novo' : atual === t.num ? 'igual' : 'troca';
+    L.motivo = L.st === 'novo' ? 'OK' : L.st === 'igual' ? 'Já cadastrado (igual)' : (subst ? 'Vai substituir o número atual' : 'Já tem outro número (marque “Substituir”)');
+    return L;
+  });
+  const n = (st)=> waImp.linhas.filter(l => l.st === st).length;
+  const gravar = waImp.linhas.filter(l => l.st === 'novo' || (subst && l.st === 'troca'));
+  waImp.gravar = gravar;
+  document.getElementById('waImpRes').innerHTML =
+    `<span class="wa-tag ok" style="padding:5px 10px">✔ ${gravar.length} prontos para gravar</span>` +
+    (n('tel') ? `<span class="wa-tag am" style="padding:5px 10px">⚠ ${n('tel')} telefones inválidos</span>` : '') +
+    (n('cpf') ? `<span class="wa-tag vm" style="padding:5px 10px">✖ ${n('cpf')} CPFs não encontrados</span>` : '') +
+    (n('igual') ? `<span class="wa-tag cz" style="padding:5px 10px">${n('igual')} já cadastrados (iguais)</span>` : '') +
+    (n('troca') && !subst ? `<span class="wa-tag cz" style="padding:5px 10px">${n('troca')} com número diferente (não substituídos)</span>` : '');
+  const ordem = { tel:0, cpf:1, troca:2, novo:3, igual:4 };
+  const mostrar = [...waImp.linhas].sort((a, b) => ordem[a.st] - ordem[b.st]).slice(0, 60);
+  const cor = { novo:'ok', igual:'cz', troca:'am', tel:'am', cpf:'vm' };
+  document.getElementById('waImpCorpo').innerHTML = mostrar.map(l => `<tr><td>${epiEsc(l.c ? l.c.nome : l.nome)}</td><td>${epiEsc(l.cpfTxt)}</td><td>${epiEsc(l.telRaw)}</td><td>${l.num ? epiEsc(waFmt(l.num)) : '—'}</td><td><span class="wa-tag ${cor[l.st]}">${epiEsc(l.motivo)}</span></td></tr>`).join('');
+  const bx = document.getElementById('waImpBaixar'); bx.style.display = (n('tel') + n('cpf')) ? '' : 'none';
+  const gv = document.getElementById('waImpGravar'); gv.disabled = !gravar.length; gv.textContent = gravar.length ? `Gravar ${gravar.length} número${gravar.length > 1 ? 's' : ''}` : 'Gravar';
+}
+
+document.getElementById('waImpBaixar').addEventListener('click', ()=>{
+  const aoa = [['Nome', 'CPF', 'Telefone', 'Motivo']].concat(waImp.linhas.filter(l => l.st === 'tel' || l.st === 'cpf').map(l => [l.nome, l.cpfTxt, l.telRaw, l.motivo]));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), 'Não cruzados');
+  XLSX.writeFile(wb, `whatsapp_nao_cruzados_${new Date().toISOString().slice(0, 10)}.xlsx`);
+});
+
+document.getElementById('waImpGravar').addEventListener('click', async ()=>{
+  const btn = document.getElementById('waImpGravar');
+  const mapa = new Map(); (waImp.gravar || []).forEach(l => mapa.set(String(l.c.id), l.num));      // CPF repetido na planilha: vale a última linha
+  const por = await waUsuarioEmail(), agora = new Date().toISOString();
+  const regs = [...mapa].map(([colaborador_id, whatsapp]) => ({ colaborador_id, whatsapp, atualizado_em:agora, atualizado_por:por }));
+  if(!regs.length) return;
+  btn.disabled = true; btn.textContent = 'Gravando…';
+  for(let i = 0; i < regs.length; i += 200){
+    const { error } = await supabaseClient.from('colaborador_whatsapp').upsert(regs.slice(i, i + 200), { onConflict:'colaborador_id' });
+    if(error){ toast('Erro ao gravar: ' + error.message + ' (se for a primeira vez, rode o supabase_whatsapp.sql)', 9000); waImpCalc(); return; }
+  }
+  regs.forEach(r => { waNumeros[r.colaborador_id] = r.whatsapp; });
+  auditar('importar_whatsapp', null, `${regs.length} número(s) de WhatsApp importados da planilha`);
+  document.getElementById('modalWaImp').classList.remove('open');
+  toast(`${regs.length} número(s) gravado(s).`, 4000); waRender();
+});
 
 atualizarMigalha();
 </script>
