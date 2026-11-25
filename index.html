@@ -447,6 +447,33 @@
   .wa-imp-tb table{width:100%;min-width:0;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
   .wa-imp-tb td{word-break:break-word;}
   .wa-imp-tb .wa-tag{white-space:normal;}
+
+  /* ===== Colaboradores Ativos: um status por documento ===== */
+  .ue-wrap{display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;}
+  .ue{display:inline-block;padding:3px 9px;border-radius:7px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .ue.ok,.ue.ass{background:#e3f7ec;color:#13763e;}.ue.ag{background:#fff3d6;color:#a76a00;}.ue.pen{background:#eef2f5;color:#5a6b7b;}
+  .ue.venc{background:#fdecea;color:#b4233f;}.ue.a30{background:#ffe9d6;color:#b45309;}.ue.oc{background:transparent;color:#94a3b8;border:1px dashed #cbd5e1;}
+  .ue-sub{font-size:10.5px;color:#7b8b99;}
+  .ue-av{flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#c9d6df;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#0f2b3c;}
+  .at-who{display:flex;align-items:center;gap:10px;min-width:0;}
+  .at-sub2{display:block;font-size:11.5px;font-weight:400;color:var(--cinza-texto);}
+  .ue-prog{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--cinza-texto);white-space:nowrap;}
+  .ue-bar{width:70px;height:8px;border-radius:5px;background:#e1e6ec;overflow:hidden;flex:none;}.ue-bar i{display:block;height:100%;}
+  .ue-resumo{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:14px 18px;margin-bottom:12px;}
+  .ue-rt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:13px;}.ue-rt span{color:var(--cinza-texto);font-size:12px;}
+  .ue-sbar{height:14px;border-radius:7px;overflow:hidden;display:flex;background:#e1e6ec;}.ue-sbar i{display:block;height:100%;}
+  .ue-kpis{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;}
+  .ue-k{all:unset;box-sizing:border-box;cursor:pointer;flex:1;min-width:150px;background:var(--branco);border:1px solid var(--cinza-borda);border-left:5px solid;border-radius:12px;padding:12px 16px;}
+  .ue-k b{display:block;font-size:24px;}.ue-k span{font-size:11.5px;color:var(--cinza-texto);}.ue-k.on{outline:2px solid #115266;}
+  .ue-k:focus-visible{outline:2px solid #2563eb;}
+  .ue-dt{margin-bottom:10px;font-size:12.5px;color:var(--cinza-texto);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;}.ue-dt b{color:var(--texto-escuro);}
+  .ue-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px;}
+  .ue-card{background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 12px;min-width:0;}.ue-card.oc{background:#f8fafc;opacity:.8;}
+  .ue-card .h{font-weight:700;margin-bottom:6px;}
+  .ue-ln{display:flex;justify-content:space-between;gap:6px;font-size:11.5px;margin-top:5px;color:var(--cinza-texto);}.ue-ln b{color:var(--texto-escuro);text-align:right;}
+  .ue-bt{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;}
+  #docsResumo{margin:8px 0 12px;}.docs-list .ue-wrap{margin:2px 0 4px;}
+
   .wa-imp-tb th{position:sticky;top:0;background:#fafcfd;text-align:left;padding:7px 9px;font-size:10.5px;letter-spacing:.4px;color:#115266;border-bottom:1px solid var(--cinza-borda);}
   .wa-imp-tb td{padding:6px 9px;border-bottom:1px solid #eef2f5;}
   .epi-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
@@ -912,12 +939,14 @@
           <button class="btn primary" id="btnAbrirNovo">+ Novo Colaborador</button>
           <button class="btn" id="btnAbrirAnexar">📎 Anexar Documentos</button>
           <button class="btn" id="btnExportExcel">⬇ Exportar Excel</button>
+          <button class="btn" id="btnAtivosAtualizar" type="button">🔄 Atualizar</button>
           <button class="btn" id="btnExportPdf">⬇ Exportar PDF</button>
           <label class="btn" for="inputImport">⬆ Importar Excel (correção em massa)</label>
           <input type="file" id="inputImport" accept=".xlsx,.xls,.csv">
         </div>
       </div>
 
+      <div id="ativosResumo"></div>
       <div class="search-card">
         <div class="search-input-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -937,13 +966,7 @@
             <option value="epi">Ficha de EPI</option>
             <option value="nr06">Certificado NR06</option>
           </select>
-          <select id="selectFiltroStatus" class="search-select">
-            <option value="">Todos os status</option>
-            <option value="ok">Em Dia</option>
-            <option value="warn">Vence em breve</option>
-            <option value="bad">Vencido</option>
-            <option value="nodate">Pendente</option>
-          </select>
+          <div class="epi-chips" id="ativosChips"></div>
           <button class="btn-limpar-filtro" id="btnLimparFiltros">Limpar filtro</button>
         </div>
       </div>
@@ -956,13 +979,13 @@
           <table class="tbl-ativos">
             <thead>
               <tr>
-                <th></th>
-                <th>NOME COMPLETO</th>
-                <th class="col-cpf">CPF</th>
+                <th>COLABORADOR</th>
                 <th class="col-loc">LOCAL DE TRABALHO</th>
-                <th class="col-loc">FUNÇÃO</th>
-                <th class="col-loc">DATA DE ADMISSÃO</th>
-                <th>SITUAÇÃO</th>
+                <th>ASO</th>
+                <th>OS</th>
+                <th>FICHA DE EPI</th>
+                <th>NR-06</th>
+                <th>COMPLETO</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -1387,6 +1410,7 @@
 <div class="modal-overlay" id="modalDocsOverlay">
   <div class="modal" style="max-width:760px;">
     <h2 id="docsModalTitulo">Documentos do Colaborador</h2>
+    <div id="docsResumo"></div>
     <div class="docs-layout">
       <div class="docs-list" id="docsList"></div>
       <div class="docs-preview">
@@ -1921,6 +1945,8 @@ function mostrarView(alvo){
     treinamentosCarregados = true;
     loadTreinamentos();
   }
+  ativosAutoAtualizar(alvo === 'colaboradores');
+  if(alvo === 'colaboradores' && typeof epiCarregarResumo === 'function' && colaboradores.length) epiCarregarResumo();
   waAutoAtualizar(alvo === 'whatsapp');
   if(alvo === 'whatsapp') waCarregar();
   if(alvo === 'acessos') carregarAcessos();
@@ -2084,7 +2110,6 @@ function pillHtml(campo, colaborador){
 const inputBuscaAtivos = document.getElementById('inputBuscaAtivos');
 const selectFiltroLocal = document.getElementById('selectFiltroLocal');
 const selectFiltroDoc = document.getElementById('selectFiltroDoc');
-const selectFiltroStatus = document.getElementById('selectFiltroStatus');
 const inputBuscaInativos = document.getElementById('inputBuscaInativos');
 const filtroDataInicio = document.getElementById('filtroDataInicio');
 const filtroDataFim = document.getElementById('filtroDataFim');
@@ -2092,13 +2117,12 @@ const filtroDataFim = document.getElementById('filtroDataFim');
 inputBuscaAtivos.addEventListener('input', renderTabelaAtivos);
 selectFiltroLocal.addEventListener('change', renderTabelaAtivos);
 selectFiltroDoc.addEventListener('change', renderTabelaAtivos);
-selectFiltroStatus.addEventListener('change', renderTabelaAtivos);
 document.getElementById('selectFiltroFuncao').addEventListener('change', renderTabelaAtivos);
 document.getElementById('btnLimparFiltros').addEventListener('click', ()=>{
   inputBuscaAtivos.value = '';
   selectFiltroLocal.value = '';
   selectFiltroDoc.value = '';
-  selectFiltroStatus.value = '';
+  ativosChip = 'todos';
   document.getElementById('selectFiltroFuncao').value = '';
   renderTabelaAtivos();
 });
@@ -2112,38 +2136,44 @@ document.getElementById('btnLimparFiltrosInativos').addEventListener('click', ()
 /* Bonequinho (silhueta de pessoa) usado na coluna AÇÕES para desligar/inativar. */
 const ICON_PESSOA = `<svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="12" cy="7.4" r="4.3"/><path d="M4.4 20.8v-1.9c0-3.5 3.4-6.1 7.6-6.1s7.6 2.6 7.6 6.1v1.9z"/></svg>`;
 
+let ativosChip = 'todos';
+const UE_GRUPOS = [['reg', 'Regulares', '#2ecc71'], ['ag', 'Aguardando assinatura', '#f5a623'], ['pen', 'Pendente de cadastro', '#b6c2cc'], ['venc', 'Vencidos', '#e31c4b']];
+function setAtivosChip(k){ ativosChip = k; renderTabelaAtivos(); }
+window.setAtivosChip = setAtivosChip;
+
 function renderTabelaAtivos(){
   const termo = normalizarTexto(inputBuscaAtivos.value);
   const termoNumerico = termo.replace(/\D/g, '');
   const local = selectFiltroLocal.value;
   const docSel = selectFiltroDoc.value;
-  const statusSel = selectFiltroStatus.value;
   const funcaoSel = document.getElementById('selectFiltroFuncao').value;
   const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
+  const docsSel = docSel ? DOC_FIELDS.filter(d => d.key === docSel) : DOC_FIELDS;
+  const estados = (c)=> docsSel.filter(d => !docOculto(c, d.key)).map(d => docEstado(d, c).e);
 
-  const filtrados = ativos.filter(c => {
+  const base = ativos.filter(c => {
     const textoOk = normalizarTexto(c.nome).includes(termo)
       || normalizarTexto(c.local).includes(termo)
       || normalizarTexto(c.funcao).includes(termo)
       || (termoNumerico && (c.cpf || '').replace(/\D/g, '').includes(termoNumerico));
     const localOk = !local || (c.local || '').trim() === local;
     const funcaoOk = !funcaoSel || (c.funcao || '').trim() === funcaoSel;
-
-    let statusOk = true;
-    if(docSel && !statusSel) statusOk = !docOculto(c, docSel);        // só um documento escolhido: quem controla esse documento
-    if(statusSel){
-      const docs = (docSel ? DOC_FIELDS.filter(d => d.key === docSel) : DOC_FIELDS).filter(d => !docOculto(c, d.key));
-      const statusDe = d => statusDoc(d, c).chave;
-      // "Em Dia" sem documento escolhido = TODOS os documentos em dia.
-      // Os demais status = pelo menos um documento naquele status.
-      statusOk = (statusSel === 'ok' && !docSel)
-        ? docs.every(d => statusDe(d) === 'ok')
-        : docs.some(d => statusDe(d) === statusSel);
-    }
-
-    return textoOk && localOk && funcaoOk && statusOk;
+    return textoOk && localOk && funcaoOk && !(docSel && docOculto(c, docSel));
   });
+  const info = new Map();
+  base.forEach(c => { const e = estados(c); info.set(c.id, { g: grupoEstados(e), a30: e.includes('a30') }); });
+  const cont = { reg:0, ag:0, pen:0, venc:0, a30:0 };
+  info.forEach(v => { cont[v.g]++; if(v.a30) cont.a30++; });
+  const tot = base.length;
 
+  document.getElementById('ativosResumo').innerHTML =
+    `<div class="ue-resumo"><div class="ue-rt"><b>Situação documental · ${tot} colaborador${tot === 1 ? '' : 'es'} ativo${tot === 1 ? '' : 's'}</b><span>cada colaborador entra pela sua pior situação</span></div>
+     <div class="ue-sbar">${UE_GRUPOS.map(([k, l, cor]) => `<i style="width:${tot ? cont[k] * 100 / tot : 0}%;background:${cor}" title="${l}: ${cont[k]}"></i>`).join('')}</div>
+     <div class="ue-kpis">${UE_GRUPOS.map(([k, l, cor]) => `<button type="button" class="ue-k${ativosChip === k ? ' on' : ''}" style="border-left-color:${cor}" onclick="setAtivosChip('${ativosChip === k ? 'todos' : k}')"><b style="color:${k === 'pen' ? '#5a6b7b' : cor}">${cont[k]}</b><span>${l}</span></button>`).join('')}</div></div>`;
+  const chips = [['todos', 'Todos', tot], ['ag', '✍ Aguardando assinatura', cont.ag], ['pen', '⏳ Pendentes', cont.pen], ['venc', '⛔ Vencidos', cont.venc], ['reg', '✔ Regulares', cont.reg], ['a30', '⚠ Vencem em 30 dias', cont.a30]];
+  document.getElementById('ativosChips').innerHTML = chips.map(([k, t, n]) => `<button type="button" class="epi-chip${ativosChip === k ? ' on' : ''}" onclick="setAtivosChip('${k}')">${t}<b>${n}</b></button>`).join('');
+
+  const filtrados = base.filter(c => ativosChip === 'todos' ? true : ativosChip === 'a30' ? info.get(c.id).a30 : info.get(c.id).g === ativosChip);
   document.getElementById('ativosContagem').textContent = `${filtrados.length} de ${ativos.length}`;
   document.getElementById('badgeAtivos').textContent = ativos.length;
   const tbody = document.getElementById('tableBody');
@@ -2554,12 +2584,12 @@ function abrirDocumentos(id){
   listEl.innerHTML = DOC_FIELDS.map(d=>{
     const link = c[`${d.key}_link`] || '';
     const epiDig = d.key === 'epi' && ((epiResumo[String(c.id)] || {}).ass > 0);
-    const status = statusDoc(d, c);
+    const st = docEstado(d, c);
     const inputId = `anexoVer_${d.key}`;
     return `
       <div class="doc-item" data-link="${epiDig ? '__epi_digital__' : link.replace(/"/g,'&quot;')}" onclick="selecionarDocumento(this)">
         <div class="doc-nome">${d.label}</div>
-        <span class="status-pill ${status.classe}">${status.icone} ${status.texto}</span>
+        ${chipEstado(st.e, st.sub, st.txt)}
         ${epiDig ? '<div class="doc-sem-link">Ficha digital do sistema</div>' : (!link ? '<div class="doc-sem-link">Sem link cadastrado</div>' : '')}
         <div onclick="event.stopPropagation()" style="margin-top:8px;">
           <label class="btn" for="${inputId}" style="font-size:11px;padding:4px 8px;margin:0;">📎 ${link ? 'Substituir' : 'Anexar'}</label>
@@ -2569,6 +2599,11 @@ function abrirDocumentos(id){
         </div>
       </div>`;
   }).join('');
+
+  const ests = DOC_FIELDS.filter(d => !docOculto(c, d.key)).map(d => docEstado(d, c).e);
+  const nOkM = ests.filter(estadoCompleto).length;
+  const segM = [['#2ecc71', e => e === 'ok' || e === 'ass'], ['#fdba74', e => e === 'a30'], ['#f5a623', e => e === 'ag'], ['#b6c2cc', e => e === 'pen'], ['#e31c4b', e => e === 'venc']];
+  document.getElementById('docsResumo').innerHTML = `<div class="ue-rt" style="align-items:center"><span><b style="color:var(--texto-escuro)">${nOkM} de ${ests.length}</b> documentos completos · ${c.local || '-'}${c.funcao ? ' · ' + c.funcao : ''}</span><button class="btn btn-sm" type="button" onclick="atualizarDocsModal()">🔄 Atualizar</button></div><div class="ue-sbar">${segM.map(([cor, f]) => `<i style="width:${ests.length ? ests.filter(f).length * 100 / ests.length : 0}%;background:${cor}"></i>`).join('')}</div>`;
 
   const frame = document.getElementById('docsPreviewFrame');
   const empty = document.getElementById('docsPreviewEmpty');
@@ -2582,6 +2617,8 @@ function abrirDocumentos(id){
   marcarAssinados(c);
 }
 window.abrirDocumentos = abrirDocumentos;
+async function atualizarDocsModal(){ await epiCarregarResumo(); if(colaboradorDocsAtual) abrirDocumentos(colaboradorDocsAtual.id); }
+window.atualizarDocsModal = atualizarDocsModal;
 
 // Extensões do Office (Word/Excel/PowerPoint) que o navegador não sabe
 // exibir sozinho — usamos o visualizador público da Microsoft pra elas.
@@ -3732,8 +3769,6 @@ async function marcarAssinados(colab){
       const el = document.getElementById(`assinInfo_${tdoc}`);
       if(!el) return;
       const d = new Date(a.assinado_em);
-      const card = el.closest('.doc-item'), pill = card && card.querySelector('.status-pill');
-      if(pill && !card.querySelector('.status-pill.assinado')) pill.insertAdjacentHTML('afterend', ' <span class="status-pill ok assinado">✍️ Assinado</span>');
       el.textContent = `✍️ Assinado em ${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
     });
   }catch(e){ console.warn('Assinaturas:', e); }
@@ -5350,6 +5385,13 @@ document.getElementById('inputImport').addEventListener('change', async (e)=>{
    COLABORADORES ATIVOS — situação + documentos abaixo do nome
    ========================================================= */
 const ativosAbertos = new Set();
+let ativosTimer = null;
+function ativosAutoAtualizar(ligar){
+  clearInterval(ativosTimer); ativosTimer = null;
+  if(ligar) ativosTimer = setInterval(()=>{ if(document.hidden || document.querySelector('.modal-overlay.open')) return; epiCarregarResumo(); }, 30000);
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && ativosTimer) epiCarregarResumo(); });
+document.getElementById('btnAtivosAtualizar').addEventListener('click', async ()=>{ await epiCarregarResumo(); toast('Lista atualizada.', 1800); });
 
 /* status de um documento; a Ficha de EPI assinada no Controle de EPI conta como Em Dia */
 function statusDocCampo(campo, c, d){
@@ -5360,7 +5402,10 @@ function statusDocCampo(campo, c, d){
     if(r && r.n) return { chave:'ok', texto:'Em Dia', classe:'ok', icone:'✔' };     // ficha criada; falta só colher as assinaturas
   }
   const doc = d || DOC_FIELDS.find(x => x.key === campo);
-  return statusDocumento(c[campo + '_data'], c[campo + '_link'], doc ? doc.expira : true);
+  const lk = c[campo + '_link'];
+  if(doc && doc.assinar && lk && !c[campo + '_data'] && typeof assinadosSet !== 'undefined' && assinadosSet.has(`${c.id}|${campo}|${lk}`))
+    return { chave:'ok', texto:'Assinado', classe:'ok', icone:'✍' };            // assinado: a data de validade não é exigida
+  return statusDocumento(c[campo + '_data'], lk, doc ? doc.expira : true);
 }
 function statusDoc(d, c){ return statusDocCampo(d.key, c, d); }
 
@@ -5400,29 +5445,68 @@ function infoDocumento(d, c, s){
   return `Vence em ${formatDataBR(data)}`;
 }
 
+/* ---------- estado ÚNICO de cada documento (data + assinatura) ---------- */
+const UE = { ok:['✔', 'Em dia'], ass:['✍', 'Assinado'], ag:['✍', 'Aguardando'], pen:['⏳', 'Pendente'], venc:['⛔', 'Vencido'], a30:['⚠', 'Vence em breve'], oc:['—', 'Não controlado'] };
+const chipEstado = (e, sub, txt)=> `<span class="ue-wrap"><span class="ue ${e}">${UE[e][0]} ${txt || UE[e][1]}</span>${sub ? `<span class="ue-sub">${sub}</span>` : ''}</span>`;
+const docAssinado = (c, k)=> { const l = c[k + '_link']; return !!l && assinadosSet.has(`${c.id}|${k}|${l}`); };
+
+function docEstado(d, c){
+  const k = d.key;
+  if(docOculto(c, k)) return { e:'oc', sub:'' };
+  const data = c[k + '_data'], link = c[k + '_link'];
+  const b = statusDocumento(data, link, d.expira);
+  const porData = (semDado)=>{
+    if(b.chave === 'nodate') return { e:'pen', sub:semDado };
+    const dias = diffDias(data);
+    if(b.chave === 'bad')  return { e:'venc', sub:`venceu há ${Math.abs(dias)} dia${Math.abs(dias) === 1 ? '' : 's'}` };
+    if(b.chave === 'warn') return { e:'a30', txt:`Vence em ${dias}d`, sub:formatDataBR(data) };
+    return { e:'ok', sub: d.expira ? 'val. ' + formatDataBR(data) : '' };
+  };
+  if(k === 'epi'){
+    const r = epiResumo[String(c.id)];
+    if(r && r.n) return r.ass >= r.n ? { e:'ass', sub:`${r.n} ${r.n === 1 ? 'item' : 'itens'}` } : { e:'ag', sub:`${r.ass} de ${r.n} itens` };
+    return porData(link ? 'sem data' : 'sem ficha');
+  }
+  if(d.assinar && link){
+    if(!docAssinado(c, k)) return { e:'ag', sub:'aguardando assinatura' };
+    const x = porData('');                                     // assinado: a data só importa se já venceu / vai vencer
+    return (x.e === 'venc' || x.e === 'a30') ? x : { e:'ass', sub: data ? 'val. ' + formatDataBR(data) : '' };
+  }
+  return porData(link ? 'sem data' : 'sem anexo');
+}
+function grupoEstados(lista){
+  const e = lista.filter(x => x !== 'oc');
+  if(e.includes('venc')) return 'venc';
+  if(e.includes('ag')) return 'ag';
+  if(e.includes('pen')) return 'pen';
+  return 'reg';
+}
+const estadoCompleto = (e)=> e === 'ok' || e === 'ass' || e === 'a30';
+
 function detalheDocsHtml(c){
-  const r = situacaoColab(c);
-  const cab = r.total
-    ? `<b>${r.total} de ${docsDe(c).length} documentos</b> precisam de atenção.`
-    : `<b>Todos os ${docsDe(c).length} documentos</b> estão em dia.`;
-  const cards = docsDe(c).map(d=>{
-    const link = c[`${d.key}_link`];
-    const s = statusDoc(d, c);
-    let botoes = '';
-    if(d.key === 'epi'){
-      const re = epiResumo[String(c.id)];
-      botoes += `<button class="btn btn-sm primary" onclick="irParaEpi('${c.id}')">Abrir</button>`;
-      if(re && re.n && re.ass < re.n) botoes += `<button class="btn btn-sm" onclick="assinarEpiDireto('${c.id}')">✍️ Assinar</button>`;
+  const est = DOC_FIELDS.map(d => ({ d, s: docEstado(d, c) }));
+  const ctr = est.filter(x => x.s.e !== 'oc');
+  const nOk = ctr.filter(x => estadoCompleto(x.s.e)).length, nAg = ctr.filter(x => x.s.e === 'ag').length, nPen = ctr.filter(x => x.s.e === 'pen').length, nVenc = ctr.filter(x => x.s.e === 'venc').length;
+  const partes = [nOk && `${nOk} completo${nOk > 1 ? 's' : ''}`, nAg && `${nAg} aguardando assinatura`, nPen && `${nPen} pendente${nPen > 1 ? 's' : ''} de cadastro`, nVenc && `${nVenc} vencido${nVenc > 1 ? 's' : ''}`].filter(Boolean).join(', ');
+  const temAg = ehAdmin() && ctr.some(x => x.s.e === 'ag' && (x.d.key !== 'epi' || (epiResumo[String(c.id)] || {}).n));
+  const cards = est.map(({ d, s })=>{
+    const k = d.key, data = c[k + '_data'], link = c[k + '_link'];
+    if(s.e === 'oc') return `<div class="ue-card oc"><div class="h">${d.label}</div>${chipEstado('oc')}<div class="ue-ln"><span>Não controlado para este colaborador</span></div></div>`;
+    let ln = '', bt = '';
+    if(k === 'epi'){
+      const r = epiResumo[String(c.id)] || { n:0, ass:0 };
+      ln = r.n ? `<div class="ue-ln"><span>Itens assinados</span><b>${r.ass} de ${r.n}</b></div><div class="ue-bar" style="width:100%;margin-top:6px"><i style="width:${r.ass * 100 / r.n}%;background:${r.ass >= r.n ? '#2ecc71' : '#f5a623'}"></i></div>` : `<div class="ue-ln"><span>Ficha digital</span><b>não criada</b></div>`;
+      bt = `<button class="btn btn-sm primary" onclick="irParaEpi('${c.id}')">${r.n ? 'Abrir ficha' : 'Criar ficha'}</button>`;
+      if(r.n && r.ass < r.n) bt += `<button class="btn btn-sm" onclick="assinarEpiDireto('${c.id}')">✍️ Assinar</button>`;
     } else {
-      botoes += s.chave === 'nodate'
-        ? `<button class="btn btn-sm primary" onclick="editarColaborador('${c.id}')">Cadastrar</button>`
-        : `<button class="btn btn-sm" onclick="abrirDocumentos('${c.id}')">Ver documento</button>`;
-      if(d.assinar && link) botoes += `<button class="btn btn-sm" onclick="assinarDireto('${c.id}','${d.key}')">✍️ Assinar</button>`;
-      if(d.assinar && link) botoes += `<button class="btn btn-sm" onclick="gerarLinkAssinatura('${d.key}','${c.id}')">🔗 Link</button>`;
+      ln = `<div class="ue-ln"><span>Validade</span><b>${data ? formatDataBR(data) : 'não cadastrada'}</b></div><div class="ue-ln"><span>Arquivo</span><b>${link ? 'anexado' : 'sem anexo'}</b></div>`;
+      if(d.assinar && link) ln += `<div class="ue-ln"><span>Assinatura</span><b>${docAssinado(c, k) ? 'assinado' : 'aguardando'}</b></div>`;
+      bt = s.e === 'pen' ? `<button class="btn btn-sm primary" onclick="editarColaborador('${c.id}')">Cadastrar</button>` : `<button class="btn btn-sm" onclick="abrirDocumentos('${c.id}')">Ver documento</button>`;
+      if(d.assinar && link && !docAssinado(c, k)) bt += `<button class="btn btn-sm" onclick="assinarDireto('${c.id}','${k}')">✍️ Assinar</button><button class="btn btn-sm" onclick="gerarLinkAssinatura('${k}','${c.id}')">🔗 Link</button>`;
     }
-    return `<div class="at-doc"><div class="dn">${d.label}</div><div><span class="status-pill ${s.classe}">${s.icone} ${s.texto}</span></div><div class="di">${infoDocumento(d, c, s)}</div><div class="da">${botoes}</div></div>`;
+    return `<div class="ue-card"><div class="h">${d.label}</div>${chipEstado(s.e, s.sub, s.txt)}${ln}<div class="ue-bt">${bt}</div></div>`;
   }).join('');
-  return `<tr class="at-detalhe"><td></td><td colspan="7"><div class="at-dhead"><span>${cab}</span><span>${formatCPF(c.cpf)} · ${c.local || '-'}</span></div><div class="at-docs">${cards}</div></td></tr>`;
+  return `<tr class="at-detalhe"><td colspan="8"><div class="ue-dt"><span>Detalhe de documentos · <b>${c.nome}</b>${partes ? ` <span style="font-weight:400">— ${partes}</span>` : ''}</span><span>${formatCPF(c.cpf)} · ${c.local || '-'}${temAg ? ` <button class="btn btn-sm wa-go" type="button" onclick="waEnviarDoCartao('${c.id}')">💬 Enviar links no WhatsApp</button>` : ''}</span></div><div class="ue-cards">${cards}</div></td></tr>`;
 }
 
 async function assinarEpiDireto(id){
@@ -5449,13 +5533,16 @@ function linhasAtivosHtml(lista){
   const chev = (aberto)=> `<svg class="at-chev${aberto ? ' open' : ''}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>`;
   return lista.map(c=>{
     const aberto = ativosAbertos.has(String(c.id));
-    const r = situacaoColab(c);
+    const est = DOC_FIELDS.map(d => ({ k:d.key, s:docEstado(d, c) }));
+    const porDoc = {}; est.forEach(x => { porDoc[x.k] = x.s; });
+    const ctr = est.filter(x => x.s.e !== 'oc'), nOk = ctr.filter(x => estadoCompleto(x.s.e)).length, g = grupoEstados(ctr.map(x => x.s.e));
+    const cor = { reg:'#2ecc71', ag:'#f5a623', pen:'#c9d3dc', venc:'#e31c4b' }[g];
+    const cel = (k)=> `<td>${chipEstado(porDoc[k].e, porDoc[k].sub, porDoc[k].txt)}</td>`;
     return `<tr class="${aberto ? 'at-aberta' : ''}">
-      <td style="width:48px"><div class="colab-avatar">${iniciais(c.nome)}</div></td>
-      <td><button class="at-namebtn" type="button" aria-expanded="${aberto}" onclick="toggleDocsAtivo('${c.id}')">${chev(aberto)}<span><span class="at-nm">${c.nome}</span><span class="sub-local">${c.local || '-'}</span></span></button></td>
-      <td class="col-cpf">${formatCPF(c.cpf)}</td><td class="col-loc">${c.local || '-'}</td>
-      <td class="col-loc">${c.funcao || '-'}</td><td class="col-loc">${c.admissao_data ? formatDataBR(c.admissao_data) : '-'}</td>
-      <td class="at-sit"><button class="at-pillbtn" type="button" aria-label="Ver documentos de ${c.nome}" onclick="toggleDocsAtivo('${c.id}')">${situacaoPills(r)}</button></td>
+      <td><button class="at-namebtn" type="button" aria-expanded="${aberto}" onclick="toggleDocsAtivo('${c.id}')">${chev(aberto)}<span class="at-who"><span class="ue-av">${iniciais(c.nome)}</span><span><span class="at-nm">${c.nome}</span><span class="at-sub2">${formatCPF(c.cpf)}${c.funcao ? ' · ' + c.funcao : ''}</span></span></span></button></td>
+      <td class="col-loc">${c.local || '-'}</td>
+      ${cel('aso')}${cel('os')}${cel('epi')}${cel('nr06')}
+      <td><div class="ue-prog"><span class="ue-bar"><i style="width:${ctr.length ? nOk * 100 / ctr.length : 0}%;background:${cor}"></i></span>${nOk} de ${ctr.length}</div></td>
       <td class="acoes"><span title="Ver documentos" onclick="abrirDocumentos('${c.id}')">👁️</span><span title="Editar colaborador" onclick="editarColaborador('${c.id}')">✏️</span><span class="btn-icon-desligar icon-desligar" role="button" tabindex="0" title="Desligar / Inativar colaborador" onclick="abrirModalDesligar('${c.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirModalDesligar('${c.id}');}">${ICON_PESSOA}</span></td>
     </tr>${aberto ? detalheDocsHtml(c) : ''}`;
   }).join('');
@@ -6254,7 +6341,7 @@ const WA_DOCS = [
 const WA_MSG_PADRAO = 'Olá {nome}, tudo bem? Segue o link para você assinar (vale por 24 horas):\n\n{links}';
 let waNumeros = {};      // colaborador_id -> 55DDDNUMERO
 let waEnvios = {};       // colaborador_id -> { ultimo: ISO, n }
-let waErro = null, waFiltro = 'todos', waLimite = 100, waOcupado = false;
+let waCarregadoUmaVez = false, waErro = null, waFiltro = 'todos', waLimite = 100, waOcupado = false;
 
 const waAtivos = ()=> colaboradores.filter(c => c.status !== 'INATIVO');
 const waHoje = (iso)=> new Date(iso).toDateString() === new Date().toDateString();
@@ -6311,7 +6398,7 @@ async function waCarregar(){
       const e = waEnvios[r.colaborador_id] || (waEnvios[r.colaborador_id] = { ultimo:'', n:0 });
       e.n++; if(!e.ultimo || r.enviado_em > e.ultimo) e.ultimo = r.enviado_em;
     });
-    waErro = null;
+    waErro = null; waCarregadoUmaVez = true;
   }catch(err){
     waErro = err.message || String(err);
     console.error(err);
@@ -6502,6 +6589,8 @@ async function waEnviar(id){
   }finally{ waOcupado = false; waRender(); }
 }
 window.waEnviar = waEnviar;
+async function waEnviarDoCartao(id){ if(!waCarregadoUmaVez) await waCarregar(); if(!waCarregadoUmaVez){ toast('Não consegui carregar os números de WhatsApp. Abra o menu WhatsApp.', 6000); return; } waEnviar(id); }
+window.waEnviarDoCartao = waEnviarDoCartao;
 
 function waProximo(){
   const x = waListaAtual.find(x => waNumeros[String(x.c.id)] && !waEnvios[String(x.c.id)]);
