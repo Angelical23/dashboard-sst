@@ -1458,6 +1458,19 @@
 </div>
 
 <!-- MENSAGEM DO WHATSAPP -->
+<div class="modal-overlay" id="modalDataDoc">
+  <div class="modal" style="max-width:420px;">
+    <h2 id="dataDocTitulo">📅 Data do documento</h2>
+    <div class="epi-sub" id="dataDocSub" style="max-width:none;"></div>
+    <label id="dataDocLabel">DATA</label>
+    <input type="date" id="dataDocInput">
+    <div class="modal-actions">
+      <button class="btn" type="button" id="dataDocLimpar">Remover data</button>
+      <button class="btn" type="button" id="dataDocCancelar">Cancelar</button>
+      <button class="btn primary" type="button" id="dataDocSalvar">Salvar</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="modalWaMsg">
   <div class="modal" style="max-width:560px;">
     <h2>✏️ Mensagem enviada no WhatsApp</h2>
@@ -2594,6 +2607,7 @@ function abrirDocumentos(id){
         <div onclick="event.stopPropagation()" style="margin-top:8px;">
           <label class="btn" for="${inputId}" style="font-size:11px;padding:4px 8px;margin:0;">📎 ${link ? 'Substituir' : 'Anexar'}</label>
           <input type="file" id="${inputId}" class="input-upload-doc-ver" data-campo="${d.key}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+          ${d.key !== 'epi' ? `<button type="button" class="btn" style="font-size:11px;padding:4px 8px;margin:0 0 0 4px;" onclick="abrirDataDoc('${c.id}','${d.key}')">📅 ${c[d.key + '_data'] ? 'Alterar data' : 'Cadastrar data'}</button>` : ''}
           ${(d.assinar && link) ? `<button type="button" class="btn btn-assinar" onclick="iniciarAssinatura('${d.key}')">✍️ Assinar documento</button><button type="button" class="btn btn-linkass" onclick="gerarLinkAssinatura('${d.key}','${c.id}')">🔗 Enviar link ao colaborador</button>${d.key === 'os' ? `<button type="button" class="btn btn-assinar" onclick="sesmtAssinarUm('${c.id}')">✍️ Assinar como Segurança do Trabalho</button>` : ''}` : ''}
           <div id="assinInfo_${d.key}" class="assin-info"></div>
         </div>
@@ -5502,12 +5516,50 @@ function detalheDocsHtml(c){
       ln = `<div class="ue-ln"><span>Validade</span><b>${data ? formatDataBR(data) : 'não cadastrada'}</b></div><div class="ue-ln"><span>Arquivo</span><b>${link ? 'anexado' : 'sem anexo'}</b></div>`;
       if(d.assinar && link) ln += `<div class="ue-ln"><span>Assinatura</span><b>${docAssinado(c, k) ? 'assinado' : 'aguardando'}</b></div>`;
       bt = s.e === 'pen' ? `<button class="btn btn-sm primary" onclick="editarColaborador('${c.id}')">Cadastrar</button>` : `<button class="btn btn-sm" onclick="abrirDocumentos('${c.id}')">Ver documento</button>`;
+      bt += `<button class="btn btn-sm" onclick="abrirDataDoc('${c.id}','${k}')">📅 ${data ? 'Alterar data' : 'Cadastrar data'}</button>`;
       if(d.assinar && link && !docAssinado(c, k)) bt += `<button class="btn btn-sm" onclick="assinarDireto('${c.id}','${k}')">✍️ Assinar</button><button class="btn btn-sm" onclick="gerarLinkAssinatura('${k}','${c.id}')">🔗 Link</button>`;
     }
     return `<div class="ue-card"><div class="h">${d.label}</div>${chipEstado(s.e, s.sub, s.txt)}${ln}<div class="ue-bt">${bt}</div></div>`;
   }).join('');
   return `<tr class="at-detalhe"><td colspan="8"><div class="ue-dt"><span>Detalhe de documentos · <b>${c.nome}</b>${partes ? ` <span style="font-weight:400">— ${partes}</span>` : ''}</span><span>${formatCPF(c.cpf)} · ${c.local || '-'}${temAg ? ` <button class="btn btn-sm wa-go" type="button" onclick="waEnviarDoCartao('${c.id}')">💬 Enviar links no WhatsApp</button>` : ''}</span></div><div class="ue-cards">${cards}</div></td></tr>`;
 }
+
+
+/* ---------- Cadastrar / alterar data do documento (ASO etc.) ---------- */
+let dataDocAlvo = null;
+function abrirDataDoc(id, key){
+  const c = colaboradores.find(x => String(x.id) === String(id));
+  const d = DOC_FIELDS.find(x => x.key === key);
+  if(!c || !d) return;
+  dataDocAlvo = { id: c.id, key };
+  const atual = c[key + '_data'] || '';
+  document.getElementById('dataDocTitulo').textContent = `📅 ${atual ? 'Alterar' : 'Cadastrar'} data — ${d.label}`;
+  document.getElementById('dataDocSub').innerHTML = `<b>${c.nome}</b>`;
+  document.getElementById('dataDocLabel').textContent = key === 'aso' ? 'DATA DE VENCIMENTO DO ASO' : 'DATA DE VALIDADE';
+  document.getElementById('dataDocInput').value = atual;
+  document.getElementById('dataDocLimpar').style.display = atual ? '' : 'none';
+  document.getElementById('modalDataDoc').classList.add('open');
+}
+window.abrirDataDoc = abrirDataDoc;
+async function salvarDataDoc(limpar){
+  if(!dataDocAlvo) return;
+  const { id, key } = dataDocAlvo;
+  const v = limpar ? null : (document.getElementById('dataDocInput').value || null);
+  if(!limpar && !v){ toast('Escolha uma data.'); return; }
+  const { error } = await supabaseClient.from('colaboradores').update({ [key + '_data']: v }).eq('id', id);
+  if(error){ toast('Erro ao salvar: ' + error.message); return; }
+  const c = colaboradores.find(x => String(x.id) === String(id));
+  if(c) c[key + '_data'] = v;
+  try{ auditar('editar_data_documento', id, `${c ? c.nome + ' — ' : ''}${key.toUpperCase()}: ${v || 'removida'}`); }catch(e){}
+  document.getElementById('modalDataDoc').classList.remove('open');
+  dataDocAlvo = null;
+  toast(v ? 'Data salva.' : 'Data removida.');
+  try{ await loadColaboradores(); }catch(e){}
+  if(document.getElementById('modalDocsOverlay') && modalDocsOverlay.classList.contains('open') && c) abrirDocumentos(c.id);
+}
+document.getElementById('dataDocSalvar').addEventListener('click', () => salvarDataDoc(false));
+document.getElementById('dataDocLimpar').addEventListener('click', () => salvarDataDoc(true));
+document.getElementById('dataDocCancelar').addEventListener('click', () => { document.getElementById('modalDataDoc').classList.remove('open'); dataDocAlvo = null; });
 
 async function assinarEpiDireto(id){
   mostrarView('epi');
