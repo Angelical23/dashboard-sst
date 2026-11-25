@@ -581,6 +581,35 @@
   body.lider #epiPaper .pbtn, body.lider #epiPaper .epi-np, body.lider #epiPaper .xx{display:none !important;}
   body.lider #epiPaper input, body.lider #epiPaper select{pointer-events:none;}
   .perfil-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;padding:1px 7px;border-radius:999px;background:#0e3342;color:#7dd3fc;margin-left:6px;vertical-align:middle;}
+
+  /* ===== Acessos e perfis (layout executivo) ===== */
+  .ac-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+  .ac-kpi{background:#fff;border:1px solid var(--cinza-borda);border-left:4px solid #b6c2cc;border-radius:10px;padding:12px 14px;}
+  .ac-kpi b{display:block;font-size:26px;line-height:1.1;color:var(--texto-escuro);}
+  .ac-kpi span{font-size:12px;color:var(--cinza-texto);}
+  .ac-kpi.adm{border-left-color:#115266;} .ac-kpi.lid{border-left-color:#2ecc71;} .ac-kpi.nun{border-left-color:#f5a623;}
+  .ac-barra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--cinza-borda);}
+  .ac-barra input[type=text]{flex:1;min-width:200px;max-width:340px;padding:8px 12px;border:1px solid var(--cinza-borda);border-radius:8px;font-size:13px;background:#f8fafc;box-sizing:border-box;}
+  .ac-chip{border:1px solid var(--cinza-borda);background:#fff;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--texto-escuro);}
+  .ac-chip.on{background:#115266;color:#fff;border-color:#115266;}
+  .ac-av{width:34px;height:34px;border-radius:50%;background:#e2edf1;color:#115266;font-weight:700;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:none;}
+  .ac-av.lid{background:#e3f8ec;color:#1b8a4b;}
+  .ac-who{display:flex;gap:10px;align-items:center;}
+  .ac-who small{display:block;color:var(--cinza-texto);font-size:11.5px;}
+  .ac-papel{display:inline-block;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:600;}
+  .ac-papel.adm{background:#e2edf1;color:#115266;} .ac-papel.lid{background:#e3f8ec;color:#1b8a4b;}
+  .ac-tbl td select{font-size:12.5px;padding:5px 8px;max-width:210px;}
+  .ac-tbl td{vertical-align:middle;}
+  .ac-nunca{color:#b7791f;font-size:12px;}
+  .ac-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px;}
+  .ac-pf{border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 12px;cursor:pointer;background:#fff;}
+  .ac-pf b{display:block;font-size:13.5px;margin-bottom:2px;} .ac-pf span{font-size:12px;color:var(--cinza-texto);line-height:1.4;display:block;}
+  .ac-pf.on{border-color:#1b8a4b;background:#f0fdf4;} .ac-pf.on b{color:#1b8a4b;}
+  .ac-tabs{display:flex;gap:6px;margin-bottom:12px;}
+  .ac-tab{border:0;background:transparent;padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer;color:var(--cinza-texto);}
+  .ac-tab.on{background:#e3f8ec;color:#1b8a4b;font-weight:600;}
+  .ac-dica{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--cinza-texto);margin:10px 0 0;line-height:1.5;}
+  @media(max-width:900px){.ac-kpis{grid-template-columns:1fr 1fr;}}
   .acessos-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--cinza-texto);margin-bottom:14px;line-height:1.55;}
   .aud-filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px;}
   .aud-filtros label{font-size:11px;color:var(--cinza-texto);display:block;margin-bottom:3px;font-weight:600;}
@@ -1000,33 +1029,22 @@
     <!-- VIEW: ACESSOS E PERFIS -->
     <section id="viewAcessos" style="display:none;">
       <div class="view-header"><div><h1>Acessos e perfis</h1>
-        <div class="epi-sub">Defina quem é Administrador e quem é Líder.</div></div></div>
-      <div class="acessos-box">
+        <div class="epi-sub">Quem entra no sistema e o que cada perfil pode fazer.</div></div>
+        <div class="toolbar"><button class="btn" type="button" id="acBtnApp">📱 Link do App</button><button class="btn primary" type="button" id="acBtnNovo">+ Novo acesso</button></div></div>
+      <div class="ac-kpis" id="acKpis"></div>
+      <div class="table-panel" style="margin-bottom:14px;">
+        <div class="ac-barra">
+          <input type="text" id="acBusca" placeholder="Buscar por nome ou CPF...">
+          <span id="acChips" style="display:flex;gap:6px;flex-wrap:wrap;"></span>
+          <span id="acContagem" style="margin-left:auto;font-size:12px;color:var(--cinza-texto);"></span>
+        </div>
+        <div class="table-scroll"><table class="tbl-ativos ac-tbl" style="min-width:0;"><thead><tr><th>USUÁRIO</th><th>PERFIL</th><th>LOCAL</th><th>ÚLTIMO ACESSO</th><th></th></tr></thead>
+          <tbody id="acessosBody"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody></table></div>
+      </div>
+      <div class="acessos-box" style="margin-bottom:0;">
         <b>Administrador:</b> vê e edita tudo (inclusive CPF e arquivo do ASO).<br>
-        <b>Líder:</b> somente consulta. Não vê o CPF nem abre/baixa o arquivo do ASO (vê apenas o status) e não altera nada.<br>
+        <b>Líder:</b> somente consulta e usa o App. Não vê o CPF nem abre/baixa o arquivo do ASO e não altera nada.<br>
         <b>Líder com local:</b> vê somente os colaboradores e documentos do local definido. Sem local = vê todos.
-      </div>
-      <div class="table-panel" style="margin-bottom:14px;">
-        <div class="table-header"><h3>LINK DO APP PARA OS LÍDERES</h3></div>
-        <div style="padding:14px;">
-          <p style="font-size:13px;color:#526173;margin:0 0 8px;">Envie este link e a mensagem abaixo para cada líder. O líder entra com o CPF e troca a senha no primeiro acesso.</p>
-          <input type="text" id="appLink" style="width:100%;box-sizing:border-box;margin-bottom:8px;">
-          <textarea id="appMsg" rows="8" readonly style="width:100%;box-sizing:border-box;font-size:13px;"></textarea>
-          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn" id="appCopLink">Copiar link</button><button type="button" class="btn primary" id="appCopMsg">Copiar mensagem</button><a class="btn" id="appWpp" target="_blank" rel="noopener" style="text-decoration:none;">Enviar por WhatsApp</a></div>
-        </div>
-      </div>
-      <div class="table-panel" style="margin-bottom:14px;">
-        <div class="table-header"><h3>CRIAR LOGINS DE LÍDERES (usuário = CPF, senha inicial = CPF)</h3></div>
-        <div style="padding:14px;">
-          <p style="font-size:13px;color:#526173;margin:0 0 8px;">Uma pessoa por linha: <b>CPF ; Nome ; Local</b> (pode colar direto do Excel). O local deve ser igual ao cadastrado nos colaboradores. No primeiro acesso a pessoa será obrigada a trocar a senha.</p>
-          <textarea id="lidLista" rows="6" style="width:100%;box-sizing:border-box;font-family:monospace;" placeholder="123.456.789-00; João da Silva; CEAGESP"></textarea>
-          <div style="margin-top:8px;"><button type="button" class="btn primary" id="lidCriar">Criar logins</button> <span id="lidMsg" style="font-size:13px;margin-left:8px;"></span></div>
-        </div>
-      </div>
-      <div class="table-panel">
-        <div class="table-header"><h3>USUÁRIOS</h3></div>
-        <div class="table-scroll"><table class="tbl-ativos"><thead><tr><th>USUÁRIO</th><th>NOME</th><th>LOCAL (só líder)</th><th>PERFIL</th><th>ÚLTIMO ACESSO</th><th></th></tr></thead>
-          <tbody id="acessosBody"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody></table></div>
       </div>
     </section>
 
@@ -1458,6 +1476,45 @@
 </div>
 
 <!-- MENSAGEM DO WHATSAPP -->
+<div class="modal-overlay" id="modalAcNovo">
+  <div class="modal" style="max-width:600px;">
+    <h2>Novo acesso</h2>
+    <div class="ac-tabs"><button type="button" class="ac-tab on" id="acTabUm">Um por vez</button><button type="button" class="ac-tab" id="acTabLote">Em lote (colar do Excel)</button></div>
+    <div id="acPainelUm">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label>NOME COMPLETO</label><input type="text" id="acNome"></div>
+        <div><label>CPF (será o usuário)</label><input type="text" id="acCpf" placeholder="000.000.000-00" inputmode="numeric"></div>
+      </div>
+      <label>PERFIL</label>
+      <div class="ac-cards">
+        <div class="ac-pf on" data-p="lider"><b>Líder</b><span>Pelo App: só o(s) local(is) dele; entrega EPI e colhe assinaturas.</span></div>
+        <div class="ac-pf" data-p="admin"><b>Administrador</b><span>Sistema web: vê e altera tudo.</span></div>
+      </div>
+      <div id="acLocalBox"><label>LOCAL DE TRABALHO</label><select id="acLocal"></select></div>
+      <div class="ac-dica">Senha inicial: o CPF, até o primeiro acesso. Depois o sistema pede uma senha nova. Esqueceu? O Administrador redefine.</div>
+    </div>
+    <div id="acPainelLote" style="display:none;">
+      <p style="font-size:13px;color:#526173;margin:0 0 8px;">Uma pessoa por linha: <b>CPF ; Nome ; Local</b> (pode colar direto do Excel). O local deve ser igual ao cadastrado nos colaboradores. Todos entram como <b>Líder</b>.</p>
+      <textarea id="lidLista" rows="7" style="width:100%;box-sizing:border-box;font-family:monospace;" placeholder="123.456.789-00; João da Silva; CEAGESP"></textarea>
+    </div>
+    <div id="lidMsg" style="font-size:13px;margin-top:8px;min-height:18px;"></div>
+    <div class="modal-actions">
+      <button class="btn" type="button" id="acNovoCancelar">Fechar</button>
+      <button class="btn primary" type="button" id="acNovoCriar">Criar acesso</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalAcApp">
+  <div class="modal" style="max-width:600px;">
+    <h2>📱 Link do App para os líderes</h2>
+    <p style="font-size:13px;color:#526173;margin:0 0 8px;">Envie este link e a mensagem abaixo para cada líder. O líder entra com o CPF e troca a senha no primeiro acesso.</p>
+    <input type="text" id="appLink" style="width:100%;box-sizing:border-box;margin-bottom:8px;">
+    <textarea id="appMsg" rows="9" readonly style="width:100%;box-sizing:border-box;font-size:13px;"></textarea>
+    <div class="modal-actions" style="flex-wrap:wrap;">
+      <button type="button" class="btn" id="appCopLink">Copiar link</button><button type="button" class="btn primary" id="appCopMsg">Copiar mensagem</button><a class="btn" id="appWpp" target="_blank" rel="noopener" style="text-decoration:none;">Enviar por WhatsApp</a><button class="btn" type="button" id="acAppFechar">Fechar</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="modalDataDoc">
   <div class="modal" style="max-width:420px;">
     <h2 id="dataDocTitulo">📅 Data do documento</h2>
@@ -1804,22 +1861,92 @@ async function carregarPerfil(session){
   if(papel !== 'admin' && (viewAtual === 'acessos' || viewAtual === 'auditoria' || viewAtual === 'backup' || viewAtual === 'whatsapp')) mostrarView('painel');
 }
 
+let acDados = [], acFiltro = 'todos';
+const acEsc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 async function carregarAcessos(){
   const tb = document.getElementById('acessosBody');
   const { data, error } = await supabaseClient.rpc('listar_acessos');
-  if(error){ tb.innerHTML = `<tr><td colspan="3" class="empty">Não foi possível listar (${error.message}). Rode o arquivo supabase_perfis.sql no Supabase.</td></tr>`; return; }
-  const esc = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-  const locais = [...new Set(colaboradores.map(c => (c.local || '').trim()).filter(Boolean))].sort();
-  tb.innerHTML = (data || []).map(u => {
-    const lider = u.papel === 'lider', cpfLogin = /^\d{11}@/.test(u.email);
-    const opts = ['<option value="">Todos os locais</option>'].concat(locais.concat(u.local && !locais.includes(u.local) ? [u.local] : []).map(l => `<option value="${esc(l)}"${l === u.local ? ' selected' : ''}>${esc(l)}</option>`)).join('');
-    return `<tr><td><b>${esc(u.email.split('@')[0])}</b></td><td>${esc(u.nome || '')}</td>
-    <td>${lider ? `<select onchange="mudarLocalLider('${u.user_id}', this)">${opts}</select>` : '—'}</td>
-    <td><select onchange="mudarPapel('${u.user_id}', this)"><option value="admin"${u.papel === 'admin' ? ' selected' : ''}>Administrador</option><option value="lider"${u.papel === 'lider' ? ' selected' : ''}>Líder</option></select></td>
-    <td>${u.ultimo_acesso ? new Date(u.ultimo_acesso).toLocaleString('pt-BR') : 'nunca entrou'}</td>
-    <td>${lider && cpfLogin ? `<button type="button" class="btn" style="font-size:11px;padding:4px 8px;" onclick="redefinirSenhaLider('${u.user_id}','${esc(u.nome || u.email)}')">Voltar senha p/ CPF</button>` : ''}</td></tr>`;
-  }).join('') || '<tr><td colspan="6" class="empty">Nenhum usuário.</td></tr>';
+  if(error){ tb.innerHTML = `<tr><td colspan="5" class="empty">Não foi possível listar (${acEsc(error.message)}). Rode o arquivo supabase_perfis.sql no Supabase.</td></tr>`; return; }
+  acDados = data || [];
+  acRender();
 }
+function acRender(){
+  const tb = document.getElementById('acessosBody');
+  const todos = acDados;
+  const nAdm = todos.filter(u => u.papel === 'admin').length, nLid = todos.filter(u => u.papel === 'lider').length, nNun = todos.filter(u => !u.ultimo_acesso).length;
+  document.getElementById('acKpis').innerHTML =
+    `<div class="ac-kpi"><b>${todos.length}</b><span>Usuários com acesso</span></div><div class="ac-kpi adm"><b>${nAdm}</b><span>Administradores</span></div><div class="ac-kpi lid"><b>${nLid}</b><span>Líderes</span></div><div class="ac-kpi nun"><b>${nNun}</b><span>Ainda não entraram</span></div>`;
+  const chips = [['todos','Todos',todos.length],['admin','Administradores',nAdm],['lider','Líderes',nLid],['nunca','Nunca entraram',nNun]];
+  document.getElementById('acChips').innerHTML = chips.map(([k,t,n]) => `<button type="button" class="ac-chip${acFiltro === k ? ' on' : ''}" onclick="acSetFiltro('${k}')">${t} ${n}</button>`).join('');
+  const q = normalizarTexto(document.getElementById('acBusca').value || '');
+  let lista = todos.filter(u => acFiltro === 'todos' || (acFiltro === 'nunca' ? !u.ultimo_acesso : u.papel === acFiltro));
+  if(q) lista = lista.filter(u => normalizarTexto((u.nome || '') + ' ' + u.email.split('@')[0]).includes(q));
+  document.getElementById('acContagem').textContent = `${lista.length} de ${todos.length}`;
+  const locais = [...new Set(colaboradores.map(c => (c.local || '').trim()).filter(Boolean))].sort();
+  tb.innerHTML = lista.map(u => {
+    const lider = u.papel === 'lider', cpfLogin = /^\d{11}@/.test(u.email), login = u.email.split('@')[0];
+    const ini = (u.nome || login).split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase();
+    const opts = ['<option value="">Todos os locais</option>'].concat(locais.concat(u.local && !locais.includes(u.local) ? [u.local] : []).map(l => `<option value="${acEsc(l)}"${l === u.local ? ' selected' : ''}>${acEsc(l)}</option>`)).join('');
+    return `<tr><td><div class="ac-who"><span class="ac-av ${lider ? 'lid' : ''}">${acEsc(ini)}</span><div><b>${acEsc(u.nome || login)}</b><small>${cpfLogin ? login.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : acEsc(login)}</small></div></div></td>
+    <td><select onchange="mudarPapel('${u.user_id}', this)"><option value="admin"${u.papel === 'admin' ? ' selected' : ''}>Administrador</option><option value="lider"${lider ? ' selected' : ''}>Líder</option></select></td>
+    <td>${lider ? `<select onchange="mudarLocalLider('${u.user_id}', this)">${opts}</select>` : '<span style="color:#94a3b8;">Todos (admin)</span>'}</td>
+    <td>${u.ultimo_acesso ? new Date(u.ultimo_acesso).toLocaleString('pt-BR') : '<span class="ac-nunca">⏳ nunca entrou</span>'}</td>
+    <td style="text-align:right;">${lider && cpfLogin ? `<button type="button" class="btn" style="font-size:11px;padding:4px 8px;" onclick="redefinirSenhaLider('${u.user_id}','${acEsc(u.nome || login)}')">Redefinir senha</button>` : ''}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="empty">Nenhum usuário encontrado.</td></tr>';
+}
+function acSetFiltro(k){ acFiltro = k; acRender(); }
+window.acSetFiltro = acSetFiltro;
+document.getElementById('acBusca').addEventListener('input', acRender);
+
+let acPerfilNovo = 'lider', acModoLote = false;
+function acAbrirNovo(){
+  const locais = [...new Set(colaboradores.map(c => (c.local || '').trim()).filter(Boolean))].sort();
+  document.getElementById('acLocal').innerHTML = '<option value="">Todos os locais</option>' + locais.map(l => `<option value="${acEsc(l)}">${acEsc(l)}</option>`).join('');
+  ['acNome','acCpf','lidLista'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('lidMsg').textContent = '';
+  acSetModo(false); acSetPerfil('lider');
+  document.getElementById('modalAcNovo').classList.add('open');
+}
+function acSetModo(lote){
+  acModoLote = lote;
+  document.getElementById('acTabUm').classList.toggle('on', !lote); document.getElementById('acTabLote').classList.toggle('on', lote);
+  document.getElementById('acPainelUm').style.display = lote ? 'none' : ''; document.getElementById('acPainelLote').style.display = lote ? '' : 'none';
+}
+function acSetPerfil(p){
+  acPerfilNovo = p;
+  document.querySelectorAll('#acPainelUm .ac-pf').forEach(el => el.classList.toggle('on', el.dataset.p === p));
+  document.getElementById('acLocalBox').style.display = p === 'lider' ? '' : 'none';
+}
+document.getElementById('acBtnNovo').addEventListener('click', acAbrirNovo);
+document.getElementById('acTabUm').addEventListener('click', () => acSetModo(false));
+document.getElementById('acTabLote').addEventListener('click', () => acSetModo(true));
+document.querySelectorAll('#acPainelUm .ac-pf').forEach(el => el.addEventListener('click', () => acSetPerfil(el.dataset.p)));
+document.getElementById('acNovoCancelar').addEventListener('click', () => document.getElementById('modalAcNovo').classList.remove('open'));
+document.getElementById('acBtnApp').addEventListener('click', () => document.getElementById('modalAcApp').classList.add('open'));
+document.getElementById('acAppFechar').addEventListener('click', () => document.getElementById('modalAcApp').classList.remove('open'));
+
+async function acCriarUm(){
+  const msg = document.getElementById('lidMsg');
+  const nome = document.getElementById('acNome').value.trim(), cpf = document.getElementById('acCpf').value.trim();
+  if(!nome || soDigitosGlobal(cpf).length !== 11){ msg.textContent = 'Informe o nome e um CPF válido (11 números).'; return; }
+  const local = acPerfilNovo === 'lider' ? document.getElementById('acLocal').value : '';
+  const { data, error } = await supabaseClient.rpc('criar_lider', { p_cpf: cpf, p_nome: nome, p_local: local });
+  if(error){ msg.textContent = 'Erro: ' + error.message; return; }
+  if(data !== 'criado'){ msg.textContent = String(data); return; }
+  if(acPerfilNovo === 'admin'){
+    const r = await supabaseClient.rpc('listar_acessos');
+    const novo = (r.data || []).find(u => u.email.split('@')[0] === soDigitosGlobal(cpf));
+    if(novo){
+      const e2 = (await supabaseClient.rpc('definir_papel', { p_user: novo.user_id, p_papel: 'admin' })).error;
+      if(e2){ msg.textContent = 'Criado como Líder, mas não foi possível promover: ' + e2.message; carregarAcessos(); return; }
+    }
+  }
+  toast(`Acesso criado: ${nome}.`);
+  document.getElementById('modalAcNovo').classList.remove('open');
+  carregarAcessos();
+}
+document.getElementById('acNovoCriar').addEventListener('click', () => { if(acModoLote) lidCriarLote(); else acCriarUm(); });
+
 async function mudarPapel(id, sel){
   const { error } = await supabaseClient.rpc('definir_papel', { p_user: id, p_papel: sel.value });
   if(error){ toast('Não foi possível alterar: ' + error.message, 6000); carregarAcessos(); return; }
@@ -1839,7 +1966,7 @@ async function redefinirSenhaLider(id, nome){
   toast('Senha redefinida para o CPF.');
 }
 window.redefinirSenhaLider = redefinirSenhaLider;
-document.getElementById('lidCriar').addEventListener('click', async ()=>{
+async function lidCriarLote(){
   const linhas = document.getElementById('lidLista').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const msg = document.getElementById('lidMsg');
   if(!linhas.length){ msg.textContent = 'Cole a lista primeiro.'; return; }
@@ -1859,7 +1986,7 @@ document.getElementById('lidCriar').addEventListener('click', async ()=>{
   msg.textContent = `${ok} criado(s), ${exist} já existia(m).` + (erros.length ? ` Problemas: ${erros.slice(0, 4).join(' | ')}` : '');
   if(!erros.length) document.getElementById('lidLista').value = '';
   carregarAcessos();
-});
+}
 
 function mostrarLogin(){
   if(typeof mobOcultar === 'function') mobOcultar();
@@ -2607,7 +2734,7 @@ function abrirDocumentos(id){
         <div onclick="event.stopPropagation()" style="margin-top:8px;">
           <label class="btn" for="${inputId}" style="font-size:11px;padding:4px 8px;margin:0;">📎 ${link ? 'Substituir' : 'Anexar'}</label>
           <input type="file" id="${inputId}" class="input-upload-doc-ver" data-campo="${d.key}" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-          ${d.key !== 'epi' ? `<button type="button" class="btn" style="font-size:11px;padding:4px 8px;margin:0 0 0 4px;" onclick="abrirDataDoc('${c.id}','${d.key}')">📅 ${c[d.key + '_data'] ? 'Alterar data' : 'Cadastrar data'}</button>` : ''}
+          ${d.key === 'aso' ? `<button type="button" class="btn" style="font-size:11px;padding:4px 8px;margin:0 0 0 4px;" onclick="abrirDataDoc('${c.id}','${d.key}')">📅 ${c[d.key + '_data'] ? 'Alterar data' : 'Cadastrar data'}</button>` : ''}
           ${(d.assinar && link) ? `<button type="button" class="btn btn-assinar" onclick="iniciarAssinatura('${d.key}')">✍️ Assinar documento</button><button type="button" class="btn btn-linkass" onclick="gerarLinkAssinatura('${d.key}','${c.id}')">🔗 Enviar link ao colaborador</button>${d.key === 'os' ? `<button type="button" class="btn btn-assinar" onclick="sesmtAssinarUm('${c.id}')">✍️ Assinar como Segurança do Trabalho</button>` : ''}` : ''}
           <div id="assinInfo_${d.key}" class="assin-info"></div>
         </div>
@@ -5516,7 +5643,7 @@ function detalheDocsHtml(c){
       ln = `<div class="ue-ln"><span>Validade</span><b>${data ? formatDataBR(data) : 'não cadastrada'}</b></div><div class="ue-ln"><span>Arquivo</span><b>${link ? 'anexado' : 'sem anexo'}</b></div>`;
       if(d.assinar && link) ln += `<div class="ue-ln"><span>Assinatura</span><b>${docAssinado(c, k) ? 'assinado' : 'aguardando'}</b></div>`;
       bt = s.e === 'pen' ? `<button class="btn btn-sm primary" onclick="editarColaborador('${c.id}')">Cadastrar</button>` : `<button class="btn btn-sm" onclick="abrirDocumentos('${c.id}')">Ver documento</button>`;
-      bt += `<button class="btn btn-sm" onclick="abrirDataDoc('${c.id}','${k}')">📅 ${data ? 'Alterar data' : 'Cadastrar data'}</button>`;
+      if(k === 'aso') bt += `<button class="btn btn-sm" onclick="abrirDataDoc('${c.id}','${k}')">📅 ${data ? 'Alterar data' : 'Cadastrar data'}</button>`;
       if(d.assinar && link && !docAssinado(c, k)) bt += `<button class="btn btn-sm" onclick="assinarDireto('${c.id}','${k}')">✍️ Assinar</button><button class="btn btn-sm" onclick="gerarLinkAssinatura('${k}','${c.id}')">🔗 Link</button>`;
     }
     return `<div class="ue-card"><div class="h">${d.label}</div>${chipEstado(s.e, s.sub, s.txt)}${ln}<div class="ue-bt">${bt}</div></div>`;
