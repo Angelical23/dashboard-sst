@@ -610,6 +610,42 @@
   .ac-tab.on{background:#e3f8ec;color:#1b8a4b;font-weight:600;}
   .ac-dica{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--cinza-texto);margin:10px 0 0;line-height:1.5;}
   @media(max-width:900px){.ac-kpis{grid-template-columns:1fr 1fr;}}
+
+  /* ===== Funções e EPIs / ficha com selo ===== */
+  .fe-tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--cinza-borda);}
+  .fe-tab{all:unset;cursor:pointer;padding:10px 16px;font-size:14px;font-weight:600;color:var(--cinza-texto);border-bottom:3px solid transparent;}
+  .fe-tab.on{color:#115266;border-bottom-color:#115266;}
+  .fe-chip{display:inline-block;background:#e8f1f4;color:#115266;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600;margin:2px 3px 2px 0;}
+  .fe-kit{display:flex;align-items:center;gap:10px;border:1px solid var(--cinza-borda);border-radius:8px;padding:7px 10px;margin-bottom:6px;font-size:13px;}
+  .fe-kit .n{flex:1;} .fe-kit input[type=number]{width:60px;height:30px;border:1px solid #cbd5e1;border-radius:6px;text-align:center;}
+  .fe-kit input[type=checkbox]{width:18px;height:18px;}
+  #epiPaper .selo{font-family:Arial,Helvetica,sans-serif;border:1px solid #2b6cb0;background:#f4f8fb;border-radius:4px;padding:5px 6px;font-size:8.6px;line-height:1.4;text-align:left;color:#222;}
+  #epiPaper .selo.leg{border-color:#d97706;background:#fffbeb;}
+  #epiPaper .selo .tp{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;}
+  #epiPaper .selo .bd{background:#198754;color:#fff;font-weight:700;padding:1px 5px;border-radius:3px;font-size:8px;}
+  #epiPaper .selo.leg .bd{background:#b45309;}
+  #epiPaper .selo img{height:22px;max-width:70px;margin:0;}
+  #epiPaper .selo .hs{font-family:Consolas,monospace;font-size:7.2px;line-height:1.3;background:rgba(255,255,255,.8);border:1px solid #ddd;padding:2px 4px;margin-top:3px;word-break:break-all;}
+  #epiPaper .selo .cn{display:block;text-align:right;margin-top:2px;}
+  #epiPaper .dtx{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:11px;text-align:center;}
+  #epiPaper .txc{font-family:Cambria,Georgia,"Times New Roman",serif;font-size:11px;padding:2px 4px;}
+  #epiPaper .legtag{font-family:Arial,sans-serif;text-align:center;font-weight:700;font-size:10px;color:#92400e;}
+  #epiPaper .legtag small{display:block;font-weight:400;color:#666;font-size:8.5px;}
+  #epiPaper .manif{margin-top:14px;border-top:1px dashed #888;padding-top:8px;font:9.5px Arial,sans-serif;color:#555;line-height:1.5;}
+  .mb-tag{font-size:10px;font-weight:800;border-radius:6px;padding:2px 6px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;white-space:nowrap;}
+  .mb-aud{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;}
+  .mb-aud .t{font-size:9.5px;font-weight:800;letter-spacing:.5px;color:#64748b;display:flex;justify-content:space-between;gap:6px;}
+  .mb-aud .g{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px;}
+  .mb-aud .g div{background:#fff;border:1px solid #e2e8f0;border-radius:7px;padding:4px 7px;font-size:10px;color:#94a3b8;}
+  .mb-aud .g b{display:block;color:#1e293b;font-size:10.5px;font-weight:600;word-break:break-word;}
+  .mb-leg{background:#fffbeb;border:1px solid #fcd34d;border-radius:9px;padding:8px 10px;font-size:11.5px;color:#78350f;line-height:1.4;}
+  .mb-sep{background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:8px 10px;font-size:11.5px;color:#1e3a8a;line-height:1.4;}
+  .mb-termo{font-size:12px;line-height:1.45;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:9px;}
+  .mb-sel{display:flex;gap:10px;align-items:center;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 11px;cursor:pointer;}
+  .mb-sel.on{border-color:#16a34a;background:#f0fdf4;} .mb-sel.leg.on{border-color:#d97706;background:#fffbeb;}
+  .mb-cb{width:22px;height:22px;border-radius:6px;border:2px solid #cbd5e1;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;background:#fff;}
+  .mb-cb.on{background:#135469;border-color:#135469;}
+  .mb-hash{font-family:ui-monospace,Consolas,monospace;font-size:9px;background:#0f172a;color:#6ee7b7;border-radius:8px;padding:7px 8px;word-break:break-all;line-height:1.4;margin-top:4px;}
   .acessos-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:13px;color:var(--cinza-texto);margin-bottom:14px;line-height:1.55;}
   .aud-filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px;}
   .aud-filtros label{font-size:11px;color:var(--cinza-texto);display:block;margin-bottom:3px;font-weight:600;}
@@ -785,6 +821,14 @@
       </button>
 
 
+      <button class="side-link" data-view="funcoes" id="navFuncoes" style="display:none;">
+        <span class="side-link-content">
+          <span class="side-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z"/></svg>
+          </span>
+          <span class="side-label">Funções e EPIs</span>
+        </span>
+      </button>
       <button class="side-link" data-view="whatsapp" id="navWhatsapp" style="display:none;">
         <span class="side-link-content">
           <span class="side-icon">
@@ -1027,6 +1071,18 @@
     </section>
 
     <!-- VIEW: ACESSOS E PERFIS -->
+    <section id="viewFuncoes" style="display:none;">
+      <div class="view-header"><div><h1>Funções e EPIs</h1>
+        <div class="epi-sub">Cadastre uma vez: Setor e CBO por função, e o C.A. de cada EPI. A ficha e o App preenchem sozinhos.</div></div></div>
+      <div class="ac-kpis" id="feKpis" style="grid-template-columns:repeat(3,1fr);"></div>
+      <div class="fe-tabs"><button class="fe-tab on" id="feTabF" type="button">Funções (Setor, CBO e kit)</button><button class="fe-tab" id="feTabE" type="button">Catálogo de EPIs (C.A.)</button></div>
+      <div id="feVF" class="table-panel"><div class="table-header"><h3>FUNÇÕES CADASTRADAS</h3><div style="display:flex;gap:8px;"><button class="btn" type="button" id="feImpF">⬆ Importar planilha</button><button class="btn primary" type="button" id="feNovaF">+ Nova função</button></div></div>
+        <div class="table-scroll"><table class="tbl-ativos" style="min-width:0;"><thead><tr><th>FUNÇÃO</th><th>SETOR</th><th>CBO</th><th>KIT DE EPIs</th><th>COLAB.</th><th></th></tr></thead><tbody id="feBodyF"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody></table></div></div>
+      <div id="feVE" class="table-panel" style="display:none;"><div class="table-header"><h3>CATÁLOGO DE EPIs</h3><div style="display:flex;gap:8px;"><button class="btn" type="button" id="feImpE">⬆ Importar planilha</button><button class="btn primary" type="button" id="feNovoE">+ Novo EPI</button></div></div>
+        <div class="table-scroll"><table class="tbl-ativos" style="min-width:0;"><thead><tr><th>DESCRIÇÃO DO EPI</th><th>Nº C.A.</th><th>QTDE PADRÃO</th><th>VALIDADE DO C.A.</th><th>USADO EM</th><th></th></tr></thead><tbody id="feBodyE"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody></table></div></div>
+      <input type="file" id="feArqF" accept=".xlsx,.xls,.csv" style="display:none"><input type="file" id="feArqE" accept=".xlsx,.xls,.csv" style="display:none">
+    </section>
+
     <section id="viewAcessos" style="display:none;">
       <div class="view-header"><div><h1>Acessos e perfis</h1>
         <div class="epi-sub">Quem entra no sistema e o que cada perfil pode fazer.</div></div>
@@ -1161,6 +1217,7 @@
       <div id="epiTelaFicha" style="display:none;"></div>
       <datalist id="epiDlColab"></datalist>
       <datalist id="epiDlCat"></datalist>
+      <datalist id="epiDlFunc"></datalist>
     </section>
 
     <!-- VIEW: WHATSAPP -->
@@ -1515,6 +1572,24 @@
     </div>
   </div>
 </div>
+<div class="modal-overlay" id="modalFeF">
+  <div class="modal" style="max-width:540px;">
+    <h2 id="feFT">Nova função</h2>
+    <label>NOME DA FUNÇÃO</label><input type="text" id="feFN">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div><label>SETOR</label><input type="text" id="feFS"></div><div><label>CBO</label><input type="text" id="feFC" placeholder="0000-00"></div></div>
+    <label>KIT DE EPIs DA FUNÇÃO</label><div id="feFK"></div>
+    <div class="modal-actions"><button class="btn" type="button" id="feFCancelar">Cancelar</button><button class="btn primary" type="button" id="feFSalvar">Salvar</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalFeE">
+  <div class="modal" style="max-width:480px;">
+    <h2 id="feET">Novo EPI</h2>
+    <label>DESCRIÇÃO DO EPI</label><input type="text" id="feEN">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div><label>Nº C.A.</label><input type="text" id="feEC" placeholder="Ex.: 47234 ou N/A"></div><div><label>QTDE PADRÃO</label><input type="text" id="feEQ" value="01"></div></div>
+    <label>VALIDADE DO C.A. (opcional)</label><input type="date" id="feEV">
+    <div class="modal-actions"><button class="btn" type="button" id="feECancelar">Cancelar</button><button class="btn primary" type="button" id="feESalvar">Salvar</button></div>
+  </div>
+</div>
 <div class="modal-overlay" id="modalDataDoc">
   <div class="modal" style="max-width:420px;">
     <h2 id="dataDocTitulo">📅 Data do documento</h2>
@@ -1850,6 +1925,7 @@ async function carregarPerfil(session){
   document.body.classList.toggle('lider', papel !== 'admin');
   const nav = document.getElementById('navAcessos');
   if(nav) nav.style.display = papel === 'admin' ? '' : 'none';
+  const navF = document.getElementById('navFuncoes'); if(navF) navF.style.display = papel === 'admin' ? '' : 'none';
   const navW = document.getElementById('navWhatsapp');
   if(navW) navW.style.display = papel === 'admin' ? '' : 'none';
   const navA = document.getElementById('navAuditoria');
@@ -1858,7 +1934,7 @@ async function carregarPerfil(session){
   if(navB) navB.style.display = papel === 'admin' ? '' : 'none';
   const el = document.getElementById('usuarioLogadoEmail');
   if(el && !el.querySelector('.perfil-tag')) el.insertAdjacentHTML('beforeend', `<span class="perfil-tag">${papel === 'admin' ? 'ADMIN' : 'LÍDER'}</span>`);
-  if(papel !== 'admin' && (viewAtual === 'acessos' || viewAtual === 'auditoria' || viewAtual === 'backup' || viewAtual === 'whatsapp')) mostrarView('painel');
+  if(papel !== 'admin' && (viewAtual === 'acessos' || viewAtual === 'auditoria' || viewAtual === 'backup' || viewAtual === 'whatsapp' || viewAtual === 'funcoes')) mostrarView('painel');
 }
 
 let acDados = [], acFiltro = 'todos';
@@ -2061,12 +2137,13 @@ const VIEWS = {
   inativos: document.getElementById('viewInativos'),
   epi: document.getElementById('viewEpi'),
   whatsapp: document.getElementById('viewWhatsapp'),
+  funcoes: document.getElementById('viewFuncoes'),
   treinamentos: document.getElementById('viewTreinamentos'),
   acessos: document.getElementById('viewAcessos'),
   auditoria: document.getElementById('viewAuditoria'),
   backup: document.getElementById('viewBackup')
 };
-const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', whatsapp:'WhatsApp', treinamentos:'Treinamentos', acessos:'Acessos e perfis', auditoria:'Auditoria', backup:'Backup e segurança' };
+const VIEW_NOMES = { painel:'Painel Geral', colaboradores:'Colaboradores Ativos', inativos:'Inativos / Desligados', epi:'Controle de EPI', whatsapp:'WhatsApp', funcoes:'Funções e EPIs', treinamentos:'Treinamentos', acessos:'Acessos e perfis', auditoria:'Auditoria', backup:'Backup e segurança' };
 let viewAtual = 'painel';
 
 function atualizarMigalha(){
@@ -2089,6 +2166,7 @@ function mostrarView(alvo){
   if(alvo === 'colaboradores' && typeof epiCarregarResumo === 'function' && colaboradores.length) epiCarregarResumo();
   waAutoAtualizar(alvo === 'whatsapp');
   if(alvo === 'whatsapp') waCarregar();
+  if(alvo === 'funcoes') feCarregar();
   if(alvo === 'acessos') carregarAcessos();
   if(alvo === 'auditoria') carregarAuditoria();
   if(alvo === 'backup') backupMostrarUltimos();
@@ -2972,7 +3050,7 @@ async function epiGerarPdfBytes(colabId){
   const { data: fi } = await supabaseClient.from('epi_fichas').select('*').eq('colaborador_id', String(colabId)).maybeSingle();
   const { PDFDocument, StandardFonts, rgb } = PDFLib;
   const pdf = await PDFDocument.create();
-  const F = await pdf.embedFont(StandardFonts.Helvetica), FB = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const F = await pdf.embedFont(StandardFonts.Helvetica), FB = await pdf.embedFont(StandardFonts.HelveticaBold), FC = await pdf.embedFont(StandardFonts.Courier);
   const logo = await pdf.embedJpg(Uint8Array.from(atob(EPI_LOGO.split(',')[1]), ch => ch.charCodeAt(0)));
   const azul = rgb(0.06, 0.27, 0.6), cinza = rgb(0.45, 0.45, 0.45), preto = rgb(0.1, 0.1, 0.1), linha = rgb(0.55, 0.55, 0.55);
   const W = 595.28, H = 841.89, M = 36;
@@ -2980,7 +3058,7 @@ async function epiGerarPdfBytes(colabId){
   const dataBR = (iso)=> iso ? String(iso).slice(0,10).split('-').reverse().join('/') : '';
   let pg = pdf.addPage([W, H]), y = H - M;
 
-  const txt = (t, x, yy, o = {})=>{ pg.drawText(safe(t), { x, y: yy, size: o.s || 8, font: o.b ? FB : F, color: o.c || preto }); };
+  const txt = (t, x, yy, o = {})=>{ pg.drawText(safe(t), { x, y: yy, size: o.s || 8, font: o.f || (o.b ? FB : F), color: o.c || preto }); };
   const centro = (t, x, w, yy, o = {})=>{ const f = o.b ? FB : F, s = o.s || 8; t = safe(t); txt(t, x + (w - f.widthOfTextAtSize(t, s)) / 2, yy, o); };
   const caixa = (x, yy, w, h, o = {})=> pg.drawRectangle({ x, y: yy, width: w, height: h, borderColor: linha, borderWidth: .6, color: o.fill });
   const quebra = (t, larg, s)=>{
@@ -3001,6 +3079,7 @@ async function epiGerarPdfBytes(colabId){
   centro('Sistema de Gestao de Seguranca e Saude no Trabalho - Norma Regulamentadora NR-6', M + lw, W - 2*M - lw - cw, y - 36, { s:6.5, c:cinza });
   txt('COD: ' + EPI_DOC.cod, W - M - cw + 8, y - 20, { b:true, s:7.5 });
   txt('REVISAO: ' + EPI_DOC.rev, W - M - cw + 8, y - 32, { b:true, s:7.5 });
+  txt('DATA: ' + EPI_DOC.data, W - M - cw + 8, y - 44, { b:true, s:7.5 });
   y -= hh + 18;
 
   // identificação
@@ -3035,36 +3114,66 @@ async function epiGerarPdfBytes(colabId){
 
   // tabela
   txt('3. REGISTRO INDIVIDUAL DE ENTREGA, SUBSTITUICAO E DEVOLUCAO', M, y, { b:true, s:9, c:azul }); y -= 6;
-  const cols = [ ['Data', .11], ['Descricao do EPI', .27], ['N C.A.', .10], ['Qtde', .07], ['Tipo', .06], ['Assinatura do trabalhador', .29], ['Visto', .10] ];
+  const cols = [ ['Data', .10], ['Descricao do EPI', .19], ['N C.A.', .08], ['Qtde', .06], ['Tipo', .07], ['Assinatura do trabalhador', .40], ['Visto', .10] ];
   const cab = ()=>{
     y -= 20; let x = M;
     cols.forEach(([t, p])=>{ const w = tw * p; pg.drawRectangle({ x, y, width:w, height:20, color: azul, borderColor: rgb(1,1,1), borderWidth:.5 }); centro(t.toUpperCase(), x, w, y + 7, { b:true, s:6.5, c: rgb(1,1,1) }); x += w; });
   };
   cab();
-  const sigH = 34;
+  const sigH = 34, selH = 56;
+  const ajusta = (t, sz, larg, f = F)=>{ let v = safe(t); while(v.length > 1 && f.widthOfTextAtSize(v, sz) > larg) v = v.slice(0, -1); return v; };
   for(const r of (ent || [])){
-    if(y - sigH < M + 110){ pg = pdf.addPage([W, H]); y = H - M; cab(); }
-    y -= sigH; let x = M;
-    const vals = [dataBR(r.data_entrega), (r.descricao || '').toUpperCase(), r.ca || '', r.qtde || '', r.tipo || 'E', null, r.visto || ''];
+    const selo = !!r.assinatura_hash, rh = selo ? selH : sigH;
+    if(y - rh < M + 110){ pg = pdf.addPage([W, H]); y = H - M; cab(); }
+    y -= rh; let x = M;
+    const vals = [dataBR(r.data_entrega), (r.descricao || '').toUpperCase(), r.ca || '', r.qtde || '', r.legado ? 'L' : (r.tipo || 'E'), null, r.visto || ''];
     for(let k = 0; k < cols.length; k++){
-      const w = tw * cols[k][1]; caixa(x, y, w, sigH);
+      const w = tw * cols[k][1]; caixa(x, y, w, rh);
       if(k === 5){
-        if(r.assinatura_img){
-          try{
-            const im = await pdf.embedPng(Uint8Array.from(atob(r.assinatura_img.split(',')[1]), ch => ch.charCodeAt(0)));
-            const sc = Math.min((w - 10) / im.width, 20 / im.height);
-            pg.drawImage(im, { x: x + (w - im.width * sc) / 2, y: y + 11, width: im.width * sc, height: im.height * sc });
-          }catch(e){}
+        if(selo){
+          const leg = !!r.legado, bx = x + 3, bw = w - 6, bh = rh - 6;
+          pg.drawRectangle({ x: bx, y: y + 3, width: bw, height: bh, borderColor: leg ? rgb(.85,.47,.02) : rgb(.17,.42,.69), borderWidth:.6, color: leg ? rgb(1,.98,.92) : rgb(.96,.97,.98) });
+          txt(leg ? 'POSSE CONFIRMADA ELETRONICAMENTE' : 'ASSINADO ELETRONICAMENTE', bx + 3, y + rh - 11, { b:true, s:5.6, c: leg ? rgb(.71,.33,.04) : rgb(.1,.53,.33) });
+          if(r.assinatura_img){
+            try{
+              const im = await pdf.embedPng(Uint8Array.from(atob(r.assinatura_img.split(',')[1]), ch => ch.charCodeAt(0)));
+              const sc = Math.min(52 / im.width, 15 / im.height);
+              pg.drawImage(im, { x: bx + bw - im.width * sc - 3, y: y + rh - 4 - im.height * sc, width: im.width * sc, height: im.height * sc });
+            }catch(e){}
+          }
+          const cpfM = c && c.cpf ? String(c.cpf).replace(/\D/g, '') : '';
+          const cpfT = cpfM.length === 11 ? '***.' + cpfM.slice(3, 6) + '.' + cpfM.slice(6, 9) + '-**' : '***';
+          const dh = (iso)=>{ const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR'); };
+          const L = [
+            (c ? c.nome : '') + ' (CPF: ' + cpfT + ')',
+            'Entrega fisica: ' + dataBR(r.data_entrega) + '  |  Assinatura digital: ' + dh(r.assinado_em),
+            'Autenticacao: ' + (r.assinatura_auth || 'Rubrica') + '  |  IP: ' + (r.assinado_ip || '-')
+          ];
+          L.forEach((t, n) => txt(ajusta(t, 5.2, bw - 6), bx + 3, y + rh - 19 - n * 7, { s:5.2 }));
+          txt(ajusta('Hash SHA-256:', 4.8, 60), bx + 3, y + 12, { b:true, s:4.8 });
+          txt(r.assinatura_hash, bx + 3, y + 6, { s:4.6, f:FC });
+        } else {
+          if(r.assinatura_img){
+            try{
+              const im = await pdf.embedPng(Uint8Array.from(atob(r.assinatura_img.split(',')[1]), ch => ch.charCodeAt(0)));
+              const sc = Math.min((w - 10) / im.width, 20 / im.height);
+              pg.drawImage(im, { x: x + (w - im.width * sc) / 2, y: y + 11, width: im.width * sc, height: im.height * sc });
+            }catch(e){}
+          }
+          if(r.assinado_em) centro(dataHora(r.assinado_em), x, w, y + 3, { s:5.5, c:cinza });
         }
-        if(r.assinado_em) centro(dataHora(r.assinado_em), x, w, y + 3, { s:5.5, c:cinza });
+      } else if(k === 1 && selo){
+        quebra(vals[1], w - 6, 7).slice(0, 4).forEach((l, n) => txt(l, x + 3, y + rh - 12 - n * 8.5, { s:7 }));
+      } else if(k === 4 && r.legado){
+        centro('L', x, w, y + rh / 2 + 1, { b:true, s:8, c: rgb(.57,.25,.04) }); centro('Legado', x, w, y + rh / 2 - 8, { s:5.5, c:cinza });
       } else {
         let v = safe(vals[k]); while(v.length > 1 && F.widthOfTextAtSize(v, 7.5) > w - 6) v = v.slice(0, -1);
-        centro(v, x, w, y + sigH / 2 - 3, { s:7.5 });
+        centro(v, x, w, y + rh / 2 - 3, { s:7.5 });
       }
       x += w;
     }
   }
-  y -= 12; txt('*Legenda Tipo: [E] Entrega inicial  |  [S] Substituicao por desgaste  |  [D] Devolucao / Desligamento', M, y, { s:6.5, c:cinza });
+  y -= 12; txt('*Legenda Tipo: [E] Entrega inicial  |  [S] Substituicao por desgaste  |  [D] Devolucao / Desligamento  |  [L] Legado (item ja em posse antes do sistema)', M, y, { s:6.2, c:cinza });
 
   // assinaturas finais
   if(y < M + 100){ pg = pdf.addPage([W, H]); y = H - M; }
@@ -3087,6 +3196,10 @@ async function epiGerarPdfBytes(colabId){
     centro(b.lab, b.x, sw, y - 10, { b:true, s:8 });
     if(b.sub) centro(b.sub, b.x, sw, y - 20, { s:6.5, c:cinza });
   }
+  y -= 38;
+  if(y < M + 30){ pg = pdf.addPage([W, H]); y = H - M; }
+  pg.drawLine({ start:{ x:M, y: y + 8 }, end:{ x:W - M, y: y + 8 }, thickness:.5, color:linha, dashArray:[3, 2] });
+  quebra('Manifesto de integridade: documento eletronico em conformidade com a NR-01 (item 1.6) e a Lei 14.063/2020. Cada assinatura eletronica e selada por um codigo SHA-256 que reune CPF, item, data da entrega fisica, data/hora real da assinatura, IP e aparelho. Itens assinados antes de ' + EPI_DOC.data + ' nao possuem selo.', tw, 6.3).forEach(l => { txt(l, M, y - 2, { s:6.3, c:cinza }); y -= 8; });
   return await pdf.save();
 }
 
@@ -3292,7 +3405,7 @@ const MOB_TOQUE = window.matchMedia('(pointer: coarse)');
 const mobEhCelular = ()=> MOB_QUERY.matches || (MOB_TOQUE.matches && Math.min(screen.width, screen.height) <= 820);
 let mobForcarCompleto = false, mobLogado = false;
 let mobTela = 'lista', mobFiltro = 'todos', mobBusca = '', mobColab = null, mobItens = [], mobTipo = 'E', mobAposSalvar = 'assinar', mobIds = [];
-let mobPad = null, mobInativo = null, mobResp = null;
+let mobPad = null, mobInativo = null, mobResp = null, mobLeg = false, mobSel = new Set(), mobTermo = false, mobUltimos = [];
 const mobE = (t)=> String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const MOB_SVG = {
   voltar:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>',
@@ -3393,6 +3506,8 @@ function mobRender(){
   else if(mobTela === 'ficha') mobRenderFicha(app);
   else if(mobTela === 'nova') mobRenderNova(app);
   else if(mobTela === 'assinar') mobRenderAssinar(app);
+  else if(mobTela === 'coleta') mobRenderColeta(app);
+  else if(mobTela === 'comp') mobRenderComp(app);
   else if(mobTela === 'assinarDoc') mobRenderAssinarDoc(app);
   else if(mobTela === 'minha') mobRenderMinha(app);
 }
@@ -3466,7 +3581,7 @@ const mobPl = (n, s, p)=> n + ' ' + (n === 1 ? s : p);
 /* ---------- 2. ficha ---------- */
 async function mobCarregarItens(){
   const { data, error } = await supabaseClient.from('epi_entregas')
-    .select('id,data_entrega,descricao,ca,qtde,tipo,assinado_em,visto,ordem')
+    .select('id,data_entrega,descricao,ca,qtde,tipo,assinado_em,visto,ordem' + (epiColsOk ? ',legado,assinado_ip,assinado_geo,assinatura_hash,assinatura_payload,assinatura_auth' : ''))
     .eq('colaborador_id', String(mobColab.id)).order('ordem', { ascending:true }).order('data_entrega', { ascending:true });
   if(error){ toast('Não foi possível abrir a ficha: ' + error.message, 6000); return false; }
   mobItens = data || []; return true;
@@ -3477,6 +3592,7 @@ async function mobAbrirFicha(id){
   if(!mobColab) return;
   auditar('ver_ficha_epi', mobColab.id, `${mobColab.nome} — abriu a ficha de EPI (celular)`);
   mobResp = null;
+  await epiDetectar();
   if(await mobCarregarItens()){ await mobCarregarResp(); mobTela = 'ficha'; mobRender(); }
 }
 window.mobAbrirFicha = mobAbrirFicha;
@@ -3548,7 +3664,7 @@ const mobTipoNome = { E:'Entrega inicial', S:'Substituição', D:'Devolução' }
 function mobRenderFicha(app){
   const c = mobColab, d = mobDocs(c), pend = mobItens.filter(i => !i.assinado_em), ass = mobItens.length - pend.length;
   const totalPend = [d.epi, d.os, d.nr06].filter(x => x.k === 'pend').length;
-  const item = (i)=> `<div class="mb-item${i.assinado_em ? ' ok' : ''}"><span class="t"><b>${mobE(i.descricao)} · ${mobE(i.qtde || '')} un.${i.ca && i.ca !== 'N/A' ? ' · C.A. ' + mobE(i.ca) : ''}</b><small>${mobTipoNome[i.tipo] || 'Entrega'} · ${mobE(epiDataBR(i.data_entrega))}</small></span><span class="mb-pill ${i.assinado_em ? 'g' : 'w'}">${i.assinado_em ? 'Assinado' : 'Pendente'}</span>${i.assinado_em ? '' : `<button type="button" class="mb-x" title="Excluir este item (o colaborador não retirou)" aria-label="Excluir item" onclick="mobExcluirItem('${i.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>`}</div>`;
+  const item = (i)=> `<div class="mb-item${i.assinado_em ? ' ok' : ''}"><span class="t"><b>${mobE(i.descricao)} · ${mobE(i.qtde || '')} un.${i.ca && i.ca !== 'N/A' ? ' · C.A. ' + mobE(i.ca) : ''}</b><small>${mobTipoNome[i.tipo] || 'Entrega'} · ${i.legado ? 'entrega física ' : ''}${mobE(epiDataBR(i.data_entrega))}</small></span>${i.legado ? '<span class="mb-tag">LEGADO</span>' : ''}<span class="mb-pill ${i.assinado_em ? 'g' : 'w'}">${i.assinado_em ? 'Assinado' : 'Pendente'}</span>${i.assinado_em ? '' : `<button type="button" class="mb-x" title="Excluir este item (o colaborador não retirou)" aria-label="Excluir item" onclick="mobExcluirItem('${i.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>`}</div>`;
   const recentes = mobItens.filter(i => i.assinado_em).slice(-3);
   const cls = (k)=> k === 'pend' ? 'w' : k === 'ok' ? 'g' : 'n';
   const cartaoDoc = (t)=>{
@@ -3590,18 +3706,26 @@ function mobProximo(){
   if(!t){ mobFilaTotal = 0; mobTela = 'ficha'; mobRender(); return; }
   mobIniciarTipo(t);
 }
-function mobIniciarTipo(t){ if(t === 'epi') mobIrAssinar([]); else mobIrAssinarDoc(t); }
+function mobIniciarTipo(t){ if(t === 'epi') mobIrColeta(); else mobIrAssinarDoc(t); }
 const mobSubFila = ()=> mobFilaTotal > 1 ? `<div class="mb-sub">Documento ${mobFilaTotal - mobFila.length} de ${mobFilaTotal} pendentes</div>` : '';
 window.mobColherTodas = mobColherTodas; window.mobIniciarTipo = mobIniciarTipo;
 
 /* ---------- 3. nova entrega ---------- */
 let mobKit = [], mobDataSel = '';
 function mobIrNova(){
-  mobTipo = 'E'; mobDataSel = '';
-  mobKit = EPI_CATALOGO.map(k => ({ desc:k[0], ca:k[1], qt:k[2], on:false, extra:false }));
+  mobTipo = 'E'; mobDataSel = ''; mobLeg = false;
+  mobKit = epiCatalogoLista().map(k => ({ desc:k[0], ca:k[1], qt:k[2], on:false, extra:false }));
   mobTela = 'nova'; mobRender();
 }
 window.mobIrNova = mobIrNova;
+function mobSetLeg(v){ mobLeg = v; mobDataSel = v ? (mobColab.admissao_data || '') : ''; mobRender(); }
+window.mobSetLeg = mobSetLeg;
+function mobAplicarKit(){
+  const kit = epiKitDe(mobColab.funcao);
+  mobKit.forEach(k => { const it = kit.find(x => x[0] === k.desc); if(it){ k.on = true; k.qt = it[2]; } });
+  mobRender();
+}
+window.mobAplicarKit = mobAplicarKit;
 function mobRenderNova(app){
   app.innerHTML = `
     <div class="mb-top"><button class="mb-back" onclick="mobTela='ficha';mobRender()">${MOB_SVG.voltar}Voltar à ficha</button>
@@ -3609,11 +3733,14 @@ function mobRenderNova(app){
     <div class="mb-body">
       <div class="mb-lb">Tipo de entrega
         <div class="mb-seg"><button class="${mobTipo === 'E' ? 'on' : ''}" onclick="mobTipo='E';mobRender()">Inicial</button><button class="${mobTipo === 'S' ? 'on' : ''}" onclick="mobTipo='S';mobRender()">Substituição</button><button class="${mobTipo === 'D' ? 'on' : ''}" onclick="mobTipo='D';mobRender()">Devolução</button></div></div>
-      <div class="mb-row"><span class="mb-lb" style="display:block">Itens entregues</span><button class="mb-chip" onclick="mobKit.forEach(k=>k.on=true);mobRender()">Aplicar kit do cargo</button></div>
+      ${epiColsOk ? `<label class="mb-lb">Quando foi entregue?
+        <div class="mb-seg"><button class="${!mobLeg ? 'on' : ''}" onclick="mobSetLeg(false)">Entrega nova (hoje)</button><button class="${mobLeg ? 'on' : ''}" onclick="mobSetLeg(true)">Migração de Legado</button></div></label>
+        ${mobLeg ? `<div class="mb-leg"><b>Migração de Legado:</b> o colaborador já recebeu estes itens no passado. A data de entrega física abaixo vem da admissão (${mobE(epiDataBR(mobColab.admissao_data) || 'não cadastrada')}), mas pode ser trocada. A assinatura será gravada com a data e hora reais de <b>hoje</b>, nunca retroativa.</div>` : ''}` : ''}
+      <div class="mb-row"><span class="mb-lb" style="display:block">Itens entregues</span><button class="mb-chip" onclick="mobAplicarKit()">Aplicar kit do cargo</button></div>
       ${mobKit.map((k, i) => k.extra ? `<div class="mb-opt on"><input type="checkbox" checked aria-label="Incluir"><span class="t"><input class="mb-in" style="height:40px" placeholder="Descrição do item" value="${mobE(k.desc)}" oninput="mobKit[${i}].desc=this.value"><small style="margin-top:4px">C.A.: <input class="mb-in" style="height:34px;width:110px;display:inline-block" value="${mobE(k.ca)}" oninput="mobKit[${i}].ca=this.value"></small></span><input class="q" inputmode="numeric" value="${mobE(k.qt)}" aria-label="Quantidade" oninput="mobKit[${i}].qt=this.value"></div>`
         : `<label class="mb-opt${k.on ? ' on' : ''}"><input type="checkbox" ${k.on ? 'checked' : ''} onchange="mobKit[${i}].on=this.checked;mobRender()"><span class="t"><b>${mobE(k.desc)}</b><small>C.A. ${mobE(k.ca)}</small></span><input class="q" inputmode="numeric" value="${mobE(k.qt)}" aria-label="Quantidade de ${mobE(k.desc)}" onclick="event.preventDefault()" oninput="mobKit[${i}].qt=this.value"></label>`).join('')}
       <button class="mb-btn s" style="flex:none;border-style:dashed" onclick="mobKit.push({desc:'',ca:'N/A',qt:'01',on:true,extra:true});mobRender()">+ Outro item</button>
-      <label class="mb-lb">Data da entrega<input class="mb-in" id="mobData" type="date" value="${mobDataSel || mobHoje()}" oninput="mobDataSel=this.value"></label>
+      <label class="mb-lb">${mobLeg ? 'Data da entrega física (passada)' : 'Data da entrega'}<input class="mb-in" id="mobData" type="date" value="${mobDataSel || mobHoje()}" ${mobLeg ? `max="${mobHoje()}"` : ''} oninput="mobDataSel=this.value"></label>
     </div>
     <div class="mb-bar">
       <button class="mb-btn p" onclick="mobSalvarEntrega(true)">Salvar e colher assinatura</button>
@@ -3625,14 +3752,55 @@ async function mobSalvarEntrega(ir){
   const sel = mobKit.filter(k => (k.extra || k.on) && (k.desc || '').trim());
   if(!sel.length){ toast('Marque pelo menos um item.'); return; }
   const base = mobItens.length;
-  const linhas = sel.map((k, i) => ({ colaborador_id: String(mobColab.id), data_entrega: data, descricao: k.desc.trim().toUpperCase(), ca: k.ca || 'N/A', qtde: k.qt || '01', tipo: mobTipo, ordem: base + i }));
+  const linhas = sel.map((k, i) => ({ colaborador_id: String(mobColab.id), data_entrega: data, descricao: k.desc.trim().toUpperCase(), ca: k.ca || 'N/A', qtde: k.qt || '01', tipo: mobTipo, ordem: base + i, ...(epiColsOk ? { legado: !!mobLeg } : {}) }));
   const { data: novos, error } = await supabaseClient.from('epi_entregas').insert(linhas).select('id');
   if(error){ toast('Não foi possível salvar: ' + error.message + ' (rode o supabase_movel.sql no Supabase)', 8000); return; }
   toast('Entrega registrada.');
   await mobCarregarItens(); epiCarregarResumo();
-  if(ir) mobIrAssinar([]); else { mobTela = 'ficha'; mobRender(); }
+  if(ir) mobIrColeta(); else { mobTela = 'ficha'; mobRender(); }
 }
 window.mobSalvarEntrega = mobSalvarEntrega;
+
+/* ---------- 3b. coleta: seleção dos itens, termo e trilha ---------- */
+let mobRelogio = null;
+function mobIrColeta(){
+  const pend = mobItens.filter(i => !i.assinado_em);
+  if(!pend.length){ toast('Não há itens pendentes.'); return; }
+  mobSel = new Set(pend.map(i => i.id)); mobTermo = false;
+  mobTela = 'coleta'; mobRender();
+}
+window.mobIrColeta = mobIrColeta;
+function mobRenderColeta(app){
+  const pend = mobItens.filter(i => !i.assinado_em);
+  const c = mobColab, cpfM = String(c.cpf || '').replace(/\D/g, ''), cpfT = cpfM.length === 11 ? '•••.' + cpfM.slice(3, 6) + '.•••-••' : '•••.•••.•••-••';
+  const temL = pend.some(i => mobSel.has(i.id) && i.legado);
+  const ua = navigator.userAgent || '', dev = (/Android/i.test(ua) ? 'Android' : /iPhone|iPad/i.test(ua) ? 'iPhone' : 'Computador') + ' · ' + (/Edg/i.test(ua) ? 'Edge' : /Chrome/i.test(ua) ? 'Chrome' : /Safari/i.test(ua) ? 'Safari' : 'Navegador');
+  app.innerHTML = `
+    <div class="mb-top"><button class="mb-back" onclick="clearInterval(mobRelogio);mobFila=[];mobFilaTotal=0;mobTela='ficha';mobRender()">${MOB_SVG.voltar}Voltar</button>
+      <div><h1>Coleta de assinatura</h1><div class="mb-sub">${mobE(c.nome)} · CPF ${cpfT}</div>${mobSubFila()}</div></div>
+    <div class="mb-body">
+      <div class="mb-aud"><div class="t"><span>● TRILHA DE AUDITORIA EM TEMPO REAL</span><span id="mobRel" style="font-family:monospace;color:#1e293b"></span></div>
+        <div class="g"><div>Aparelho<b>${mobE(dev)}</b></div><div>Localização (GPS)<b id="mobGeoT">${mobE(epiCtx.geo || 'será solicitada ao assinar')}</b></div><div>IP<b>${mobE(epiCtx.ip || 'registrado ao assinar')}</b></div><div>Colhido por<b>${mobE(epiNomeUsuario())}</b></div></div></div>
+      <div class="mb-row"><span class="mb-lb" style="display:block">Equipamentos para retirada (${pend.length})</span><button class="mb-chip" onclick="mobSelTodos()">Selecionar todos</button></div>
+      ${pend.map(i => `<div class="mb-sel${i.legado ? ' leg' : ''}${mobSel.has(i.id) ? ' on' : ''}" onclick="mobSelItem('${i.id}')"><div class="mb-cb${mobSel.has(i.id) ? ' on' : ''}">${mobSel.has(i.id) ? '✓' : ''}</div><span class="mb-info"><b>${mobE(i.descricao)}</b><small>${i.ca && i.ca !== 'N/A' ? 'C.A. ' + mobE(i.ca) + ' · ' : ''}${mobE(i.qtde || '')} un. · entrega física <b>${mobE(epiDataBR(i.data_entrega))}</b></small></span>${i.legado ? '<span class="mb-tag">LEGADO</span>' : ''}</div>`).join('')}
+      ${temL ? `<div class="mb-leg"><b>CONFIRMAÇÃO DE POSSE E USO (itens Legado):</b> confirmo que recebi fisicamente os itens sinalizados como <b>Legado</b> na data de entrega física indicada (anterior a este sistema) e permaneço em posse e uso regular deles, ratificando a assinatura eletrônica registrada <b>hoje</b>.</div>
+      <div class="mb-sep"><b>Separação legal de datas:</b> a entrega física preserva o histórico real; a assinatura digital registra só o momento de hoje (${new Date().toLocaleDateString('pt-BR')}), sem retroagir.</div>` : ''}
+      <div class="mb-termo"><b>Termo de responsabilidade (NR-06 item 6.6.1):</b> declaro ter recebido gratuitamente os EPIs selecionados, em perfeitas condições, bem como orientação sobre uso, guarda, conservação e higienização, comprometendo-me a utilizá-los apenas para a finalidade a que se destinam.</div>
+      <div class="mb-sel${mobTermo ? ' on' : ''}" onclick="mobTermo=!mobTermo;mobRender()"><div class="mb-cb${mobTermo ? ' on' : ''}">${mobTermo ? '✓' : ''}</div><span class="mb-info" style="font-size:13px;font-weight:700">Li, compreendi e concordo com o termo${temL ? ' e a confirmação de posse' : ''}.</span></div>
+    </div>
+    <div class="mb-bar"><button class="mb-btn p" onclick="mobSeguirColeta()">Continuar para assinatura</button></div>`;
+  const t = ()=>{ const e = document.getElementById('mobRel'); if(e) e.textContent = new Date().toLocaleString('pt-BR'); else clearInterval(mobRelogio); };
+  t(); clearInterval(mobRelogio); mobRelogio = setInterval(t, 1000);
+}
+function mobSelItem(id){ if(mobSel.has(id)) mobSel.delete(id); else mobSel.add(id); mobRender(); }
+function mobSelTodos(){ const p = mobItens.filter(i => !i.assinado_em); if(p.every(i => mobSel.has(i.id))) mobSel.clear(); else p.forEach(i => mobSel.add(i.id)); mobRender(); }
+function mobSeguirColeta(){
+  const ids = mobItens.filter(i => !i.assinado_em && mobSel.has(i.id)).map(i => i.id);
+  if(!ids.length){ toast('Selecione pelo menos um item.'); return; }
+  if(!mobTermo){ toast('Marque o aceite do termo de responsabilidade.'); return; }
+  clearInterval(mobRelogio); mobIrAssinar(ids);
+}
+window.mobSelItem = mobSelItem; window.mobSelTodos = mobSelTodos; window.mobSeguirColeta = mobSeguirColeta;
 
 /* ---------- 4. assinatura ---------- */
 function mobIrAssinar(ids){
@@ -3652,6 +3820,7 @@ function mobRenderAssinar(app){
       <p style="margin:0;font-size:13px;color:#334155;line-height:1.45">Declaro que recebi os equipamentos de proteção individual listados e estou ciente dos compromissos da ficha (NR-6).</p>
       <div class="mb-lb">Assine com o dedo no quadro abaixo<div class="mb-pad"><canvas id="mobPad" aria-label="Quadro de assinatura"></canvas></div></div>
       <label class="mb-lb">Confirme os 3 últimos dígitos do seu CPF<input class="mb-in" id="mobCpf3" inputmode="numeric" maxlength="3" autocomplete="off" style="width:130px;font-size:20px;letter-spacing:5px" placeholder="000"></label>
+      ${epiColsOk ? '<div class="mb-termo" style="font-size:11.5px"><b>O que fica gravado como prova:</b><br>• data da <b>entrega física</b> de cada item<br>• <b>data e hora reais</b> da assinatura (não retroativa)<br>• IP, localização, aparelho e quem colheu<br>• <b>selo SHA-256</b> que sela todos esses dados</div>' : ''}
     </div>
     <div class="mb-bar"><button class="mb-btn p" id="mobConfirmar" onclick="mobConfirmarAssinatura()">✔ Confirmar assinatura</button><button class="mb-btn g" onclick="mobLimparPad()">Limpar</button></div>`;
   mobIniciaPad();
@@ -3687,19 +3856,56 @@ async function mobConfirmarAssinatura(){
     if(e0) throw new Error(e0.message + ' (rode o supabase_movel.sql no Supabase)');
     if(!ok){ toast('Os 3 últimos dígitos do CPF não conferem.'); return; }
     const img = mobRecortar();
-    const { error } = await supabaseClient.from('epi_entregas').update({
-      assinatura_img: img, assinado_em: new Date().toISOString(),
-      assinado_por: `${epiNomeUsuario()} (${epiLoginUsuario()}) — no celular`, assinado_disp: (navigator.userAgent || '').slice(0, 250),
-      visto: epiIniciais()
-    }).in('id', mobIds).is('assinado_em', null);
-    if(error) throw error;
-    toast('Assinatura registrada.');
-    await mobCarregarItens(); await epiCarregarResumo();
-    mobProximo();
+    const iso = new Date().toISOString(), por = `${epiNomeUsuario()} (${epiLoginUsuario()}) — no celular`;
+    const base = { assinatura_img: img, assinado_em: iso, assinado_por: por, assinado_disp: (navigator.userAgent || '').slice(0, 250), visto: epiIniciais() };
+    await epiDetectar();
+    if(epiColsOk){
+      const ctx = await epiContexto(true), auth = 'Rubrica + CPF (3 últimos dígitos)';
+      for(const id of mobIds){
+        const it = mobItens.find(x => x.id === id); if(!it) continue;
+        const sl = await epiSelar({ colabId: mobColab.id, cpf: mobColab.cpf || ('***' + cpf3), desc: it.descricao, ca: it.ca, qt: it.qtde, tp: it.tipo, leg: it.legado, dFis: it.data_entrega, iso, ip: ctx.ip, geo: ctx.geo, por, auth });
+        const reg = { ...base, assinado_ip: ctx.ip, assinado_geo: ctx.geo, assinatura_auth: auth, assinatura_hash: sl.hash || null, assinatura_payload: sl.hash ? sl.payload : null };
+        const { error } = await supabaseClient.from('epi_entregas').update(reg).eq('id', id).is('assinado_em', null);
+        if(error) throw error;
+      }
+      toast('Assinatura registrada com selo SHA-256.');
+      const idsAss = [...mobIds];
+      await mobCarregarItens(); await epiCarregarResumo();
+      mobUltimos = mobItens.filter(x => idsAss.includes(x.id));
+      mobTela = 'comp'; mobRender();
+    } else {
+      const { error } = await supabaseClient.from('epi_entregas').update(base).in('id', mobIds).is('assinado_em', null);
+      if(error) throw error;
+      toast('Assinatura registrada.');
+      await mobCarregarItens(); await epiCarregarResumo();
+      mobProximo();
+    }
   }catch(e){ console.error(e); toast('Erro: ' + (e.message || e), 8000); }
   finally{ const b = document.getElementById('mobConfirmar'); if(b) b.disabled = false; }
 }
 window.mobConfirmarAssinatura = mobConfirmarAssinatura;
+
+/* ---------- 4b. comprovante com selo ---------- */
+function mobRenderComp(app){
+  const l = mobUltimos, a = l[0] || {};
+  const dhs = (iso)=> { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR') + ' (UTC-3)'; };
+  app.innerHTML = `
+    <div class="mb-top"><div><h1>${mobE(mobColab.nome)}</h1><div class="mb-sub">Ficha de EPI · comprovante da assinatura</div>${mobSubFila()}</div></div>
+    <div class="mb-body">
+      <div class="mb-info-box" style="text-align:center;background:#dcfce7;color:#166534;font-weight:800">✔ ${l.length} ${l.length === 1 ? 'item assinado' : 'itens assinados'}</div>
+      <div class="mb-termo" style="background:#fff;line-height:1.7"><b>Assinatura digital:</b> ${mobE(dhs(a.assinado_em))}<br><b>Autenticação:</b> ${mobE(a.assinatura_auth || 'Rubrica')}<br><b>IP:</b> ${mobE(a.assinado_ip || '-')}<br><b>Localização:</b> ${mobE(a.assinado_geo || '-')}<br><b>Colhido por:</b> ${mobE(epiNomeUsuario())}</div>
+      ${l.map(i => `<div class="mb-${i.legado ? 'leg' : 'sep'}"><b>${i.legado ? '✔ POSSE CONFIRMADA ELETRONICAMENTE' : '✔ ASSINADO ELETRONICAMENTE'}</b><br>${mobE(i.descricao)}${i.ca && i.ca !== 'N/A' ? ' (C.A. ' + mobE(i.ca) + ')' : ''}<br><b>Entrega física:</b> ${mobE(epiDataBR(i.data_entrega))} · <b>Assinatura digital:</b> ${mobE(dhs(i.assinado_em))}<div class="mb-hash">SHA-256: ${mobE(i.assinatura_hash || '')}</div></div>`).join('')}
+      <div class="mb-termo" style="display:flex;justify-content:space-between;align-items:center;background:#fff"><span>Integridade</span><span class="mb-pill g" id="mobInteg">ÍNTEGRO</span></div>
+    </div>
+    <div class="mb-bar"><button class="mb-btn s" onclick="mobValidarHash()">Recalcular e validar hash</button><button class="mb-btn p" onclick="mobProximo()">${mobFila.length ? 'Próximo documento →' : 'Concluir'}</button></div>`;
+}
+async function mobValidarHash(){
+  let ok = true;
+  for(const i of mobUltimos){ if(!i.assinatura_payload || await sha256hex(i.assinatura_payload) !== i.assinatura_hash) ok = false; }
+  const e = document.getElementById('mobInteg'); if(e){ e.className = 'mb-pill ' + (ok ? 'g' : 'w'); e.textContent = ok ? 'ÍNTEGRO' : 'NÃO CONFERE'; }
+  toast(ok ? 'Hash recalculado: integridade confirmada.' : 'ALERTA: o hash não confere.', 4000);
+}
+window.mobValidarHash = mobValidarHash;
 
 /* ---------- 5. assinar OS / Certificado NR06 no celular ---------- */
 async function mobIrAssinarDoc(tipo){
@@ -5730,7 +5936,202 @@ function linhasAtivosHtml(lista){
 /* =========================================================
    CONTROLE DE EPI — Ficha de Controle e Entrega de EPI (SST-EPI-002)
    ========================================================= */
-const EPI_DOC = { cod:'SST-EPI-002', rev:'01' };
+const EPI_DOC = { cod:'SST-EPI-002', rev:'02', data:'25/11/2026' };
+/* =========================================================
+   Selo SHA-256, Legado, catálogo de EPIs e funções (cadastrados uma vez)
+   ========================================================= */
+let epiColsOk = false, epiColsChecado = false;
+async function epiDetectar(){
+  if(epiColsChecado) return epiColsOk;
+  try{
+    const { error } = await supabaseClient.from('epi_entregas').select('legado,assinatura_hash').limit(1);
+    epiColsOk = !error; epiColsChecado = true;
+  }catch(e){ epiColsOk = false; }
+  return epiColsOk;
+}
+async function sha256hex(m){
+  try{
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(m));
+    return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
+  }catch(e){ return ''; }
+}
+const epiTemp = (p, ms)=> Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+let epiCtx = { ip:null, geo:null };
+async function epiContexto(comGeo){
+  if(!epiCtx.ip){
+    epiCtx.ip = 'indisponível';
+    try{ const r = await epiTemp(fetch('https://api.ipify.org?format=json').then(x => x.json()), 3000); if(r && r.ip) epiCtx.ip = r.ip; }catch(e){}
+  }
+  if(comGeo && !epiCtx.geo){
+    epiCtx.geo = 'não informado';
+    try{
+      if(navigator.geolocation){
+        const p = await epiTemp(new Promise(res => navigator.geolocation.getCurrentPosition(res, () => res(null), { timeout:3500, maximumAge:600000 })), 4200);
+        epiCtx.geo = p && p.coords ? p.coords.latitude.toFixed(4) + ', ' + p.coords.longitude.toFixed(4) : 'não autorizado';
+      }
+    }catch(e){}
+  }
+  return { ip: epiCtx.ip, geo: epiCtx.geo || 'não informado' };
+}
+async function epiSelar(o){
+  const payload = [`COLAB:${o.colabId}`, `CPF:${String(o.cpf || '').replace(/\D/g, '')}`, `ITEM:${o.desc}`, `CA:${o.ca}`, `QTD:${o.qt}`,
+    `TIPO:${o.tp}${o.leg ? '-LEGADO' : ''}`, `ENTREGA_FISICA:${o.dFis}`, `ASSINATURA_UTC:${o.iso}`, `IP:${o.ip}`, `GEO:${o.geo}`,
+    `COLHIDO_POR:${o.por}`, `AUTH:${o.auth}`].join('|');
+  return { payload, hash: await sha256hex(payload) };
+}
+const epiHashCurto = (h)=> h ? h.slice(0, 8) + '…' + h.slice(-8) : '';
+
+let epiCatDB = null, epiFuncDB = null;
+async function epiCarregarCadastros(){
+  try{
+    const a = await supabaseClient.from('epi_catalogo').select('*').order('descricao');
+    epiCatDB = a.error ? null : (a.data || []);
+    const b = await supabaseClient.from('epi_funcoes').select('*').order('nome');
+    epiFuncDB = b.error ? null : (b.data || []);
+  }catch(e){ epiCatDB = null; epiFuncDB = null; }
+}
+function epiCatalogoLista(){
+  return epiCatDB && epiCatDB.length ? epiCatDB.map(c => [c.descricao, c.ca || 'N/A', c.qtde_padrao || '01']) : EPI_CATALOGO;
+}
+function epiFuncaoDe(nome){
+  if(!epiFuncDB || !nome) return null;
+  const n = normalizarTexto(nome);
+  return epiFuncDB.find(f => normalizarTexto(f.nome) === n) || null;
+}
+function epiKitDe(nomeFuncao){
+  const f = epiFuncaoDe(nomeFuncao);
+  if(f && Array.isArray(f.kit) && f.kit.length && epiCatDB){
+    const l = f.kit.map(k => { const e = epiCatDB.find(x => x.id === k.epi); return e ? [e.descricao, e.ca || 'N/A', k.qt || e.qtde_padrao || '01'] : null; }).filter(Boolean);
+    if(l.length) return l;
+  }
+  return epiCatalogoLista();
+}
+
+/* ---------- tela Funções e EPIs ---------- */
+let feAba = 'F', feEditF = null, feEditE = null;
+async function feCarregar(){ await epiCarregarCadastros(); feRender(); }
+function feAbaSet(a){
+  feAba = a;
+  document.getElementById('feVF').style.display = a === 'F' ? '' : 'none';
+  document.getElementById('feVE').style.display = a === 'E' ? '' : 'none';
+  document.getElementById('feTabF').classList.toggle('on', a === 'F');
+  document.getElementById('feTabE').classList.toggle('on', a === 'E');
+}
+function feRender(){
+  const bf = document.getElementById('feBodyF'), be = document.getElementById('feBodyE'), kp = document.getElementById('feKpis');
+  if(epiCatDB === null || epiFuncDB === null){
+    const m = '<tr><td colspan="6" class="empty">Tabelas ainda não criadas. Rode o arquivo supabase_epi_legado_funcoes.sql no Supabase e atualize.</td></tr>';
+    bf.innerHTML = m; be.innerHTML = m; kp.innerHTML = ''; return;
+  }
+  const semCa = epiCatDB.filter(e => !e.ca || /^n\/?a$/i.test(e.ca)).length;
+  kp.innerHTML = `<div class="ac-kpi"><b>${epiFuncDB.length}</b><span>Funções cadastradas</span></div><div class="ac-kpi adm"><b>${epiCatDB.length}</b><span>EPIs no catálogo</span></div><div class="ac-kpi nun"><b>${semCa}</b><span>Itens sem C.A. (uniforme)</span></div>`;
+  const nColab = (nome)=> colaboradores.filter(c => normalizarTexto(c.funcao || '') === normalizarTexto(nome)).length;
+  bf.innerHTML = epiFuncDB.map(f => {
+    const chips = (f.kit || []).map(k => { const e = epiCatDB.find(x => x.id === k.epi); return e ? `<span class="fe-chip">${epiEsc(e.descricao.split(' ')[0])}</span>` : ''; }).join('') || '—';
+    return `<tr><td><b>${epiEsc(f.nome)}</b></td><td>${epiEsc(f.setor || '—')}</td><td><b>${epiEsc(f.cbo || '—')}</b></td><td>${chips}</td><td>${nColab(f.nome)}</td>
+      <td style="text-align:right;white-space:nowrap;"><button type="button" class="btn" style="font-size:11px;padding:4px 8px;" onclick="feAbrirF('${f.id}')">✏️ Editar</button> <button type="button" class="btn" style="font-size:11px;padding:4px 8px;color:#b91c1c;" onclick="feExcluirF('${f.id}')">Excluir</button></td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Nenhuma função cadastrada. Clique em “+ Nova função”.</td></tr>';
+  const hoje = new Date().toISOString().slice(0, 10), em60 = new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10);
+  be.innerHTML = epiCatDB.map(e => {
+    const aviso = e.validade_ca ? (e.validade_ca < hoje ? ' <span style="color:#b91c1c;font-size:11.5px;">⛔ C.A. vencido</span>' : e.validade_ca < em60 ? ' <span style="color:#b45309;font-size:11.5px;">⚠ vence em breve</span>' : '') : '';
+    const uso = epiFuncDB.filter(f => (f.kit || []).some(k => k.epi === e.id)).length;
+    return `<tr><td><b>${epiEsc(e.descricao)}</b></td><td><b>${epiEsc(e.ca || 'N/A')}</b></td><td>${epiEsc(e.qtde_padrao || '01')}</td><td>${e.validade_ca ? epiDataBR(e.validade_ca) + aviso : '—'}</td><td>${uso} função(ões)</td>
+      <td style="text-align:right;white-space:nowrap;"><button type="button" class="btn" style="font-size:11px;padding:4px 8px;" onclick="feAbrirE('${e.id}')">✏️ Editar</button> <button type="button" class="btn" style="font-size:11px;padding:4px 8px;color:#b91c1c;" onclick="feExcluirE('${e.id}')">Excluir</button></td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Catálogo vazio. Clique em “+ Novo EPI”.</td></tr>';
+}
+function feAbrirF(id){
+  feEditF = id || null;
+  const f = (epiFuncDB || []).find(x => x.id === id) || { nome:'', setor:'', cbo:'', kit:[] };
+  document.getElementById('feFT').textContent = id ? 'Editar função' : 'Nova função';
+  document.getElementById('feFN').value = f.nome; document.getElementById('feFS').value = f.setor || ''; document.getElementById('feFC').value = f.cbo || '';
+  document.getElementById('feFK').innerHTML = (epiCatDB || []).map(e => {
+    const k = (f.kit || []).find(x => x.epi === e.id);
+    return `<div class="fe-kit"><input type="checkbox" data-e="${e.id}" ${k ? 'checked' : ''}><span class="n">${epiEsc(e.descricao)} <small style="color:#64748b;">· C.A. ${epiEsc(e.ca || 'N/A')}</small></span><input type="number" min="1" data-q="${e.id}" value="${parseInt((k && k.qt) || e.qtde_padrao || '1', 10) || 1}"></div>`;
+  }).join('') || '<div class="epi-sub">Cadastre os EPIs primeiro na aba Catálogo.</div>';
+  document.getElementById('modalFeF').classList.add('open');
+}
+async function feSalvarF(){
+  const nome = document.getElementById('feFN').value.trim();
+  if(!nome){ toast('Informe o nome da função.'); return; }
+  const kit = [...document.querySelectorAll('#feFK input[type=checkbox]:checked')].map(c => ({ epi: c.dataset.e, qt: String(document.querySelector(`#feFK input[data-q="${c.dataset.e}"]`).value || 1).padStart(2, '0') }));
+  const reg = { nome, setor: document.getElementById('feFS').value.trim() || null, cbo: document.getElementById('feFC').value.trim() || null, kit };
+  const { error } = feEditF ? await supabaseClient.from('epi_funcoes').update(reg).eq('id', feEditF) : await supabaseClient.from('epi_funcoes').insert([reg]);
+  if(error){ toast('Não foi possível salvar: ' + (/duplicate|unique/i.test(error.message) ? 'já existe uma função com esse nome.' : error.message), 6000); return; }
+  auditar(feEditF ? 'alterou' : 'criou', feEditF, `Função "${nome}" (Setor ${reg.setor || '-'}, CBO ${reg.cbo || '-'}) — ${kit.length} EPI(s) no kit`);
+  document.getElementById('modalFeF').classList.remove('open'); toast('Função salva.'); await feCarregar();
+}
+async function feExcluirF(id){
+  const f = epiFuncDB.find(x => x.id === id); if(!f || !confirm(`Excluir a função "${f.nome}"? Os colaboradores e fichas já feitos não mudam.`)) return;
+  const { error } = await supabaseClient.from('epi_funcoes').delete().eq('id', id);
+  if(error){ toast('Erro: ' + error.message, 6000); return; }
+  auditar('excluiu', id, `Função "${f.nome}" excluída`); await feCarregar();
+}
+function feAbrirE(id){
+  feEditE = id || null;
+  const e = (epiCatDB || []).find(x => x.id === id) || { descricao:'', ca:'', qtde_padrao:'01', validade_ca:'' };
+  document.getElementById('feET').textContent = id ? 'Editar EPI' : 'Novo EPI';
+  document.getElementById('feEN').value = e.descricao; document.getElementById('feEC').value = e.ca || ''; document.getElementById('feEQ').value = e.qtde_padrao || '01'; document.getElementById('feEV').value = e.validade_ca || '';
+  document.getElementById('modalFeE').classList.add('open');
+}
+async function feSalvarE(){
+  const descricao = document.getElementById('feEN').value.trim().toUpperCase();
+  if(!descricao){ toast('Informe a descrição do EPI.'); return; }
+  const reg = { descricao, ca: document.getElementById('feEC').value.trim() || 'N/A', qtde_padrao: document.getElementById('feEQ').value.trim() || '01', validade_ca: document.getElementById('feEV').value || null };
+  const { error } = feEditE ? await supabaseClient.from('epi_catalogo').update(reg).eq('id', feEditE) : await supabaseClient.from('epi_catalogo').insert([reg]);
+  if(error){ toast('Não foi possível salvar: ' + (/duplicate|unique/i.test(error.message) ? 'esse EPI já existe no catálogo.' : error.message), 6000); return; }
+  auditar(feEditE ? 'alterou' : 'criou', feEditE, `EPI "${descricao}" (C.A. ${reg.ca})`);
+  document.getElementById('modalFeE').classList.remove('open'); toast('EPI salvo.'); await feCarregar();
+}
+async function feExcluirE(id){
+  const e = epiCatDB.find(x => x.id === id); if(!e || !confirm(`Excluir "${e.descricao}" do catálogo? Fichas já feitas não mudam.`)) return;
+  const { error } = await supabaseClient.from('epi_catalogo').delete().eq('id', id);
+  if(error){ toast('Erro: ' + error.message, 6000); return; }
+  for(const f of epiFuncDB.filter(f => (f.kit || []).some(k => k.epi === id))){
+    await supabaseClient.from('epi_funcoes').update({ kit: f.kit.filter(k => k.epi !== id) }).eq('id', f.id);
+  }
+  auditar('excluiu', id, `EPI "${e.descricao}" excluído do catálogo`); await feCarregar();
+}
+async function feImportar(tipo, arq){
+  if(!arq) return;
+  try{
+    const wb = XLSX.read(await arq.arrayBuffer(), { type:'array' });
+    const l = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:'' });
+    if(l.length < 2){ toast('A planilha está vazia.'); return; }
+    const cab = l[0].map(h => normalizarTexto(String(h)));
+    const col = (re)=> cab.findIndex(h => re.test(h));
+    let regs = [];
+    if(tipo === 'E'){
+      const cd = col(/descr|epi|item|equip/), cc = col(/^ca$|c\.?a\b|certif/), cq = col(/qt/);
+      if(cd < 0){ toast('Não achei a coluna de descrição do EPI.'); return; }
+      regs = l.slice(1).filter(r => String(r[cd]).trim()).map(r => ({ descricao: String(r[cd]).trim().toUpperCase(), ca: cc >= 0 ? (String(r[cc]).trim() || 'N/A') : 'N/A', qtde_padrao: cq >= 0 ? (String(r[cq]).trim().padStart(2, '0') || '01') : '01' }));
+      const { error } = await supabaseClient.from('epi_catalogo').upsert(regs, { onConflict:'descricao' });
+      if(error) throw error;
+    } else {
+      const cn = col(/fun/), cs = col(/setor/), cb = col(/cbo/);
+      if(cn < 0){ toast('Não achei a coluna "Função".'); return; }
+      regs = l.slice(1).filter(r => String(r[cn]).trim()).map(r => ({ nome: String(r[cn]).trim(), setor: cs >= 0 ? (String(r[cs]).trim() || null) : null, cbo: cb >= 0 ? (String(r[cb]).trim() || null) : null }));
+      const { error } = await supabaseClient.from('epi_funcoes').upsert(regs, { onConflict:'nome' });
+      if(error) throw error;
+    }
+    auditar('criou', null, `Importou ${regs.length} ${tipo === 'E' ? 'EPI(s) para o catálogo' : 'função(ões)'} da planilha`);
+    toast(`${regs.length} importado(s).`); await feCarregar();
+  }catch(e){ toast('Erro ao importar: ' + (e.message || e), 7000); }
+}
+document.getElementById('feTabF').addEventListener('click', () => feAbaSet('F'));
+document.getElementById('feTabE').addEventListener('click', () => feAbaSet('E'));
+document.getElementById('feNovaF').addEventListener('click', () => feAbrirF(null));
+document.getElementById('feNovoE').addEventListener('click', () => feAbrirE(null));
+document.getElementById('feFSalvar').addEventListener('click', feSalvarF);
+document.getElementById('feESalvar').addEventListener('click', feSalvarE);
+document.getElementById('feFCancelar').addEventListener('click', () => document.getElementById('modalFeF').classList.remove('open'));
+document.getElementById('feECancelar').addEventListener('click', () => document.getElementById('modalFeE').classList.remove('open'));
+document.getElementById('feImpF').addEventListener('click', () => document.getElementById('feArqF').click());
+document.getElementById('feImpE').addEventListener('click', () => document.getElementById('feArqE').click());
+document.getElementById('feArqF').addEventListener('change', (e) => { feImportar('F', e.target.files[0]); e.target.value = ''; });
+document.getElementById('feArqE').addEventListener('change', (e) => { feImportar('E', e.target.files[0]); e.target.value = ''; });
+window.feAbrirF = feAbrirF; window.feExcluirF = feExcluirF; window.feAbrirE = feAbrirE; window.feExcluirE = feExcluirE;
+
+
 const EPI_LOGO = 'data:image/jpeg;base64,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';
 const EPI_CATALOGO = [
   ['CAMISA','N/A','03'], ['CALÇA','N/A','03'], ['BLUSA DE FRIO','N/A','03'], ['MEIAS','N/A','03'],
@@ -5783,6 +6184,7 @@ async function epiBuscarTudo(tabela, colunas){
 /* ---------- lista ---------- */
 /* carrega só o resumo das fichas (para a situação em Colaboradores Ativos e no Painel) */
 async function epiCarregarResumo(){
+  epiDetectar(); epiCarregarCadastros();
   try{
     const linhas = await epiBuscarTudo('epi_entregas', 'id,colaborador_id,data_entrega,assinado_em');
     epiResumo = {};
@@ -5826,7 +6228,8 @@ async function loadEpi(){
 function epiPopularListas(){
   const ativos = colaboradores.filter(c => c.status !== 'INATIVO');
   document.getElementById('epiDlColab').innerHTML = ativos.map(c => `<option value="${epiEsc(c.nome + ' — ' + (c.cpf || ''))}">`).join('');
-  document.getElementById('epiDlCat').innerHTML = EPI_CATALOGO.map(c => `<option value="${epiEsc(c[0])}">`).join('');
+  document.getElementById('epiDlFunc').innerHTML = (epiFuncDB || []).map(f => `<option value="${epiEsc(f.nome)}">`).join('');
+  document.getElementById('epiDlCat').innerHTML = epiCatalogoLista().map(c => `<option value="${epiEsc(c[0])}">`).join('');
   const sel = document.getElementById('epiLocal');
   const atual = sel.value;
   const locais = [...new Set(ativos.map(c => (c.local || '').trim()).filter(Boolean))].sort();
@@ -5971,6 +6374,8 @@ async function epiAbrirFicha(id){
     rows: [], removidos: [], resp: null
   };
   if(c){
+    await epiDetectar();
+    if(c.funcao && (!epiFicha.setor || !epiFicha.cbo)){ const fn = epiFuncaoDe(c.funcao); if(fn){ if(!epiFicha.setor) epiFicha.setor = fn.setor || ''; if(!epiFicha.cbo) epiFicha.cbo = fn.cbo || ''; } }
     const ok = await epiCarregarFicha();
     if(ok) auditar('ver_ficha_epi', c.id, `${c.nome} — abriu a ficha de EPI`);
     if(!ok){ epiFicha = null; return; }
@@ -6008,8 +6413,8 @@ async function epiCarregarFicha(){
     .eq('colaborador_id', f.colabId).order('ordem', { ascending:true }).order('data_entrega', { ascending:true });
   if(error){ toast('Não foi possível abrir a ficha. Rode o arquivo supabase_epi.sql no Supabase. (' + error.message + ')', 8000); return false; }
   f.rows = (data || []).map(r => ({
-    id: r.id, d: r.data_entrega || '', desc: r.descricao || '', ca: r.ca || '', qt: r.qtde || '', tp: r.tipo || 'E',
-    sig: r.assinado_em ? { img: r.assinatura_img || null, at: r.assinado_em, por: r.assinado_por || '' } : null,
+    id: r.id, d: r.data_entrega || '', desc: r.descricao || '', ca: r.ca || '', qt: r.qtde || '', tp: r.tipo || 'E', leg: !!r.legado,
+    sig: r.assinado_em ? { img: r.assinatura_img || null, at: r.assinado_em, por: r.assinado_por || '', ip: r.assinado_ip || '', geo: r.assinado_geo || '', hash: r.assinatura_hash || '', payload: r.assinatura_payload || '', auth: r.assinatura_auth || '' } : null,
     visto: r.visto || ''
   }));
   const { data: fi } = await supabaseClient.from('epi_fichas').select('*').eq('colaborador_id', f.colabId).maybeSingle();
@@ -6017,20 +6422,46 @@ async function epiCarregarFicha(){
   return true;
 }
 
+function epiDataHoraSegBR(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR') + ' (UTC-3)';
+}
+function epiCpfMasc(c){ const d = String(c || '').replace(/\D/g, ''); return d.length === 11 ? `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**` : '***'; }
 function epiLinhaHtml(r, i){
   const bloq = !!r.sig;
   const ro = bloq ? ' readonly' : '';
+  const selo = !!(r.sig && r.sig.hash);
+  const tpv = r.leg ? 'L' : r.tp;
+  const optL = (epiColsOk || r.leg) ? `<option${tpv === 'L' ? ' selected' : ''}>L</option>` : '';
+  const vistoCell = r.visto ? epiEsc(r.visto) : `<button class="pbtn epi-np" type="button" onclick="epiVisar(${i})">Visar</button>`;
+  const cancelar = `<button class="pbtn lk epi-np" type="button" onclick="epiCancelarAssinatura(${i})">cancelar assinatura</button>`;
+  if(selo){
+    const f = epiFicha, s = r.sig;
+    const geo = s.geo && /^-?\d/.test(s.geo) ? ` | <b>Local:</b> ${epiEsc(s.geo)}` : '';
+    return `<tr>
+    <td class="dt"><div class="dtx">${epiDataBR(r.d)}</div></td>
+    <td><div class="txc">${epiEsc(r.desc)}</div></td>
+    <td><div class="txc" style="text-align:center;font-weight:700;">${epiEsc(r.ca)}</div></td>
+    <td><div class="txc" style="text-align:center;">${epiEsc(r.qt)}</div></td>
+    <td>${r.leg ? '<div class="legtag">L<small>Legado</small></div>' : `<div class="dtx">${epiEsc(r.tp)}</div>`}</td>
+    <td class="c"><div class="selo${r.leg ? ' leg' : ''}"><div class="tp"><span class="bd">✓ ${r.leg ? 'POSSE CONFIRMADA ELETRONICAMENTE' : 'ASSINADO ELETRONICAMENTE'}</span>${s.img ? `<img src="${s.img}" alt="Assinatura do trabalhador">` : ''}</div>
+      <b>${epiEsc(f.nome)}</b> (CPF: ${epiCpfMasc(f.cpf)})<br><b>Data da entrega física:</b> ${epiDataBR(r.d)}<br><b>Data da assinatura digital:</b> ${epiDataHoraSegBR(s.at)}<br><b>Autenticação:</b> ${epiEsc(s.auth || 'Rubrica')} | <b>IP:</b> ${epiEsc(s.ip || '-')}${geo}
+      <div class="hs">Hash SHA-256: ${epiEsc(s.hash)}</div><span class="cn">${cancelar}</span></div></td>
+    <td class="c">${vistoCell}</td>
+    <td class="xx epi-np"></td>
+  </tr>`;
+  }
   const sigCell = r.sig
     ? ((r.sig.img ? `<img src="${r.sig.img}" alt="Assinatura do trabalhador">` : '<span class="okm">✍️ Assinado</span>')
-       + `<div class="at">${epiDataHoraBR(r.sig.at)}</div><button class="pbtn lk epi-np" type="button" onclick="epiCancelarAssinatura(${i})">cancelar assinatura</button>`)
+       + `<div class="at">${epiDataHoraBR(r.sig.at)}</div>${cancelar}`)
     : `<button class="pbtn epi-np" type="button" onclick="epiAssinarLinha(${i})">✍️ Assinar</button>`;
-  const vistoCell = r.visto ? epiEsc(r.visto) : `<button class="pbtn epi-np" type="button" onclick="epiVisar(${i})">Visar</button>`;
   return `<tr>
     <td class="dt"><input type="date" data-r="${i}" data-c="d" value="${epiEsc(r.d)}" aria-label="Data"${ro} oninput="epiLinha(${i},'d',this)"></td>
     <td><input list="epiDlCat" data-r="${i}" data-c="desc" value="${epiEsc(r.desc)}" aria-label="Descrição do EPI"${ro} oninput="epiLinha(${i},'desc',this)"></td>
     <td><input data-r="${i}" data-c="ca" value="${epiEsc(r.ca)}" aria-label="Número do C.A."${ro} oninput="epiLinha(${i},'ca',this)"></td>
     <td><input data-r="${i}" data-c="qt" value="${epiEsc(r.qt)}" inputmode="numeric" aria-label="Quantidade"${ro} oninput="epiLinha(${i},'qt',this)"></td>
-    <td><select aria-label="Tipo"${bloq ? ' disabled' : ''} onchange="epiLinha(${i},'tp',this)"><option${r.tp === 'E' ? ' selected' : ''}>E</option><option${r.tp === 'S' ? ' selected' : ''}>S</option><option${r.tp === 'D' ? ' selected' : ''}>D</option></select></td>
+    <td><select aria-label="Tipo"${bloq ? ' disabled' : ''} onchange="epiLinha(${i},'tp',this)"><option${tpv === 'E' ? ' selected' : ''}>E</option><option${tpv === 'S' ? ' selected' : ''}>S</option><option${tpv === 'D' ? ' selected' : ''}>D</option>${optL}</select></td>
     <td class="c">${sigCell}</td>
     <td class="c">${vistoCell}</td>
     <td class="xx epi-np">${bloq ? '' : `<button class="pbtn x" type="button" onclick="epiRemoverLinha(${i})" aria-label="Remover linha">×</button>`}</td>
@@ -6054,6 +6485,8 @@ function epiRenderFicha(){
       <button class="btn" onclick="epiVoltar()">← Voltar à lista</button><span class="sp"></span>
       ${f.anexo ? '<button class="btn" onclick="epiVerAnexo()">📎 Ver anexo</button>' : ''}
       ${f.rows.some(r => r.sig && !r.visto) ? '<button class="btn" onclick="epiVisarPendentes()">Visar pendentes</button>' : ''}
+      ${epiColsOk && f.rows.some(r => !r.sig && !r.leg && r.d && r.d < epiHoje()) ? '<button class="btn" onclick="epiMarcarLegado()" title="Marca como Legado os itens pendentes com data anterior a hoje">Marcar pendentes antigos como Legado</button>' : ''}
+      ${f.rows.some(r => r.sig && r.sig.hash) ? '<button class="btn" onclick="epiValidarSelos()">🛡 Validar selos SHA-256</button>' : ''}
       <button class="btn" onclick="epiKit()">Aplicar kit do cargo</button>
       <button class="btn" onclick="epiAddLinha()">+ Adicionar linha</button>
       <button class="btn" onclick="epiImprimir()">🖨 Imprimir ficha</button>
@@ -6066,11 +6499,11 @@ function epiRenderFicha(){
     <div class="epi-paper-wrap"><div id="epiPaper">
       <table class="hd"><tr><td class="logo"><img src="${EPI_LOGO}" alt="Grupo Global"></td>
         <td class="tt"><b>FICHA DE CONTROLE E ENTREGA DE EPI</b><i>Sistema de Gestão de Segurança e Saúde no Trabalho — Norma Regulamentadora NR-6</i></td>
-        <td class="cd">CÓD: ${EPI_DOC.cod}<br>REVISÃO: ${EPI_DOC.rev}</td></tr></table>
+        <td class="cd">CÓD: ${EPI_DOC.cod}<br>REVISÃO: ${EPI_DOC.rev}<br>DATA: ${EPI_DOC.data}</td></tr></table>
       <h3>1. Identificação do trabalhador</h3>
       <table class="idt">
         <tr><td class="lb">Nome Completo:</td><td><input id="epiNome" list="epiDlColab" value="${epiEsc(f.nome)}" placeholder="Digite o nome ou CPF do colaborador" aria-label="Nome completo"${travaColab} onchange="epiEscolherColab(this)"></td><td class="lb s">CPF:</td><td><input value="${epiEsc(f.cpf)}" readonly aria-label="CPF"></td></tr>
-        <tr><td class="lb">Função / Cargo:</td><td><input value="${epiEsc(f.funcao)}" aria-label="Função ou cargo" oninput="epiCampo('funcao',this)"></td><td class="lb s">Setor:</td><td><input value="${epiEsc(f.setor)}" aria-label="Setor" oninput="epiCampo('setor',this)"></td></tr>
+        <tr><td class="lb">Função / Cargo:</td><td><input list="epiDlFunc" value="${epiEsc(f.funcao)}" aria-label="Função ou cargo" oninput="epiCampo('funcao',this)" onchange="epiEscolherFuncao(this)"></td><td class="lb s">Setor:</td><td><input value="${epiEsc(f.setor)}" aria-label="Setor" oninput="epiCampo('setor',this)"></td></tr>
         <tr><td class="lb">Data de Admissão:</td><td><input value="${epiEsc(f.adm)}" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" aria-label="Data de admissão" oninput="epiAdmMask(this)"></td><td class="lb s">CBO:</td><td><input value="${epiEsc(f.cbo)}" aria-label="CBO" oninput="epiCampo('cbo',this)"></td></tr>
       </table>
       <h3>2. Declaração de responsabilidade e compromisso</h3>
@@ -6080,11 +6513,11 @@ function epiRenderFicha(){
         <p>c) Comunicar imediatamente ao SESMT ou à chefia direta qualquer dano, extravio ou alteração que os torne impróprios para o uso;</p>
         <p>d) Estar ciente de que a não utilização intencional constitui ato de insubordinação, sujeito às sanções previstas no Art. 482 da CLT, e que danos decorrentes de uso negligente ou extravio intencional poderão gerar coparticipação financeira, conforme Art. 462 da CLT.</p></div>
       <h3>3. Registo individual de entrega, substituição e devolução</h3>
-      <table class="et"><colgroup><col style="width:16%"><col style="width:26%"><col style="width:11%"><col style="width:8%"><col style="width:8%"><col style="width:20%"><col style="width:11%"><col class="xx" style="width:26px"></colgroup>
+      <table class="et"><colgroup><col style="width:14%"><col style="width:18%"><col style="width:8%"><col style="width:6%"><col style="width:7%"><col style="width:37%"><col style="width:10%"><col class="xx" style="width:26px"></colgroup>
         <thead><tr><th>Data</th><th>Descrição do EPI</th><th>Nº C.A.</th><th>Qtde</th><th>Tipo*</th><th>Assinatura do trabalhador</th><th>Visto</th><th class="xx"></th></tr></thead>
         <tbody>${tabela}</tbody></table>
       ${aviso}
-      <div class="legend">*Legenda Tipo: [E] Entrega inicial &nbsp;|&nbsp; [S] Substituição por desgaste &nbsp;|&nbsp; [D] Devolução / Desligamento</div>
+      <div class="legend">*Legenda Tipo: [E] Entrega inicial &nbsp;|&nbsp; [S] Substituição por desgaste &nbsp;|&nbsp; [D] Devolução / Desligamento &nbsp;|&nbsp; [L] Legado (item já em posse do colaborador antes do sistema; a assinatura sempre registra a data real de hoje)</div>
       <div class="sigs">
         <div><div class="sigline">${cs ? `<img src="${cs.sig.img}" alt="Assinatura do colaborador">` : ''}</div><div class="lab">Assinatura do Colaborador</div>
           <div class="ctl epi-np"><button class="pbtn" type="button" onclick="epiAssinarTodas()"${pend ? '' : ' disabled'}>✍️ Assinar neste aparelho (${pend})</button></div></div>
@@ -6092,8 +6525,16 @@ function epiRenderFicha(){
           ${f.resp ? `<div class="nm">${epiEsc(f.resp.nome)} — ${epiDataHoraBR(f.resp.at)}</div>` : ''}
           <div class="ctl epi-np"><button class="pbtn" type="button" onclick="epiAssinarResp()">${f.resp ? '✍️ Assinar novamente' : '✍️ Assinar como responsável'}</button></div></div>
       </div>
+      <div class="manif"><b style="color:#222;">Manifesto de integridade:</b> documento eletrônico em conformidade com a NR-01 (item 1.6) e a Lei 14.063/2020. Cada assinatura eletrônica é selada por um código <b>SHA-256</b> que reúne CPF, item, data da entrega física, data/hora real da assinatura, IP e aparelho. Fichas e itens assinados antes de ${EPI_DOC.data} não possuem selo.</div>
     </div></div>`;
 }
+
+function epiEscolherFuncao(el){
+  const fn = epiFuncaoDe(el.value);
+  epiFicha.funcao = el.value;
+  if(fn){ epiFicha.setor = fn.setor || epiFicha.setor; epiFicha.cbo = fn.cbo || epiFicha.cbo; epiRenderFicha(); toast('Setor e CBO preenchidos pela função.'); }
+}
+window.epiEscolherFuncao = epiEscolherFuncao;
 
 function epiCampo(chave, el){ epiFicha[chave] = el.value; }
 function epiAdmMask(el){
@@ -6116,9 +6557,10 @@ window.epiCampo = epiCampo;
 
 function epiLinha(i, c, el){
   const r = epiFicha.rows[i];
+  if(c === 'tp'){ if(el.value === 'L'){ r.tp = 'E'; r.leg = true; } else { r.tp = el.value; r.leg = false; } return; }
   r[c] = el.value;
   if(c === 'desc'){
-    const item = EPI_CATALOGO.find(x => x[0] === el.value);
+    const item = epiCatalogoLista().find(x => x[0] === el.value);
     if(item){
       r.ca = item[1]; r.qt = item[2];
       const caEl = document.querySelector(`#epiPaper input[data-r="${i}"][data-c="ca"]`);
@@ -6149,10 +6591,26 @@ window.epiAddLinha = epiAddLinha;
 function epiKit(){
   const f = epiFicha;
   if(!f.colabId){ toast('Escolha o colaborador primeiro.'); return; }
-  EPI_CATALOGO.forEach(c => f.rows.push({ d: epiHoje(), desc:c[0], ca:c[1], qt:c[2], tp:'E', sig:null, visto:'' }));
+  epiKitDe(f.funcao).forEach(c => f.rows.push({ d: epiHoje(), desc:c[0], ca:c[1], qt:c[2], tp:'E', leg:false, sig:null, visto:'' }));
   epiRenderFicha();
 }
 window.epiKit = epiKit;
+function epiMarcarLegado(){
+  const f = epiFicha, hoje = epiHoje();
+  const alvo = f.rows.filter(r => !r.sig && !r.leg && r.d && r.d < hoje);
+  if(!alvo.length){ toast('Não há itens pendentes com data anterior a hoje.'); return; }
+  if(!confirm(`Marcar ${alvo.length} ${alvo.length === 1 ? 'item pendente' : 'itens pendentes'} como LEGADO?\n\nIsso indica que o colaborador já estava com o item desde a data de entrega física informada. A assinatura continuará registrando a data real de hoje. Depois, clique em Salvar ficha.`)) return;
+  alvo.forEach(r => { r.leg = true; });
+  epiRenderFicha(); toast(`${alvo.length} item(ns) marcado(s) como Legado. Clique em Salvar ficha.`, 5000);
+}
+window.epiMarcarLegado = epiMarcarLegado;
+async function epiValidarSelos(){
+  const com = epiFicha.rows.filter(r => r.sig && r.sig.hash);
+  let ok = 0, ruim = 0;
+  for(const r of com){ if(r.sig.payload && await sha256hex(r.sig.payload) === r.sig.hash) ok++; else ruim++; }
+  toast(ruim ? `⚠ ${ruim} selo(s) NÃO conferem. ${ok} íntegro(s).` : `✓ ${ok} selo(s) SHA-256 recalculado(s): integridade confirmada.`, 6000);
+}
+window.epiValidarSelos = epiValidarSelos;
 
 function epiRemoverLinha(i){
   const r = epiFicha.rows[i];
@@ -6212,7 +6670,9 @@ async function epiSalvarFicha(silencioso){
       colaborador_id: f.colabId, data_entrega: r.d || null, descricao: r.desc, ca: r.ca, qtde: r.qt, tipo: r.tp,
       assinatura_img: r.sig ? r.sig.img : null, assinado_em: r.sig ? r.sig.at : null,
       assinado_por: r.sig ? (r.sig.por || null) : null, assinado_disp: r.sig ? disp : null,
-      visto: r.visto || null, ordem: i
+      visto: r.visto || null, ordem: i,
+      ...(epiColsOk ? { legado: !!r.leg, assinado_ip: r.sig ? (r.sig.ip || null) : null, assinado_geo: r.sig ? (r.sig.geo || null) : null,
+        assinatura_hash: r.sig ? (r.sig.hash || null) : null, assinatura_payload: r.sig ? (r.sig.payload || null) : null, assinatura_auth: r.sig ? (r.sig.auth || null) : null } : {})
     });
     const existentes = [], novas = [];
     f.rows.forEach((r, i)=>{
@@ -6407,7 +6867,18 @@ document.getElementById('epiAssinOk').addEventListener('click', async ()=>{
   const agora = new Date().toISOString();
   const por = `${epiNomeUsuario()} (${epiLoginUsuario()})`;
   if(epiAssin.quem === 'colab'){
-    epiAssin.alvo.forEach(i => { f.rows[i].sig = { img, at: agora, por }; if(!f.rows[i].visto) f.rows[i].visto = epiIniciais(); });
+    await epiDetectar();
+    const ctx = epiColsOk ? await epiContexto(false) : null;
+    const comCpf = (f.cpf || '').replace(/\D/g, '').length >= 3;
+    for(const i of epiAssin.alvo){
+      const r = f.rows[i], sig = { img, at: agora, por };
+      if(ctx){
+        const auth = comCpf ? 'Rubrica + CPF (3 últimos dígitos)' : 'Rubrica';
+        const sl = await epiSelar({ colabId:f.colabId, cpf:f.cpf, desc:r.desc, ca:r.ca, qt:r.qt, tp:r.tp, leg:r.leg, dFis:r.d, iso:agora, ip:ctx.ip, geo:ctx.geo, por, auth });
+        if(sl.hash) Object.assign(sig, { ip:ctx.ip, geo:ctx.geo, hash:sl.hash, payload:sl.payload, auth });
+      }
+      r.sig = sig; if(!r.visto) r.visto = epiIniciais();
+    }
   } else {
     f.resp = { img, at: agora, nome: epiNomeUsuario() };
   }
