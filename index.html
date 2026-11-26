@@ -7141,6 +7141,7 @@ function waRender(){
   const chips = [
     ['todos', 'Todos', base.length],
     ...WA_DOCS.map(d => [d.k, d.curto, base.filter(x => x.pend.includes(d.k)).length]),
+    ['enviado', 'Enviado e não assinou', base.filter(x => waEnvios[String(x.c.id)]).length],
     ['nunca', 'Nunca enviados', base.filter(x => !waEnvios[String(x.c.id)]).length],
     ['reenviar', 'Reenviar (+3 dias)', base.filter(reenv).length],
     ['sem', 'Sem WhatsApp', base.filter(x => !waNumeros[String(x.c.id)]).length]
@@ -7148,6 +7149,7 @@ function waRender(){
   document.getElementById('waChips').innerHTML = chips.map(([k, t, n]) => `<button type="button" class="epi-chip${waFiltro === k ? ' on' : ''}" data-wa="${k}">${t}<b>${n}</b></button>`).join('');
   let lista = base.filter(x => {
     if(waFiltro === 'todos') return true;
+    if(waFiltro === 'enviado') return !!waEnvios[String(x.c.id)];
     if(waFiltro === 'nunca') return !waEnvios[String(x.c.id)];
     if(waFiltro === 'reenviar') return reenv(x);
     if(waFiltro === 'sem') return !waNumeros[String(x.c.id)];
