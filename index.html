@@ -3782,6 +3782,8 @@ function mobRenderColeta(app){
       <div class="mb-aud"><div class="t"><span>● TRILHA DE AUDITORIA EM TEMPO REAL</span><span id="mobRel" style="font-family:monospace;color:#1e293b"></span></div>
         <div class="g"><div>Aparelho<b>${mobE(dev)}</b></div><div>Localização (GPS)<b id="mobGeoT">${mobE(epiCtx.geo || 'será solicitada ao assinar')}</b></div><div>IP<b>${mobE(epiCtx.ip || 'registrado ao assinar')}</b></div><div>Colhido por<b>${mobE(epiNomeUsuario())}</b></div></div></div>
       <div class="mb-row"><span class="mb-lb" style="display:block">Equipamentos para retirada (${pend.length})</span><button class="mb-chip" onclick="mobSelTodos()">Selecionar todos</button></div>
+      ${epiColsOk ? `<div class="mb-leg" style="background:#fff7ed"><b>Migração de Legado</b> — o colaborador já tinha estes itens antes do sistema? Marque os itens selecionados como Legado: a entrega física continua na data original e a assinatura registra só o dia de hoje.
+        <div style="display:flex;gap:8px;margin-top:8px"><button class="mb-chip" style="flex:1" onclick="mobMarcarLegado(true)">Marcar selecionados como Legado</button><button class="mb-chip" style="flex:1" onclick="mobMarcarLegado(false)">Tirar Legado</button></div></div>` : ''}
       ${pend.map(i => `<div class="mb-sel${i.legado ? ' leg' : ''}${mobSel.has(i.id) ? ' on' : ''}" onclick="mobSelItem('${i.id}')"><div class="mb-cb${mobSel.has(i.id) ? ' on' : ''}">${mobSel.has(i.id) ? '✓' : ''}</div><span class="mb-info"><b>${mobE(i.descricao)}</b><small>${i.ca && i.ca !== 'N/A' ? 'C.A. ' + mobE(i.ca) + ' · ' : ''}${mobE(i.qtde || '')} un. · entrega física <b>${mobE(epiDataBR(i.data_entrega))}</b></small></span>${i.legado ? '<span class="mb-tag">LEGADO</span>' : ''}</div>`).join('')}
       ${temL ? `<div class="mb-leg"><b>CONFIRMAÇÃO DE POSSE E USO (itens Legado):</b> confirmo que recebi fisicamente os itens sinalizados como <b>Legado</b> na data de entrega física indicada (anterior a este sistema) e permaneço em posse e uso regular deles, ratificando a assinatura eletrônica registrada <b>hoje</b>.</div>
       <div class="mb-sep"><b>Separação legal de datas:</b> a entrega física preserva o histórico real; a assinatura digital registra só o momento de hoje (${new Date().toLocaleDateString('pt-BR')}), sem retroagir.</div>` : ''}
@@ -3792,6 +3794,16 @@ function mobRenderColeta(app){
   const t = ()=>{ const e = document.getElementById('mobRel'); if(e) e.textContent = new Date().toLocaleString('pt-BR'); else clearInterval(mobRelogio); };
   t(); clearInterval(mobRelogio); mobRelogio = setInterval(t, 1000);
 }
+async function mobMarcarLegado(v){
+  const ids = mobItens.filter(i => !i.assinado_em && mobSel.has(i.id)).map(i => i.id);
+  if(!ids.length){ toast('Selecione pelo menos um item.'); return; }
+  const { error } = await supabaseClient.from('epi_entregas').update({ legado: !!v }).in('id', ids).is('assinado_em', null);
+  if(error){ toast('Não foi possível marcar: ' + error.message, 6000); return; }
+  auditar('alterou', mobColab.id, `${mobColab.nome} — ${ids.length} item(ns) ${v ? 'marcado(s) como Legado' : 'sem Legado'} (celular)`);
+  await mobCarregarItens(); mobRender();
+  toast(v ? ids.length + ' item(ns) marcado(s) como Legado.' : 'Legado removido de ' + ids.length + ' item(ns).');
+}
+window.mobMarcarLegado = mobMarcarLegado;
 function mobSelItem(id){ if(mobSel.has(id)) mobSel.delete(id); else mobSel.add(id); mobRender(); }
 function mobSelTodos(){ const p = mobItens.filter(i => !i.assinado_em); if(p.every(i => mobSel.has(i.id))) mobSel.clear(); else p.forEach(i => mobSel.add(i.id)); mobRender(); }
 function mobSeguirColeta(){
