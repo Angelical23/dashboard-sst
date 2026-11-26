@@ -3782,7 +3782,7 @@ function mobRenderColeta(app){
       <div class="mb-aud"><div class="t"><span>● TRILHA DE AUDITORIA EM TEMPO REAL</span><span id="mobRel" style="font-family:monospace;color:#1e293b"></span></div>
         <div class="g"><div>Aparelho<b>${mobE(dev)}</b></div><div>Localização (GPS)<b id="mobGeoT">${mobE(epiCtx.geo || 'será solicitada ao assinar')}</b></div><div>IP<b>${mobE(epiCtx.ip || 'registrado ao assinar')}</b></div><div>Colhido por<b>${mobE(epiNomeUsuario())}</b></div></div></div>
       <div class="mb-row"><span class="mb-lb" style="display:block">Equipamentos para retirada (${pend.length})</span><button class="mb-chip" onclick="mobSelTodos()">Selecionar todos</button></div>
-      ${epiColsOk ? `<div class="mb-leg" style="background:#fff7ed"><b>Migração de Legado</b> — o colaborador já tinha estes itens antes do sistema? Marque os itens selecionados como Legado: a entrega física continua na data original e a assinatura registra só o dia de hoje.
+      ${epiColsOk ? `<div class="mb-leg" style="background:#fff7ed"><b>Migração de Legado</b> — o colaborador já tinha estes itens antes do sistema? Marque os itens selecionados como Legado: a data da entrega passa a ser a data de admissão e a assinatura registra só o dia de hoje.
         <div style="display:flex;gap:8px;margin-top:8px"><button class="mb-chip" style="flex:1" onclick="mobMarcarLegado(true)">Marcar selecionados como Legado</button><button class="mb-chip" style="flex:1" onclick="mobMarcarLegado(false)">Tirar Legado</button></div></div>` : ''}
       ${pend.map(i => `<div class="mb-sel${i.legado ? ' leg' : ''}${mobSel.has(i.id) ? ' on' : ''}" onclick="mobSelItem('${i.id}')"><div class="mb-cb${mobSel.has(i.id) ? ' on' : ''}">${mobSel.has(i.id) ? '✓' : ''}</div><span class="mb-info"><b>${mobE(i.descricao)}</b><small>${i.ca && i.ca !== 'N/A' ? 'C.A. ' + mobE(i.ca) + ' · ' : ''}${mobE(i.qtde || '')} un. · entrega física <b>${mobE(epiDataBR(i.data_entrega))}</b></small></span>${i.legado ? '<span class="mb-tag">LEGADO</span>' : ''}</div>`).join('')}
       ${temL ? `<div class="mb-leg"><b>CONFIRMAÇÃO DE POSSE E USO (itens Legado):</b> confirmo que recebi fisicamente os itens sinalizados como <b>Legado</b> na data de entrega física indicada (anterior a este sistema) e permaneço em posse e uso regular deles, ratificando a assinatura eletrônica registrada <b>hoje</b>.</div>
@@ -3797,7 +3797,15 @@ function mobRenderColeta(app){
 async function mobMarcarLegado(v){
   const ids = mobItens.filter(i => !i.assinado_em && mobSel.has(i.id)).map(i => i.id);
   if(!ids.length){ toast('Selecione pelo menos um item.'); return; }
-  const { error } = await supabaseClient.from('epi_entregas').update({ legado: !!v }).in('id', ids).is('assinado_em', null);
+  const adm = mobColab.admissao_data || '';
+  if(v && !adm){ toast('Cadastre a data de admissão do colaborador (na ficha, no sistema) para usar Legado.', 6000); return; }
+  let error = null;
+  for(const id of ids){
+    const it = mobItens.find(x => x.id === id), upd = { legado: !!v };
+    if(v) upd.data_entrega = adm; else if(it && it.tipo === 'E') upd.data_entrega = mobHoje();
+    const r = await supabaseClient.from('epi_entregas').update(upd).eq('id', id).is('assinado_em', null);
+    if(r.error){ error = r.error; break; }
+  }
   if(error){ toast('Não foi possível marcar: ' + error.message, 6000); return; }
   auditar('alterou', mobColab.id, `${mobColab.nome} — ${ids.length} item(ns) ${v ? 'marcado(s) como Legado' : 'sem Legado'} (celular)`);
   await mobCarregarItens(); mobRender();
@@ -3875,8 +3883,9 @@ async function mobConfirmarAssinatura(){
       const ctx = await epiContexto(true), auth = 'Rubrica + CPF (3 últimos dígitos)';
       for(const id of mobIds){
         const it = mobItens.find(x => x.id === id); if(!it) continue;
-        const sl = await epiSelar({ colabId: mobColab.id, cpf: mobColab.cpf || ('***' + cpf3), desc: it.descricao, ca: it.ca, qt: it.qtde, tp: it.tipo, leg: it.legado, dFis: it.data_entrega, iso, ip: ctx.ip, geo: ctx.geo, por, auth });
-        const reg = { ...base, assinado_ip: ctx.ip, assinado_geo: ctx.geo, assinatura_auth: auth, assinatura_hash: sl.hash || null, assinatura_payload: sl.hash ? sl.payload : null };
+        const dFis = it.legado ? (mobColab.admissao_data || it.data_entrega) : (it.tipo === 'E' ? mobHoje() : it.data_entrega);
+        const sl = await epiSelar({ colabId: mobColab.id, cpf: mobColab.cpf || ('***' + cpf3), desc: it.descricao, ca: it.ca, qt: it.qtde, tp: it.tipo, leg: it.legado, dFis, iso, ip: ctx.ip, geo: ctx.geo, por, auth });
+        const reg = { ...base, data_entrega: dFis, assinado_ip: ctx.ip, assinado_geo: ctx.geo, assinatura_auth: auth, assinatura_hash: sl.hash || null, assinatura_payload: sl.hash ? sl.payload : null };
         const { error } = await supabaseClient.from('epi_entregas').update(reg).eq('id', id).is('assinado_em', null);
         if(error) throw error;
       }
@@ -6569,7 +6578,14 @@ window.epiCampo = epiCampo;
 
 function epiLinha(i, c, el){
   const r = epiFicha.rows[i];
-  if(c === 'tp'){ if(el.value === 'L'){ r.tp = 'E'; r.leg = true; } else { r.tp = el.value; r.leg = false; } return; }
+  if(c === 'tp'){
+    if(el.value === 'L'){
+      const adm = epiAdmISO(epiFicha.adm);
+      if(!adm){ toast('Informe a data de admissão do colaborador para usar Legado.', 5000); epiRenderFicha(); return; }
+      r.tp = 'E'; r.leg = true; r.d = adm;
+    } else { const eraL = r.leg; r.tp = el.value; r.leg = false; if(eraL && r.tp === 'E') r.d = epiHoje(); }
+    epiRenderFicha(); return;
+  }
   r[c] = el.value;
   if(c === 'desc'){
     const item = epiCatalogoLista().find(x => x[0] === el.value);
@@ -6608,12 +6624,13 @@ function epiKit(){
 }
 window.epiKit = epiKit;
 function epiMarcarLegado(){
-  const f = epiFicha, hoje = epiHoje();
+  const f = epiFicha, hoje = epiHoje(), adm = epiAdmISO(f.adm);
+  if(!adm){ toast('Informe a data de admissão do colaborador antes de marcar como Legado.', 5000); return; }
   const alvo = f.rows.filter(r => !r.sig && !r.leg && r.d && r.d < hoje);
   if(!alvo.length){ toast('Não há itens pendentes com data anterior a hoje.'); return; }
-  if(!confirm(`Marcar ${alvo.length} ${alvo.length === 1 ? 'item pendente' : 'itens pendentes'} como LEGADO?\n\nIsso indica que o colaborador já estava com o item desde a data de entrega física informada. A assinatura continuará registrando a data real de hoje. Depois, clique em Salvar ficha.`)) return;
-  alvo.forEach(r => { r.leg = true; });
-  epiRenderFicha(); toast(`${alvo.length} item(ns) marcado(s) como Legado. Clique em Salvar ficha.`, 5000);
+  if(!confirm(`Marcar ${alvo.length} ${alvo.length === 1 ? 'item pendente' : 'itens pendentes'} como LEGADO?\n\nIsso indica que o colaborador já estava com o item desde a data de entrega física informada. A data da entrega passa a ser a data de admissão e a assinatura registra a data real de hoje. Depois, clique em Salvar ficha.`)) return;
+  alvo.forEach(r => { r.leg = true; r.d = adm; });
+  epiRenderFicha(); toast(`${alvo.length} item(ns) marcado(s) como Legado, com a data de admissão. Clique em Salvar ficha.`, 5000);
 }
 window.epiMarcarLegado = epiMarcarLegado;
 async function epiValidarSelos(){
@@ -6884,6 +6901,8 @@ document.getElementById('epiAssinOk').addEventListener('click', async ()=>{
     const comCpf = (f.cpf || '').replace(/\D/g, '').length >= 3;
     for(const i of epiAssin.alvo){
       const r = f.rows[i], sig = { img, at: agora, por };
+      const admI = epiAdmISO(f.adm);
+      if(r.leg && admI) r.d = admI; else if(!r.leg && r.tp === 'E') r.d = epiHoje();
       if(ctx){
         const auth = comCpf ? 'Rubrica + CPF (3 últimos dígitos)' : 'Rubrica';
         const sl = await epiSelar({ colabId:f.colabId, cpf:f.cpf, desc:r.desc, ca:r.ca, qt:r.qt, tp:r.tp, leg:r.leg, dFis:r.d, iso:agora, ip:ctx.ip, geo:ctx.geo, por, auth });
