@@ -173,6 +173,47 @@
   .kpi-value.gray{color:#64748b;}
 
   .charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
+
+  /* ---- Painel Geral (layout executivo) ---- */
+  .pg-top{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+  .pg-top h1{margin:2px 0 0;font-size:24px;letter-spacing:-.3px;color:#0f2b3c;}
+  .pg-crumb{font-size:12px;color:#64748b;}.pg-crumb b{color:#0f766e;}
+  .pg-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .pg-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+  .pg-k{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;position:relative;overflow:hidden;}
+  .pg-k:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c);}
+  .pg-k .l{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#64748b;}
+  .pg-k .v{font-size:30px;font-weight:800;margin-top:6px;color:#0f172a;line-height:1.15;}
+  .pg-k .v small{font-size:12px;font-weight:700;color:#64748b;}
+  .pg-k .v span{font-size:inherit;}
+  .pg-k .f{margin-top:12px;padding-top:10px;border-top:1px solid #eef2f6;font-size:11.5px;color:#64748b;display:flex;justify-content:space-between;gap:8px;}
+  .pg-k .f b{color:var(--c);text-align:right;}
+  .pg-g{display:grid;gap:18px;margin-top:18px;}.pg-g75{grid-template-columns:7fr 5fr;}.pg-g48{grid-template-columns:4fr 8fr;}
+  .pg-ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding-bottom:12px;border-bottom:1px solid #eef2f6;flex-wrap:wrap;margin-bottom:10px;}
+  .pg-ph h3{margin:0;font-size:15px;}.pg-s{font-size:12px;color:#64748b;margin-top:2px;}
+  .pg-ey{font-size:11px;font-weight:700;color:#0f766e;letter-spacing:.6px;}
+  .pg-chip{display:inline-block;border:1px solid #dbe4ea;background:#f8fafc;border-radius:10px;padding:5px 10px;font-size:12px;font-weight:600;color:#334155;}
+  .pg-tot{display:flex;gap:8px;}
+  .pg-rich{display:grid;grid-template-columns:190px 1fr;gap:14px;align-items:center;margin:8px 0 14px;}
+  .pg-dn{position:relative;height:190px;}.pg-dn .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .pg-dn .c span{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;}.pg-dn .c b{font-size:22px;}
+  .pg-li{display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid #eef2f6;border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:12px;font-weight:600;gap:8px;}
+  .pg-li i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;}
+  .pg-dark{background:#0f2b3c;color:#fff;border-radius:14px;padding:14px 16px;}
+  .pg-dark .t{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}.pg-dark h4{margin:0;font-size:12px;letter-spacing:.6px;text-transform:uppercase;}.pg-dark small{color:#94a3b8;font-size:11px;}
+  .pg-dark .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(245,158,11,.2);color:#fcd34d;}
+  .pg-bar{margin-bottom:10px;font-size:12px;}.pg-bar:last-child{margin-bottom:0;}.pg-bar .r{display:flex;justify-content:space-between;margin-bottom:4px;color:#cbd5e1;font-weight:600;}.pg-bar .t2{height:6px;background:#1e3a4d;border-radius:9px;overflow:hidden;}.pg-bar .t2 i{display:block;height:100%;border-radius:9px;}
+  .pg-mini{display:flex;align-items:center;gap:12px;background:#f8fafc;border:1px solid #e8eef3;border-radius:12px;padding:12px 14px;margin-top:10px;}
+  .pg-mini .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .pg-mini p{margin:0;font-size:11.5px;color:#64748b;}.pg-mini b{font-size:18px;display:block;color:#0f172a;}
+  .pg-tb{width:100%;border-collapse:collapse;min-width:760px;}.pg-tb th{text-align:left;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#64748b;padding:10px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;}
+  .pg-tb td{padding:11px 12px;border-bottom:1px solid #eef2f6;font-size:13px;}.pg-tb .c{text-align:center;}
+  .pg-pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:7px;}
+  .pg-ib{display:flex;align-items:center;gap:8px;}.pg-ib .t3{width:90px;height:7px;background:#eef2f6;border-radius:9px;overflow:hidden;}.pg-ib .t3 i{display:block;height:100%;}
+  .pg-ab{border:1px solid #dbe4ea;background:#fff;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;color:#334155;cursor:pointer;}.pg-ab:hover{background:#ecfdf5;border-color:#6ee7b7;color:#047857;}
+  @media(max-width:1250px){.pg-kpis{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:1000px){.pg-g75,.pg-g48{grid-template-columns:1fr;}.pg-kpis{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:560px){.pg-kpis{grid-template-columns:1fr;}.pg-rich{grid-template-columns:1fr;}}
   .panel{background:var(--branco);border:1px solid var(--cinza-borda);border-radius:12px;padding:18px;}
   .panel h3{margin:0 0 12px 0;font-size:14px;letter-spacing:0.3px;}
   .chart-wrap{position:relative;height:250px;}
@@ -885,62 +926,33 @@
 
     <!-- VIEW: PAINEL -->
     <section id="viewPainel">
-      <div class="view-header"><h1>Painel Geral</h1></div>
-
-      <div class="search-card">
-        <div class="search-filter-wrap">
-          <span class="search-date-label">📍 Local de trabalho:</span>
-          <select id="painelFiltroLocal" class="search-select" style="min-width:280px;">
-            <option value="">Todos os locais</option>
-          </select>
+      <div class="pg-top">
+        <div><h1>Painel Geral de Compliance</h1></div>
+        <div class="pg-tools">
+          <span class="search-date-label">📍 Local:</span>
+          <select id="painelFiltroLocal" class="search-select" style="min-width:260px;"><option value="">Todos os locais</option></select>
           <button class="btn-limpar-filtro" id="btnLimparFiltroPainel">Limpar filtro</button>
           <span class="pill-ativos" id="painelPillAtivos"></span>
         </div>
-        <div class="chart-info" id="painelFiltroInfo" style="margin:0;"></div>
+      </div>
+      <div class="chart-info" id="painelFiltroInfo" style="margin:0 0 12px;"></div>
+
+      <div class="pg-kpis">
+        <div class="pg-k" style="--c:#475569;--bg:#f1f5f9"><div class="l">Ativos no quadro</div><div class="v"><span id="kpiTotal">–</span></div><div class="f"><span>Desligados (histórico)</span><b id="pgDeslHist">–</b></div></div>
+        <div class="pg-k" style="--c:#16a34a;--bg:#dcfce7"><div class="l">Colaboradores em dia</div><div class="v"><span id="kpiEmDia">–</span></div><div class="f"><span id="pgEmDiaTxt">Todos os documentos regulares</span><b id="pgEmDiaIc"></b></div></div>
+        <div class="pg-k" style="--c:#e11d48;--bg:#ffe4e6"><div class="l">Vencidos / a vencer (30d)</div><div class="v"><span id="kpiVencidos">–</span></div><div class="f"><span>Vencendo em 30 dias</span><b id="kpiVencendo">–</b></div></div>
+        <div class="pg-k" style="--c:#d97706;--bg:#fef3c7"><div class="l">Pendentes (sem data)</div><div class="v"><span id="kpiSemData">–</span></div><div class="f"><span>Backlog de cadastro</span><b id="pgSemPct">–</b></div></div>
+        <div class="pg-k" style="--c:#4f46e5;--bg:#e0e7ff"><div class="l">Aguardando assinatura</div><div class="v"><span id="kpiAguardando">–</span> <small>docs</small></div><div class="f"><span id="kpiAguardandoSub"></span></div></div>
       </div>
 
-      <div class="kpi-row">
-        <div class="kpi-card">
-          <div class="kpi-icon blue">👥</div>
-          <div><div class="kpi-label">Ativos no Quadro</div><div class="kpi-value" id="kpiTotal">–</div></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon green">✔</div>
-          <div><div class="kpi-label">Colaboradores em Dia</div><div class="kpi-value green" id="kpiEmDia">–</div></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon yellow">⚠</div>
-          <div><div class="kpi-label">Documentos Vencendo (30 dias)</div><div class="kpi-value yellow" id="kpiVencendo">–</div></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon red">⛔</div>
-          <div><div class="kpi-label">Documentos Vencidos</div><div class="kpi-value red" id="kpiVencidos">–</div></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon gray">📝</div>
-          <div><div class="kpi-label">Documentos Pendentes (sem data)</div><div class="kpi-value gray" id="kpiSemData">–</div></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon purple">✍️</div>
-          <div><div class="kpi-label">Aguardando Assinatura</div><div class="kpi-value purple" id="kpiAguardando">–</div><div class="kpi-sub" id="kpiAguardandoSub"></div></div>
-        </div>
-      </div>
-
-      <div class="charts-row">
+      <div class="pg-g pg-g75">
         <div class="panel">
-          <div class="panel-head">
-            <h3 id="tituloGraficoSetor">Status de Documentação por Setor (Ativos)</h3>
+          <div class="pg-ph">
+            <div><h3 id="tituloGraficoSetor">Status de Documentação por Setor (Ativos)</h3><div class="pg-s">Ranking por volume de pendências</div></div>
             <div class="chart-controls" id="chartControlsSetor">
               <input type="text" id="buscaSetorGrafico" placeholder="Filtrar setor...">
-              <select id="topSetoresSelect">
-                <option value="10">Top 10</option>
-                <option value="20" selected>Top 20</option>
-                <option value="0">Todos</option>
-              </select>
-              <select id="modoSetorSelect">
-                <option value="qtd">Quantidade</option>
-                <option value="pct">Percentual (%)</option>
-              </select>
+              <select id="topSetoresSelect"><option value="10">Top 10</option><option value="20" selected>Top 20</option><option value="0">Todos</option></select>
+              <select id="modoSetorSelect"><option value="qtd">Quantidade</option><option value="pct">Percentual (%)</option></select>
             </div>
           </div>
           <div class="chart-legend">
@@ -949,58 +961,39 @@
             <div><span class="dot" style="background:#e74c3c"></span>Vencido</div>
             <div><span class="dot" style="background:#cbd5e1"></span>Pendente</div>
           </div>
-          <div class="chart-scroll">
-            <div id="barChartInner" style="position:relative;height:300px;"><canvas id="barChart"></canvas></div>
-          </div>
+          <div class="chart-scroll"><div id="barChartInner" style="position:relative;height:300px;"><canvas id="barChart"></canvas></div></div>
           <div class="chart-info" id="barChartInfo"></div>
         </div>
         <div class="panel">
-          <h3>Documentos com Pendência ou Irregulares</h3>
-          <div class="pie-wrap">
-            <div class="pie-canvas-holder"><canvas id="pieChart"></canvas></div>
-            <div class="legend" id="pieLegend"></div>
+          <div class="pg-ph"><div><h3>Composição das pendências</h3><div class="pg-s">Documentos com pendência ou irregulares, por tipo</div></div></div>
+          <div class="pg-rich">
+            <div class="pg-dn"><canvas id="pieChart"></canvas><div class="c"><span>Total docs</span><b id="pgPieTotal">–</b></div></div>
+            <div id="pieLegend"></div>
+          </div>
+          <div class="pg-dark">
+            <div class="t"><div><h4>Gargalo de assinaturas</h4><small id="pgGargSub">–</small></div><span class="tag">Ação rápida</span></div>
+            <div id="pgGargBars"></div>
           </div>
         </div>
       </div>
 
-      <div style="margin-top: 28px;">
-        <div style="font-size:13px; font-weight:700; color:#0f2b3c; margin-bottom:12px; letter-spacing:0.5px;">
-          🚪 GESTÃO DE DESLIGAMENTOS E TURNOVER (MÊS VIGENTE)
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 16px; margin-bottom: 20px;">
-          <div class="kpi-card">
-            <div class="kpi-icon red">📉</div>
-            <div>
-              <div class="kpi-label">Desligados no Mês</div>
-              <div class="kpi-value red" id="kpiDesligadosMes">0</div>
-              <div style="font-size:11px; color:#94a3b8; margin-top:2px;" id="kpiMesAnoAtual">-</div>
-            </div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-icon blue">📊</div>
-            <div>
-              <div class="kpi-label">Taxa de Turnover</div>
-              <div class="kpi-value" id="kpiTaxaTurnover">0.0%</div>
-              <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Proporção no mês</div>
-            </div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-icon yellow">🏷️</div>
-            <div>
-              <div class="kpi-label">Principal Motivo de Desligamento</div>
-              <div class="kpi-value" style="font-size:15px; margin-top:2px;" id="kpiMotivoPrincipal">-</div>
-              <div style="font-size:11px; color:#94a3b8; margin-top:2px;" id="kpiMotivoSecundario">-</div>
-            </div>
-          </div>
-        </div>
-
+      <div class="pg-g pg-g48">
         <div class="panel">
-          <h3>Evolução Mensal de Desligamentos (Histórico de Saídas)</h3>
-          <div class="chart-wrap" style="height:220px;"><canvas id="turnoverChart"></canvas></div>
+          <div class="pg-ph"><div><div class="pg-ey">MOVIMENTAÇÃO • MÊS VIGENTE</div><h3>Turnover e desligamentos</h3></div><span class="pg-chip" id="kpiMesAnoAtual">-</span></div>
+          <div class="pg-mini"><div class="ic" style="background:#ffe4e6">📉</div><p>Desligados no mês<b id="kpiDesligadosMes">0</b></p></div>
+          <div class="pg-mini"><div class="ic" style="background:#ccfbf1">📊</div><p>Taxa de turnover<b id="kpiTaxaTurnover">0.0%</b></p></div>
+          <div class="pg-mini" style="background:#fffbeb"><div class="ic" style="background:#fef3c7">🏷️</div><p>Principal motivo<b style="font-size:14px" id="kpiMotivoPrincipal">-</b><span id="kpiMotivoSecundario" style="font-size:11px;color:#94a3b8">-</span></p></div>
         </div>
+        <div class="panel">
+          <div class="pg-ph"><div><h3>Evolução mensal de desligamentos</h3><div class="pg-s">Histórico de saídas (últimos 6 meses)</div></div>
+            <div class="pg-tot"><span class="pg-chip">Média <b id="pgTurMedia">–</b>/mês</span><span class="pg-chip" style="color:#e11d48">Total <b id="pgTurTotal">–</b></span></div></div>
+          <div class="chart-wrap" style="height:230px;margin-top:10px;"><canvas id="turnoverChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px;padding:0;overflow:hidden;">
+        <div class="pg-ph" style="padding:16px 20px;"><div><h3>Plano de regularização por unidade <span class="pg-pill" style="background:#ffe4e6;color:#be123c;margin-left:6px;">Ação executiva</span></h3><div class="pg-s">Locais com mais pendências documentais e assinaturas aguardando</div></div></div>
+        <div style="overflow-x:auto;"><table class="pg-tb"><thead><tr><th>Local de trabalho</th><th class="c">Efetivo</th><th class="c">Docs regulares</th><th class="c">Docs pendentes</th><th class="c">Assinaturas pend.</th><th>Índice de compliance</th><th style="text-align:right">Ação rápida</th></tr></thead><tbody id="pgTabela"></tbody></table></div>
       </div>
     </section>
 
@@ -2304,7 +2297,7 @@ function renderPainel(){
   const pill = document.getElementById('painelPillAtivos');
   pill.style.display = localSel ? 'inline-block' : 'none';
   pill.innerHTML = `👥 <b>${ativos.length}</b> ${ativos.length === 1 ? 'ativo' : 'ativos'} neste local`;
-  document.getElementById('kpiTotal').closest('.kpi-card').classList.toggle('kpi-destaque', !!localSel);
+  const kc = document.getElementById('kpiTotal').closest('.pg-k, .kpi-card'); if(kc) kc.classList.toggle('kpi-destaque', !!localSel);
 
   renderKpis(ativos, inativos);
   renderGraficos(ativos, inativos);
@@ -2485,6 +2478,40 @@ async function desarquivarColaborador(id, nome){
 }
 window.desarquivarColaborador = desarquivarColaborador;
 
+/* ---------- Painel Geral: gargalo de assinaturas e plano por unidade ---------- */
+let pgLocais = [];
+function pgExtras(ativos, ag){
+  const tot = ag.total || 0;
+  document.getElementById('pgGargSub').textContent = `${tot} documento${tot === 1 ? '' : 's'} aguardando assinatura`;
+  const itens = [['Ficha de EPI', ag.epi, '#fbbf24'], ['OS - Ordem de Serviço', ag.os, '#38bdf8'], ['Certificado NR-06', ag.nr06, '#34d399']];
+  document.getElementById('pgGargBars').innerHTML = itens.map(([n, v, c]) => { const pc = tot ? v * 100 / tot : 0;
+    return `<div class="pg-bar"><div class="r"><span>${n} (${v})</span><span style="color:${c}">${pc.toFixed(1).replace('.', ',')}%</span></div><div class="t2"><i style="width:${pc}%;background:${c}"></i></div></div>`; }).join('');
+  const por = {};
+  ativos.forEach(c => { const l = localDe(c); (por[l] = por[l] || []).push(c); });
+  const linhas = Object.entries(por).map(([local, lista]) => {
+    let reg = 0, pen = 0;
+    lista.forEach(c => docsDe(c).forEach(d => { if(statusDoc(d, c).chave === 'ok') reg++; else pen++; }));
+    return { local, efetivo: lista.length, reg, pen, ass: contaAguardandoAssinatura(lista).total };
+  }).sort((a, b) => b.pen - a.pen).slice(0, 10);
+  pgLocais = linhas.map(l => l.local);
+  const wa = document.getElementById('navWhatsapp'), podeWa = wa && wa.style.display !== 'none';
+  document.getElementById('pgTabela').innerHTML = linhas.map((l, i) => {
+    const t = l.reg + l.pen, p = t ? Math.round(l.reg * 100 / t) : 0;
+    const c = p >= 70 ? ['#16a34a', '#dcfce7'] : p >= 40 ? ['#d97706', '#fef3c7'] : ['#e11d48', '#ffe4e6'];
+    return `<tr><td><b>${epiEsc(l.local)}</b></td><td class="c">${l.efetivo}</td><td class="c"><span class="pg-pill" style="background:#ccfbf1;color:#0f766e">${l.reg}</span></td><td class="c"><span class="pg-pill" style="background:#fef3c7;color:#b45309">${l.pen}</span></td><td class="c"><span class="pg-pill" style="background:#e0e7ff;color:#4338ca">${l.ass}</span></td>
+      <td><div class="pg-ib"><div class="t3"><i style="width:${p}%;background:${c[0]}"></i></div><span class="pg-pill" style="background:${c[1]};color:${c[0]}">${p}%</span></div></td>
+      <td style="text-align:right">${podeWa && l.ass ? `<button type="button" class="pg-ab" onclick="pgCobrar(${i})">💬 Cobrar no WhatsApp</button>` : ''}</td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">Sem dados.</td></tr>';
+}
+async function pgCobrar(i){
+  const local = pgLocais[i]; if(local == null) return;
+  mostrarView('whatsapp');
+  await waCarregar();
+  const sel = document.getElementById('waLocal');
+  if([...sel.options].some(o => o.value === local)){ sel.value = local; waRender(); }
+}
+window.pgCobrar = pgCobrar;
+
 function renderKpis(ativos, inativos){
   const total = ativos.length;
   document.getElementById('kpiTotal').textContent = total;
@@ -2501,13 +2528,19 @@ function renderKpis(ativos, inativos){
   });
   const totalDocs=ativos.reduce((n, c)=> n + docsDe(c).length, 0);
   const pctDocs=(n)=> totalDocs ? `${n} (${Math.round(n/totalDocs*100)}%)` : '0 (0%)';
-  document.getElementById('kpiEmDia').textContent = total ? `${emDia} (${Math.round(emDia/total*100)}%)` : '0 (0%)';
-  document.getElementById('kpiVencendo').textContent = pctDocs(docsVencendo);
-  document.getElementById('kpiVencidos').textContent = pctDocs(docsVencidos);
-  document.getElementById('kpiSemData').textContent = pctDocs(docsSemData);
+  const pc=(n,t)=> t ? Math.round(n/t*100) : 0;
+  document.getElementById('kpiEmDia').textContent = emDia;
+  document.getElementById('pgEmDiaTxt').textContent = `${pc(emDia,total)}% dos ativos estão em dia`;
+  document.getElementById('pgEmDiaIc').textContent = total && pc(emDia,total) < 30 ? '⚠ regularizar' : '';
+  document.getElementById('kpiVencendo').textContent = `${docsVencendo} (${pc(docsVencendo,totalDocs)}%)`;
+  document.getElementById('kpiVencidos').textContent = docsVencidos;
+  document.getElementById('kpiSemData').textContent = docsSemData.toLocaleString('pt-BR');
+  document.getElementById('pgSemPct').textContent = `${pc(docsSemData,totalDocs)}% dos documentos`;
+  document.getElementById('pgDeslHist').textContent = `${inativos.length} ${inativos.length === 1 ? 'inativo' : 'inativos'}`;
   const ag = contaAguardandoAssinatura(ativos);
   document.getElementById('kpiAguardando').textContent = ag.total;
-  document.getElementById('kpiAguardandoSub').textContent = `OS ${ag.os} · NR06 ${ag.nr06} · Ficha de EPI ${ag.epi}`;
+  document.getElementById('kpiAguardandoSub').textContent = `OS ${ag.os} · NR-06 ${ag.nr06} · EPI ${ag.epi}`;
+  try{ pgExtras(ativos, ag); }catch(e){ console.error(e); }
 
   const agora=new Date(), ano=agora.getFullYear(), mes=agora.getMonth();
   const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -2676,7 +2709,9 @@ function renderGraficos(ativos, inativos){
   }));
   if(pieChartInstance)pieChartInstance.destroy();
   pieChartInstance=new Chart(document.getElementById('pieChart'),{type:'doughnut',data:{labels:pendentes.map(p=>p.label),datasets:[{data:pendentes.map(p=>p.valor),backgroundColor:pendentes.map(p=>p.cor),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'55%'}});
-  document.getElementById('pieLegend').innerHTML=pendentes.map(p=>`<div class="legend-item"><span class="legend-dot" style="background:${p.cor}"></span>${p.label}</div>`).join('');
+  const totPie=pendentes.reduce((n,p)=>n+p.valor,0);
+  document.getElementById('pgPieTotal').textContent=totPie.toLocaleString('pt-BR');
+  document.getElementById('pieLegend').innerHTML=pendentes.map(p=>`<div class="pg-li"><span><i style="background:${p.cor}"></i>${p.label}</span><span>${totPie?(p.valor*100/totPie).toFixed(1).replace('.',','):'0,0'}% <small style="color:#94a3b8;font-weight:600">(${p.valor})</small></span></div>`).join('');
 
   // Evolução mensal de desligamentos
   const meses=[]; const agora=new Date();
@@ -2685,6 +2720,9 @@ function renderGraficos(ativos, inativos){
     meses.push({ano:d.getFullYear(),mes:d.getMonth(),label:d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','')+'/'+String(d.getFullYear()).slice(2)});
   }
   const saidas=meses.map(m=>inativos.filter(c=>{if(!c.data_desligamento)return false;const d=new Date(c.data_desligamento+'T00:00:00');return d.getFullYear()===m.ano&&d.getMonth()===m.mes;}).length);
+  const somaSaidas=saidas.reduce((a,b)=>a+b,0);
+  document.getElementById('pgTurTotal').textContent=somaSaidas+(somaSaidas===1?' saída':' saídas');
+  document.getElementById('pgTurMedia').textContent=(somaSaidas/6).toFixed(1).replace('.',',');
   if(turnoverChartInstance)turnoverChartInstance.destroy();
   turnoverChartInstance=new Chart(document.getElementById('turnoverChart'),{type:'bar',data:{labels:meses.map(m=>m.label),datasets:[{label:'Desligamentos',data:saidas,backgroundColor:'rgba(227,28,75,.85)',borderRadius:6,maxBarThickness:38}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,precision:0}},x:{grid:{display:false}}}}});
  }catch(err){console.error('Erro ao renderizar gráficos:',err);}
@@ -6583,6 +6621,7 @@ function epiLinha(i, c, el){
       const adm = epiAdmISO(epiFicha.adm);
       if(!adm){ toast('Informe a data de admissão do colaborador para usar Legado.', 5000); epiRenderFicha(); return; }
       r.tp = 'E'; r.leg = true; r.d = adm;
+      epiRenderFicha(); if(r.id) epiSalvarFicha(true); return;
     } else { const eraL = r.leg; r.tp = el.value; r.leg = false; if(eraL && r.tp === 'E') r.d = epiHoje(); }
     epiRenderFicha(); return;
   }
@@ -6623,14 +6662,16 @@ function epiKit(){
   epiRenderFicha();
 }
 window.epiKit = epiKit;
-function epiMarcarLegado(){
+async function epiMarcarLegado(){
   const f = epiFicha, hoje = epiHoje(), adm = epiAdmISO(f.adm);
   if(!adm){ toast('Informe a data de admissão do colaborador antes de marcar como Legado.', 5000); return; }
   const alvo = f.rows.filter(r => !r.sig && !r.leg && r.d && r.d < hoje);
   if(!alvo.length){ toast('Não há itens pendentes com data anterior a hoje.'); return; }
   if(!confirm(`Marcar ${alvo.length} ${alvo.length === 1 ? 'item pendente' : 'itens pendentes'} como LEGADO?\n\nIsso indica que o colaborador já estava com o item desde a data de entrega física informada. A data da entrega passa a ser a data de admissão e a assinatura registra a data real de hoje. Depois, clique em Salvar ficha.`)) return;
   alvo.forEach(r => { r.leg = true; r.d = adm; });
-  epiRenderFicha(); toast(`${alvo.length} item(ns) marcado(s) como Legado, com a data de admissão. Clique em Salvar ficha.`, 5000);
+  epiRenderFicha();
+  const salvou = await epiSalvarFicha(true);
+  toast(salvou === false ? `${alvo.length} item(ns) marcado(s), mas NÃO foi possível salvar. Clique em Salvar ficha.` : `${alvo.length} item(ns) marcado(s) como Legado, com a data de admissão, e já salvo(s).`, 5000);
 }
 window.epiMarcarLegado = epiMarcarLegado;
 async function epiValidarSelos(){
