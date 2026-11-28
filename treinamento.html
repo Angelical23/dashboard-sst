@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Treinamento online</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--azul:#0f2b3c;--azul2:#115266;--verde:#16a34a;--verm:#dc2626;--borda:#dbe4ea;--texto:#14212b;--cinza:#5d6e7b;--fundo:#f1f5f8;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--fundo);color:var(--texto);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:1.45;}
+  header{background:var(--azul);color:#fff;padding:14px 16px;}
+  header b{display:block;font-size:12px;letter-spacing:.8px;color:#4ade80;text-transform:uppercase;}
+  header span{font-size:15px;font-weight:600;}
+  main{max-width:680px;margin:0 auto;padding:16px;}
+  .card{background:#fff;border:1px solid var(--borda);border-radius:14px;padding:18px;margin-bottom:14px;}
+  h1{font-size:20px;margin:0 0 6px;color:var(--azul);}
+  p{margin:8px 0;}
+  .muted{color:var(--cinza);font-size:14px;}
+  label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px;}
+  input[type=text]{width:100%;font-size:26px;letter-spacing:8px;text-align:center;padding:12px;border:2px solid var(--borda);border-radius:10px;}
+  input[type=text]:focus{outline:none;border-color:var(--azul2);}
+  button{font:inherit;font-weight:700;border-radius:10px;padding:13px 16px;border:2px solid var(--azul2);background:#fff;color:var(--azul2);cursor:pointer;}
+  button.p{background:var(--azul2);color:#fff;width:100%;margin-top:14px;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  .erro{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:14px;}
+  .passos{display:flex;gap:6px;margin-bottom:14px;}
+  .passos i{flex:1;height:5px;border-radius:5px;background:#d5dee5;}
+  .passos i.on{background:var(--azul2);} .passos i.ok{background:var(--verde);}
+  .video{position:relative;background:#000;border-radius:12px;aspect-ratio:16/9;overflow:hidden;}
+  .video iframe,.video video,.video #yt{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .barra{height:9px;background:#e1e8ed;border-radius:9px;overflow:hidden;margin:12px 0 6px;}
+  .barra i{display:block;height:100%;width:0;background:var(--verde);transition:width .4s;}
+  .linha{display:flex;justify-content:space-between;font-size:12px;color:var(--cinza);gap:10px;}
+  .q{border:1px solid var(--borda);border-radius:12px;padding:14px;margin-bottom:12px;}
+  .q.err{border-color:#fca5a5;background:#fff7f7;}
+  .q b{display:block;font-size:15px;margin-bottom:10px;}
+  .opt{display:flex;gap:10px;align-items:flex-start;padding:11px;border:1px solid var(--borda);border-radius:9px;margin-bottom:7px;cursor:pointer;font-size:15px;}
+  .opt.sel{border-color:var(--azul2);background:#e8f4f8;}
+  .opt span{font-weight:800;color:var(--azul2);min-width:18px;}
+  .res{text-align:center;} .res .big{font-size:48px;font-weight:800;margin:4px 0;}
+  .okc{color:var(--verde);} .noc{color:var(--verm);}
+  .hide{display:none !important;}
+  /* certificado */
+  .cert{background:#fff;border:8px double #0f2b3c;padding:26px 22px;text-align:center;margin-top:12px;}
+  .cert h2{margin:0;color:var(--azul);letter-spacing:3px;font-size:17px;}
+  .cert .n{font-size:22px;font-weight:800;margin:10px 0;color:var(--azul);}
+  .cert p{font-size:14px;}
+  .cert .selo{margin-top:16px;text-align:left;font:11px/1.5 ui-monospace,Consolas,monospace;color:#40525f;background:#f3f7f9;border:1px dashed #b8c6cf;padding:10px;word-break:break-all;}
+  .cert .selo b{color:var(--azul);}
+  @media print{
+    @page{size:A4 landscape;margin:12mm;}
+    body{background:#fff;} header,.passos,.nao-imprimir{display:none !important;}
+    main{max-width:none;padding:0;} .card{border:0;padding:0;margin:0;}
+    .cert{margin:0;min-height:170mm;display:flex;flex-direction:column;justify-content:center;} .cert .n{font-size:30px;} .cert p{font-size:16px;}
+  }
+</style>
+</head>
+<body>
+<header><b>Gestão de Segurança do Trabalho</b><span>Treinamento online</span></header>
+<main>
+  <div class="passos nao-imprimir" id="passos"><i></i><i></i><i></i><i></i></div>
+
+  <!-- carregando / erro geral -->
+  <section class="card" id="vCarregando"><p class="muted">Carregando...</p></section>
+  <section class="card hide" id="vErro"><h1>Não foi possível abrir</h1><div class="erro" id="erroGeral"></div></section>
+
+  <!-- 1. CPF -->
+  <section class="card hide" id="vCpf">
+    <h1>Confirme sua identidade</h1>
+    <p class="muted">Você recebeu este link da Segurança do Trabalho. Digite os <b>3 últimos dígitos do seu CPF</b> para continuar.</p>
+    <label for="cpf3">Últimos 3 dígitos do CPF</label>
+    <input type="text" id="cpf3" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="000">
+    <div class="erro hide" id="erroCpf"></div>
+    <button class="p" id="btnCpf">Continuar</button>
+    <p class="muted" style="margin-top:12px">Este link é individual. Não compartilhe com outras pessoas.</p>
+  </section>
+
+  <!-- 2. Vídeo -->
+  <section class="card hide" id="vVideo">
+    <h1 id="tTitulo"></h1>
+    <p class="muted" id="tSub"></p>
+    <div class="video" id="videoBox"></div>
+    <div class="barra"><i id="vbar"></i></div>
+    <div class="linha"><span id="vtxt">0% assistido</span><span>Assista até o final para liberar a avaliação</span></div>
+    <div class="erro hide" id="erroVideo"></div>
+    <button class="p" id="btnProva" disabled>Fazer a avaliação</button>
+  </section>
+
+  <!-- 3. Prova -->
+  <section class="card hide" id="vProva">
+    <h1>Avaliação</h1>
+    <p class="muted" id="provaSub"></p>
+    <div id="qs"></div>
+    <div class="erro hide" id="erroProva"></div>
+    <button class="p" id="btnEnviar" disabled>Enviar respostas</button>
+  </section>
+
+  <!-- 4. Resultado -->
+  <section class="card hide res" id="vReprovado">
+    <div class="big noc" id="rNotaNo"></div>
+    <h1>Não foi desta vez</h1>
+    <p id="rMsgNo"></p>
+    <button class="p" id="btnTentar">Tentar novamente</button>
+  </section>
+
+  <section class="card hide" id="vAprovado">
+    <div class="res nao-imprimir"><div class="big okc" id="rNotaOk"></div><h1>Aprovado!</h1>
+      <p class="muted">Treinamento concluído. Seu certificado está abaixo.</p></div>
+    <div class="cert" id="cert"></div>
+    <button class="p nao-imprimir" id="btnImprimir">⬇ Baixar / imprimir certificado (PDF)</button>
+    <p class="muted nao-imprimir" style="text-align:center">Na tela de impressão escolha "Salvar como PDF".</p>
+  </section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://nnzqwkhwtphkijlgtwxm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uenF3a2h3dHBoa2lqbGd0d3htIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2NTc5NTgsImV4cCI6MjEwMjIzMzk1OH0.nYOD0jnxyyxBTptQRsFrwfQO8haD0-ejMcujQ6IOsQQ";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:false, autoRefreshToken:false } });
+
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+let CPF3 = '', INFO = null, assistidos = 0, ultimaPos = 0, concluido = false, jogando = false, tickTimer = null, sendTimer = null, player = null, mediaEl = null, enviando = false;
+const VIEWS = ['vCarregando','vErro','vCpf','vVideo','vProva','vReprovado','vAprovado'];
+
+function ver(id, passo){
+  VIEWS.forEach(v => $(v).classList.toggle('hide', v !== id));
+  [...$('passos').children].forEach((e, i) => { e.className = passo == null ? '' : (i < passo - 1 ? 'ok' : (i === passo - 1 ? 'on' : '')); });
+  window.scrollTo(0, 0);
+}
+function erroGeral(msg){ $('erroGeral').textContent = msg; ver('vErro'); }
+async function rpc(nome, args){
+  const { data, error } = await sb.rpc(nome, args);
+  if(error) throw new Error(error.message || 'Falha de conexão.');
+  return data;
+}
+const base = () => ({ p_token: TOKEN, p_cpf3: CPF3 });
+const dataBR = d => { const s = String(d || '').slice(0, 10).split('-'); return s.length === 3 ? `${s[2]}/${s[1]}/${s[0]}` : '—'; };
+
+/* ---------- 1. CPF ---------- */
+$('btnCpf').onclick = async () => {
+  const v = $('cpf3').value.replace(/\D/g, '');
+  const er = $('erroCpf'); er.classList.add('hide');
+  if(v.length !== 3){ er.textContent = 'Digite os 3 últimos dígitos do CPF.'; er.classList.remove('hide'); return; }
+  $('btnCpf').disabled = true;
+  try{
+    CPF3 = v;
+    const r = await rpc('trn_info', base());
+    if(!r.ok){
+      CPF3 = '';
+      er.textContent = r.erro + (r.cpf_errado && r.restantes != null ? ` Restam ${r.restantes} tentativa(s).` : '');
+      er.classList.remove('hide');
+      if(!r.cpf_errado) erroGeral(r.erro);
+      return;
+    }
+    INFO = r; seguir();
+  }catch(e){ CPF3 = ''; er.textContent = 'Não foi possível conectar: ' + e.message; er.classList.remove('hide'); }
+  finally{ $('btnCpf').disabled = false; }
+};
+$('cpf3').addEventListener('keydown', e => { if(e.key === 'Enter') $('btnCpf').click(); });
+
+function seguir(){
+  if(INFO.status === 'CONCLUIDO' && INFO.certificado){ mostrarCertificado(); return; }
+  assistidos = INFO.progresso.segundos || 0; ultimaPos = INFO.progresso.posicao || 0; concluido = !!INFO.progresso.concluido;
+  telaVideo();
+}
+
+/* ---------- 2. Vídeo ---------- */
+function ytId(u){
+  const m = String(u || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/);
+  return m ? m[1] : null;
+}
+function telaVideo(){
+  const c = INFO.curso;
+  $('tTitulo').textContent = c.titulo || 'Treinamento';
+  $('tSub').textContent = `${INFO.colaborador}${c.duracao_minutos ? ' · ' + c.duracao_minutos + ' min' : ''} · Nota mínima ${c.nota_minima}%`;
+  ver('vVideo', 2);
+  pintaProgresso();
+  const box = $('videoBox'); box.innerHTML = '';
+  const id = ytId(c.video_url);
+  if(id){
+    box.innerHTML = '<div id="yt"></div>';
+    const iniciar = () => {
+      player = new YT.Player('yt', { videoId: id, playerVars: { rel: 0, modestbranding: 1, playsinline: 1, start: Math.max(0, Math.floor(ultimaPos)) },
+        events: { onStateChange: e => { jogando = (e.data === 1); if(e.data === 0) enviarProgresso(); if(e.data === 2) enviarProgresso(); } } });
+    };
+    if(window.YT && YT.Player) iniciar();
+    else { window.onYouTubeIframeAPIReady = iniciar; const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s); }
+  }else if(/\.(mp4|webm|ogg)(\?|$)/i.test(c.video_url || '')){
+    mediaEl = document.createElement('video'); mediaEl.src = c.video_url; mediaEl.controls = true; mediaEl.playsInline = true;
+    mediaEl.addEventListener('loadedmetadata', () => { if(ultimaPos > 0) try{ mediaEl.currentTime = ultimaPos; }catch(e){} });
+    mediaEl.addEventListener('play', () => jogando = true); mediaEl.addEventListener('pause', () => { jogando = false; enviarProgresso(); }); mediaEl.addEventListener('ended', () => { jogando = false; enviarProgresso(); });
+    box.appendChild(mediaEl);
+  }else{
+    $('erroVideo').textContent = 'O vídeo deste treinamento não está disponível. Avise a Segurança do Trabalho.'; $('erroVideo').classList.remove('hide');
+  }
+  if(!tickTimer) tickTimer = setInterval(() => { if(jogando && !document.hidden){ assistidos += 1; } pintaProgresso(); }, 1000);
+  if(!sendTimer) sendTimer = setInterval(enviarProgresso, 15000);
+  document.addEventListener('visibilitychange', () => { if(document.hidden) enviarProgresso(); });
+}
+function posAtual(){
+  try{ if(player && player.getCurrentTime) return Math.floor(player.getCurrentTime()); if(mediaEl) return Math.floor(mediaEl.currentTime); }catch(e){}
+  return ultimaPos;
+}
+function durAtual(){
+  try{ if(player && player.getDuration) return Math.floor(player.getDuration()); if(mediaEl && isFinite(mediaEl.duration)) return Math.floor(mediaEl.duration); }catch(e){}
+  return (INFO.curso.duracao_minutos || 1) * 60;
+}
+function pintaProgresso(){
+  const ref = (INFO.curso.duracao_minutos > 0 ? INFO.curso.duracao_minutos * 60 : durAtual()) || 1;
+  const pct = concluido ? 100 : Math.min(99, Math.round(assistidos * 100 / ref));
+  $('vbar').style.width = pct + '%'; $('vtxt').textContent = pct + '% assistido';
+  $('btnProva').disabled = !concluido;
+}
+async function enviarProgresso(){
+  if(enviando || !INFO || INFO.status === 'CONCLUIDO') return;
+  enviando = true;
+  try{
+    ultimaPos = posAtual();
+    const r = await rpc('trn_progresso', { ...base(), p_assistidos: assistidos, p_posicao: ultimaPos, p_duracao: durAtual() });
+    if(r.ok){
+      if(r.segundos != null && r.segundos < assistidos) assistidos = r.segundos;   // o servidor manda: não aceita avanço maior que o tempo real
+      if(r.concluido) concluido = true;
+      pintaProgresso();
+    }else if(r.erro){ $('erroVideo').textContent = r.erro; $('erroVideo').classList.remove('hide'); }
+  }catch(e){ /* sem internet: tenta de novo no próximo ciclo */ }
+  finally{ enviando = false; }
+}
+$('btnProva').onclick = async () => { await enviarProgresso(); abrirProva(); };
+
+/* ---------- 3. Prova ---------- */
+let perguntas = [], respostas = {};
+async function abrirProva(){
+  $('btnProva').disabled = true;
+  try{
+    const r = await rpc('trn_perguntas', base());
+    if(!r.ok){ $('erroVideo').textContent = r.erro; $('erroVideo').classList.remove('hide'); return; }
+    perguntas = r.perguntas || []; respostas = {};
+    jogando = false; try{ if(player && player.pauseVideo) player.pauseVideo(); if(mediaEl) mediaEl.pause(); }catch(e){}
+    $('provaSub').textContent = `${perguntas.length} questão(ões) · responda todas · nota mínima ${INFO.curso.nota_minima}%`;
+    $('qs').innerHTML = perguntas.map((q, i) => {
+      const alts = (q.alternativas || []).map((a, j) => typeof a === 'string' ? { id: 'ABCDEFGH'[j], texto: a } : a);
+      return `<div class="q" data-q="${esc(q.id)}"><b>${i + 1}. ${esc(q.enunciado)}</b>${alts.map(a => `<div class="opt" data-a="${esc(a.id)}"><span>${esc(a.id)}</span>${esc(a.texto)}</div>`).join('')}</div>`;
+    }).join('');
+    $('qs').querySelectorAll('.opt').forEach(o => o.onclick = () => {
+      const q = o.closest('.q'); q.classList.remove('err');
+      q.querySelectorAll('.opt').forEach(x => x.classList.remove('sel')); o.classList.add('sel');
+      respostas[q.dataset.q] = o.dataset.a; $('btnEnviar').disabled = Object.keys(respostas).length < perguntas.length;
+    });
+    $('btnEnviar').disabled = true; $('erroProva').classList.add('hide');
+    ver('vProva', 3);
+  }catch(e){ $('erroVideo').textContent = 'Falha de conexão: ' + e.message; $('erroVideo').classList.remove('hide'); }
+  finally{ pintaProgresso(); }
+}
+$('btnEnviar').onclick = async () => {
+  $('btnEnviar').disabled = true; $('erroProva').classList.add('hide');
+  try{
+    const r = await rpc('trn_responder', { ...base(), p_respostas: respostas });
+    if(!r.ok){ $('erroProva').textContent = r.erro; $('erroProva').classList.remove('hide'); return; }
+    if(r.aprovado){
+      const i = await rpc('trn_info', base()); if(i.ok) INFO = i;
+      $('rNotaOk').textContent = '✔ ' + Number(r.nota).toLocaleString('pt-BR') + '%'; mostrarCertificado(r.nota);
+    }else{
+      $('rNotaNo').textContent = '✖ ' + Number(r.nota).toLocaleString('pt-BR') + '%';
+      $('rMsgNo').textContent = `Você acertou ${r.acertos} de ${r.total}. A nota mínima é ${r.nota_minima}%. Você pode tentar de novo quantas vezes precisar.`;
+      ver('vReprovado', 4);
+    }
+  }catch(e){ $('erroProva').textContent = 'Falha de conexão: ' + e.message; $('erroProva').classList.remove('hide'); $('btnEnviar').disabled = false; }
+};
+$('btnTentar').onclick = () => abrirProva();
+
+/* ---------- 4. Certificado ---------- */
+function somaMeses(iso, m){ const d = new Date(String(iso).slice(0, 10) + 'T12:00:00'); d.setMonth(d.getMonth() + m); return d.toISOString().slice(0, 10); }
+function mostrarCertificado(nota){
+  const c = INFO.certificado || {}, cu = INFO.curso;
+  const nt = nota != null ? nota : INFO.nota_final;
+  $('rNotaOk').textContent = '✔ ' + Number(nt).toLocaleString('pt-BR') + '%';
+  const val = cu.validade_meses ? `Validade: ${dataBR(somaMeses(c.data_conclusao, cu.validade_meses))}` : 'Sem prazo de validade';
+  $('cert').innerHTML = `
+    <h2>CERTIFICADO DE TREINAMENTO</h2>
+    <p style="margin-top:12px">Certificamos que</p>
+    <div class="n">${esc(INFO.colaborador)}</div>
+    <p>CPF final ${esc(INFO.cpf_final)}, concluiu o treinamento <b>${esc(cu.titulo)}</b>${cu.duracao_minutos ? ` (carga horária: ${esc(cu.duracao_minutos)} min)` : ''}, com aproveitamento de <b>${Number(nt).toLocaleString('pt-BR')}%</b>, em <b>${dataBR(c.data_conclusao)}</b>.</p>
+    <p>${esc(val)}</p>
+    <div class="selo"><b>Assinado eletronicamente</b> pelo participante (link individual + CPF) · IP ${esc(c.ip || '—')}<br>
+    <b>Código:</b> ${esc(c.codigo || '—')}<br><b>Selo SHA-256:</b> ${esc(c.hash || '—')}</div>`;
+  clearInterval(tickTimer); clearInterval(sendTimer); tickTimer = sendTimer = null;
+  ver('vAprovado', 4);
+  [...$('passos').children].forEach(e => e.className = 'ok');
+}
+$('btnImprimir').onclick = () => window.print();
+
+/* ---------- início ---------- */
+(function(){
+  if(TOKEN.length < 20){ erroGeral('Link inválido. Abra o link completo que você recebeu no WhatsApp.'); return; }
+  ver('vCpf', 1);
+})();
+</script>
+</body>
+</html>
