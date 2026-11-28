@@ -737,6 +737,31 @@
   .mb-bar>div>.mb-btn{flex:1;}
   .mb-btn.p{background:#135469;color:#fff;font-size:16px;height:52px;} .mb-btn.s{border:1.5px solid #135469;color:#135469;} .mb-btn.g{border:1.5px solid #cbd5e1;background:#fff;color:#0f172a;}
   .mb-btn[disabled]{opacity:.5;}
+
+  /* ---- App do líder: menu lateral + Treinamentos ---- */
+  .mb-hamrow{display:flex;align-items:center;gap:10px;}
+  .mb-ham{all:unset;cursor:pointer;width:42px;height:42px;border-radius:12px;background:#0e3342;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:22px;flex:none;}
+  #mobDrw{display:none;position:fixed;inset:0;z-index:95;pointer-events:none;}
+  body.mob-on #mobDrw{display:block;}
+  #mobDrw .bk{position:absolute;inset:0;background:rgba(15,23,42,.6);opacity:0;transition:opacity .2s;}
+  #mobDrw .pn{position:absolute;top:0;bottom:0;left:0;width:84%;max-width:330px;background:#fff;transform:translateX(-100%);transition:transform .28s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;}
+  #mobDrw.open{pointer-events:auto;} #mobDrw.open .bk{opacity:1;} #mobDrw.open .pn{transform:none;}
+  #mobDrw .dh{background:#0b2a3a;color:#fff;padding:calc(20px + env(safe-area-inset-top)) 16px 16px;}
+  #mobDrw .dh small{font-size:10px;letter-spacing:.8px;color:#4ade80;font-weight:800;text-transform:uppercase;}
+  #mobDrw .dh h3{margin:3px 0 12px;font-size:15px;}
+  #mobDrw .me{background:#12394d;border:1px solid #1f5470;border-radius:12px;padding:11px;} #mobDrw .me b{display:block;font-size:13px;} #mobDrw .me span{font-size:11px;color:#cbd5e1;}
+  #mobDrw nav{flex:1;overflow-y:auto;padding:10px;}
+  #mobDrw nav button{all:unset;box-sizing:border-box;width:100%;min-height:48px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:14px;font-weight:700;color:#334155;cursor:pointer;margin-bottom:4px;}
+  #mobDrw nav button.on{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;}
+  #mobDrw nav .bd{margin-left:auto;background:#fee2e2;color:#b91c1c;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:800;}
+  #mobDrw nav .bd.z{background:#e2e8f0;color:#475569;}
+  #mobDrw .df{padding:10px 10px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #e2e8f0;}
+  .mb-pill.r{color:#991b1b;background:#fee2e2;} .mb-pill.b{color:#1e40af;background:#dbeafe;}
+  .mb-aviso{background:#fff8e1;border:1px dashed #e0b84a;color:#7a5b00;font-size:12px;padding:9px 11px;border-radius:10px;line-height:1.45;}
+  .mb-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  .mb-kpi{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:4px;}
+  .mb-kpi b{font-size:24px;} .mb-kpi span{font-size:11px;color:#64748b;font-weight:700;}
+  .mb-prog{height:8px;background:#e2e8f0;border-radius:8px;overflow:hidden;margin:8px 0 4px;} .mb-prog i{display:block;height:100%;background:#059669;}
   .mb-nav{background:#fff;border-top:1px solid #e2e8f0;padding:8px 8px calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-around;flex:none;}
   .mb-nav button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:700;color:#526173;padding:4px 10px;min-width:60px;}
   .mb-nav button.on{color:#135469;}
@@ -1304,7 +1329,12 @@
 
     <!-- VIEW: TREINAMENTOS -->
     <section id="viewTreinamentos" style="display:none;">
-      <div class="view-header">
+      <div class="training-tabs" style="display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap;">
+        <button class="btn primary" id="tabSstRegistros" onclick="sstTrainingTab('registros')" type="button">Treinamentos Registrados</button>
+        <button class="btn secondary" id="tabSstOnline" onclick="sstTrainingTab('online')" type="button">Treinamentos Online</button>
+      </div>
+      <div id="sstTabRegistros">
+<div class="view-header">
         <h1>Treinamentos</h1>
         <div class="toolbar">
           <button class="btn primary" id="btnNovoTreinamento">+ Novo Treinamento</button>
@@ -1330,9 +1360,446 @@
           </table>
         </div>
       </div>
+    
+      </div>
+      <div id="sstTabOnline" style="display:none;"><style>#sstApprovedWorkspace{--navy:#0f2b3c;--navy2:#16465d;--green:#2ecc71;--blue:#2980b9;--red:#e74c3c;--yellow:#f1c40f;--bg:#f3f6f9;--card:#fff;--border:#e1e7ed;--text:#172b3a;--muted:#71808d}
+#sstApprovedWorkspace *{box-sizing:border-box}
+#sstApprovedWorkspace{margin:0;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text)}
+#sstApprovedWorkspace .heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px}
+#sstApprovedWorkspace .heading h1{font-size:23px;margin:0 0 6px;color:var(--navy)}
+#sstApprovedWorkspace .heading p{margin:0;color:var(--muted);font-size:13px}
+#sstApprovedWorkspace .btn{border:0;border-radius:8px;padding:10px 14px;font-weight:700;font-size:12px;cursor:pointer}
+#sstApprovedWorkspace .primary{background:#17617b;color:white}
+#sstApprovedWorkspace .ghost{background:#fff;border:1px solid var(--border);color:#314b5d}
+#sstApprovedWorkspace .stats{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:12px;margin-bottom:18px}
+#sstApprovedWorkspace .stat{background:white;border:1px solid var(--border);border-radius:12px;padding:14px 15px;position:relative;overflow:hidden}
+#sstApprovedWorkspace .stat:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+#sstApprovedWorkspace .stat .label{font-size:11px;color:var(--muted)}
+#sstApprovedWorkspace .stat .num{font-size:25px;font-weight:800;margin-top:7px;color:var(--text)}
+#sstApprovedWorkspace .stat .note{font-size:10px;color:var(--muted);margin-top:4px}
+#sstApprovedWorkspace .stat .label{display:flex;align-items:center;gap:6px;font-weight:600}
+#sstApprovedWorkspace .stat-emoji{font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center;min-width:17px}
+#sstApprovedWorkspace .quick-action{width:100%;display:flex;align-items:center;gap:11px;text-align:left;padding:11px 12px;margin:0 0 9px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);cursor:pointer}
+#sstApprovedWorkspace .quick-action.primary{background:#17617b;border-color:#17617b;color:#fff}
+#sstApprovedWorkspace .quick-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:8px;background:#eef4f7;color:#17617b;font-size:19px;font-weight:700}
+#sstApprovedWorkspace .quick-action.primary .quick-icon{background:#ffffff24;color:#fff}
+#sstApprovedWorkspace .quick-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+#sstApprovedWorkspace .quick-copy b{font-size:12px;font-weight:700}
+#sstApprovedWorkspace .quick-copy small{font-size:10px;color:var(--muted);font-weight:400}
+#sstApprovedWorkspace .quick-action.primary .quick-copy small{color:#d9eaf0}
+#sstApprovedWorkspace .quick-arrow{margin-left:auto;font-size:20px;opacity:.65}
+
+#sstApprovedWorkspace .stat.blue{--accent:#3498db}
+#sstApprovedWorkspace .stat.orange{--accent:#f39c12}
+#sstApprovedWorkspace .stat.green{--accent:#27ae60}
+#sstApprovedWorkspace .stat.red{--accent:#e74c3c}
+#sstApprovedWorkspace .stat.gray{--accent:#8295a5}
+#sstApprovedWorkspace .panel{background:white;border:1px solid var(--border);border-radius:13px;padding:18px;margin-bottom:16px}
+#sstApprovedWorkspace .panel-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+#sstApprovedWorkspace .panel-title h2{font-size:15px;margin:0;color:var(--navy)}
+#sstApprovedWorkspace .panel-title span{font-size:11px;color:var(--muted)}
+#sstApprovedWorkspace .filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+#sstApprovedWorkspace .filters input,#sstApprovedWorkspace .filters select{border:1px solid var(--border);border-radius:8px;padding:9px 11px;background:white;color:var(--text);font-size:12px;min-width:155px}
+#sstApprovedWorkspace .table-wrap{overflow:auto}
+#sstApprovedWorkspace table{border-collapse:collapse;width:100%;min-width:690px}
+#sstApprovedWorkspace th,#sstApprovedWorkspace td{text-align:left;padding:11px 10px;border-bottom:1px solid #edf1f4;font-size:12px}
+#sstApprovedWorkspace th{font-size:10px;color:#71808d;text-transform:uppercase;letter-spacing:.4px;background:#fafcfd}
+#sstApprovedWorkspace td b{display:block;font-size:12px}
+#sstApprovedWorkspace td small{color:var(--muted);display:block;margin-top:3px}
+#sstApprovedWorkspace .pill{padding:5px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+#sstApprovedWorkspace .p-pend{background:#fff4d7;color:#9a6700}
+#sstApprovedWorkspace .p-progress{background:#e5f2ff;color:#2166a3}
+#sstApprovedWorkspace .p-done{background:#e3f7ec;color:#13763e}
+#sstApprovedWorkspace .p-fail{background:#fdecea;color:#b4233f}
+#sstApprovedWorkspace .progress{width:94px;height:7px;background:#e6edf2;border-radius:8px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:5px}
+#sstApprovedWorkspace .progress i{height:100%;display:block;background:#28a96b;border-radius:8px}
+#sstApprovedWorkspace .two{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+#sstApprovedWorkspace .course{display:flex;gap:13px;align-items:center}
+#sstApprovedWorkspace .course-icon{width:54px;height:54px;border-radius:12px;background:#e8f4fb;display:grid;place-items:center;font-size:24px;flex-shrink:0}
+#sstApprovedWorkspace .course h3{margin:0 0 5px;font-size:13px}
+#sstApprovedWorkspace .course p{margin:0;color:var(--muted);font-size:11px;line-height:1.5}
+#sstApprovedWorkspace .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+#sstApprovedWorkspace .tag{background:#f1f5f8;color:#506577;padding:5px 8px;border-radius:6px;font-size:10px}
+#sstApprovedWorkspace .quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+#sstApprovedWorkspace .quick button{font-size:11px;padding:8px 10px}
+#sstApprovedWorkspace .empty-note{font-size:11px;color:var(--muted);line-height:1.5}
+@media (max-width:1000px){#sstApprovedWorkspace .stats{grid-template-columns:repeat(3,1fr)}
+#sstApprovedWorkspace .two{grid-template-columns:1fr}}
+@media (max-width:700px){
+#sstApprovedWorkspace .stats{grid-template-columns:repeat(2,1fr)}
+#sstApprovedWorkspace .heading h1{font-size:20px}}#sstApprovedWorkspace .catalog-course-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:5px}
+#sstApprovedWorkspace .catalog-course-head h3{margin:0}
+#sstApprovedWorkspace .catalog-status{font-size:10px;font-weight:700;color:#16834a;background:#e9f7ef;padding:5px 8px;border-radius:20px;white-space:nowrap}
+#sstApprovedWorkspace .training-flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+#sstApprovedWorkspace .flow-step{border:1px solid var(--border);border-radius:11px;padding:14px 12px;background:#fbfcfd;min-width:0}
+#sstApprovedWorkspace .flow-number{font-size:11px;font-weight:800;letter-spacing:.5px;color:#7890a2}
+#sstApprovedWorkspace .flow-symbol{width:34px;height:34px;border-radius:9px;background:#e8f2f8;color:#174b68;display:grid;place-items:center;font-size:17px;margin:10px 0}
+#sstApprovedWorkspace .flow-label{font-size:10px;text-transform:uppercase;letter-spacing:.55px;font-weight:700;color:#537185}
+#sstApprovedWorkspace .flow-step h3{font-size:13px;margin:5px 0 6px;color:var(--navy)}
+#sstApprovedWorkspace .flow-step p{font-size:11px;line-height:1.5;color:var(--muted);margin:0}
+#sstApprovedWorkspace .sstap-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+#sstApprovedWorkspace .catalog-list{display:flex;flex-direction:column;gap:10px}
+#sstApprovedWorkspace .catalog-item{display:flex;align-items:flex-start;gap:13px;padding:14px;border:1px solid var(--border);border-radius:11px;background:#fff}
+#sstApprovedWorkspace .catalog-item .course-icon{flex:none}
+#sstApprovedWorkspace .catalog-item-main{flex:1;min-width:0}
+#sstApprovedWorkspace .catalog-item-main p{font-size:11px;color:var(--muted);margin:7px 0 12px}
+#sstApprovedWorkspace .catalog-actions{display:flex;gap:7px;flex-wrap:wrap}
+#sstApprovedWorkspace .catalog-actions .btn{padding:6px 11px;font-size:11px}
+#sstApprovedWorkspace .catalog-status.inactive{background:#f1f3f5;color:#667085}
+@media(max-width:700px){#sstApprovedWorkspace .sstap-toolbar{width:100%}#sstApprovedWorkspace .sstap-toolbar .btn{flex:1}}
+
+@media(max-width:1000px){#sstApprovedWorkspace .training-flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){#sstApprovedWorkspace .training-flow{grid-template-columns:1fr 1fr}}
+</style><div id="sstApprovedWorkspace"><div class="heading"><div><h1>Gestão de Treinamentos</h1><p>Acompanhe inscrições, andamento, avaliações e certificados dos treinamentos online.</p></div><div class="sstap-toolbar"><button class="btn ghost" onclick="sstap_newCourse()">＋ Novo curso</button><button class="btn primary" onclick="sstap_assignTraining()">＋ Atribuir treinamento</button></div></div>
+<div class="stats">
+<div class="stat blue"><div class="label"><span class="stat-emoji">📚</span>Inscrições totais</div><div class="num" id="sstap_kpiTotal">—</div><div class="note" id="sstap_kpiTotalNote">Aguardando consulta</div></div>
+<div class="stat orange"><div class="label"><span class="stat-emoji">⏳</span>Pendentes</div><div class="num" id="sstap_kpiPending">—</div><div class="note">Aguardando início</div></div>
+<div class="stat blue"><div class="label"><span class="stat-emoji">▶</span>Em andamento</div><div class="num" id="sstap_kpiProgress">—</div><div class="note">Treinamento iniciado</div></div>
+<div class="stat green"><div class="label"><span class="stat-emoji">✓</span>Concluídos</div><div class="num" id="sstap_kpiDone">—</div><div class="note">Finalizados</div></div>
+<div class="stat red"><div class="label"><span class="stat-emoji">!</span>Reprovados</div><div class="num" id="sstap_kpiFailed">—</div><div class="note">Nova tentativa necessária</div></div>
+</div>
+<div class="two"><section class="panel catalog-panel"><div class="panel-title"><h2>Catálogo de cursos</h2><span id="sstap_catalogCount">Aguardando consulta</span></div>
+<div class="catalog-list" id="sstap_catalogList"><div class="empty-note" id="sstap_catalogMessage">Abra a aba Treinamentos Online para carregar os cursos cadastrados.</div></div>
+</section>
+<section class="panel"><div class="panel-title"><h2>Ações rápidas</h2><span>Gestão da turma</span></div>
+<button class="quick-action primary" onclick="sstap_assignTraining()"><span class="quick-icon">＋</span><span class="quick-copy"><b>Atribuir treinamento</b><small>Selecionar colaboradores</small></span><span class="quick-arrow">›</span></button>
+<button class="quick-action" onclick="sstap_convites()"><span class="quick-icon">✉</span><span class="quick-copy"><b>Ver convites criados</b><small>Status e validade dos links</small></span><span class="quick-arrow">›</span></button>
+<button class="quick-action" onclick="sstap_exportCsv()"><span class="quick-icon">⇩</span><span class="quick-copy"><b>Exportar relatório CSV</b><small>Baixar inscrições filtradas</small></span><span class="quick-arrow">›</span></button>
+</section></div>
+<section class="panel"><div class="panel-title"><h2 id="sstap_inscTitle">Inscrições</h2><span id="sstap_inscriptionCount">Aguardando consulta</span></div><div class="filters"><input id="sstap_search" oninput="sstap_filterRows()" placeholder="Buscar colaborador..."/><select id="sstap_status" onchange="sstap_filterRows()"><option value="">Todos os status</option><option>Pendente</option><option>Em andamento</option><option>Concluído</option><option>Reprovado</option></select><select id="sstap_unit" onchange="sstap_filterRows()"><option value="">Todas as unidades</option></select><button class="btn ghost" onclick="sstap_clearFilters()">Limpar filtros</button></div><div class="table-wrap"><table><thead><tr><th>Colaborador</th><th>Unidade</th><th>Status</th><th>Progresso</th><th>Nota</th><th>Prazo</th><th>Ações</th></tr></thead><tbody id="sstap_rows"></tbody></table></div></section>
+<section class="panel flow-panel"><div class="panel-title"><h2>Fluxo do treinamento online</h2><span>Etapas previstas</span></div><div class="training-flow">
+<div class="flow-step"><div class="flow-number">01</div><div class="flow-symbol">＋</div><div class="flow-label">Atribuição</div><h3>Selecionar curso</h3><p>Selecionar curso, unidade e colaboradores.</p></div>
+<div class="flow-step"><div class="flow-number">02</div><div class="flow-symbol">✉</div><div class="flow-label">Convite</div><h3>Enviar acesso</h3><p>Gerar link individual e compartilhar.</p></div>
+<div class="flow-step"><div class="flow-number">03</div><div class="flow-symbol">▶</div><div class="flow-label">Conteúdo</div><h3>Assistir aula</h3><p>Assistir vídeo e registrar progresso.</p></div>
+<div class="flow-step"><div class="flow-number">04</div><div class="flow-symbol">✓</div><div class="flow-label">Avaliação</div><h3>Responder quiz</h3><p>Responder questões e obter nota.</p></div>
+<div class="flow-step"><div class="flow-number">05</div><div class="flow-symbol">▣</div><div class="flow-label">Certificado</div><h3>Finalização</h3><p>Emitir após aprovação.</p></div>
+</div></section></div></div>
+
+<script>(function(){
+let cursos=[], insc=[], carregando=false, carregado=false;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function sstap_toast(m){ if(typeof toast==='function') toast(m); else alert(m); }
+function colabs(){ try{ return (typeof colaboradores!=='undefined' && Array.isArray(colaboradores))?colaboradores:[]; }catch(e){ return []; } }
+function colabDe(r){ const id=String(r.colaborador_id||''); return colabs().find(c=>String(c.id)===id)||null; }
+function statusNorm(s){ const v=String(s||'PENDENTE').toUpperCase(); return ({PENDENTE:'Pendente',EM_ANDAMENTO:'Em andamento',CONCLUIDO:'Concluído',REPROVADO:'Reprovado',CANCELADO:'Cancelado'})[v]||'Pendente'; }
+function pillClass(s){ return s==='Pendente'?'p-pend':s==='Em andamento'?'p-progress':s==='Concluído'?'p-done':s==='Reprovado'?'p-fail':'p-pend'; }
+function fmtData(d){ if(!d) return '—'; const s=String(d).slice(0,10).split('-'); return s.length===3?`${s[2]}/${s[1]}/${s[0]}`:'—'; }
+function renderCursos(){
+  const list=document.getElementById('sstap_catalogList'), cnt=document.getElementById('sstap_catalogCount');
+  if(cnt) cnt.textContent=`${cursos.length} curso(s)`;
+  if(!list) return;
+  if(!cursos.length){ list.innerHTML='<div class="empty-note">Nenhum curso retornado. Verifique o cadastro e as permissões (RLS) da tabela sst_cursos.</div>'; return; }
+  list.innerHTML=cursos.map(c=>{
+    const det=[];
+    if(c.duracao_minutos!=null) det.push(`${esc(c.duracao_minutos)} min`);
+    if(c.nota_minima!=null) det.push(`Nota mínima ${esc(c.nota_minima)}%`);
+    if(c.validade_meses!=null) det.push(`Validade ${esc(c.validade_meses)} meses`);
+    if(c.setor) det.push(esc(c.setor));
+    const ativo=c.ativo!==false;
+    return `<article class="catalog-item"><div class="course-icon">📚</div><div class="catalog-item-main"><div class="catalog-course-head"><h3>${esc(c.titulo||'Curso sem título')}</h3><span class="catalog-status ${ativo?'':'inactive'}">${ativo?'● Ativo':'● Desativado'}</span></div><p>${det.join(' · ')||'—'}</p><div class="catalog-actions"><button class="btn ghost" onclick="sstap_newCourse('${esc(c.id)}')">✎ Editar curso e perguntas</button></div></div></article>`;
+  }).join('');
+}
+function renderKpis(){
+  const n={Pendente:0,'Em andamento':0,'Concluído':0,Reprovado:0};
+  insc.forEach(r=>{ const s=statusNorm(r.status); if(n[s]!==undefined) n[s]++; });
+  const put=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=String(v); };
+  put('sstap_kpiTotal',insc.length); put('sstap_kpiPending',n.Pendente); put('sstap_kpiProgress',n['Em andamento']); put('sstap_kpiDone',n['Concluído']); put('sstap_kpiFailed',n.Reprovado);
+  put('sstap_kpiTotalNote','Inscrições cadastradas');
+  put('sstap_inscriptionCount',`${insc.length} inscrição(ões)`);
+  const t=document.getElementById('sstap_inscTitle');
+  if(t){ const ids=[...new Set(insc.map(r=>r.curso_id))]; const c=ids.length===1?cursos.find(x=>x.id===ids[0]):null; t.textContent=c?`Inscrições — ${c.titulo}`:'Inscrições'; }
+}
+function unidadeDe(r){ const c=colabDe(r); return (c&&(c.local||c.unidade))||''; }
+function renderUnidades(){
+  const sel=document.getElementById('sstap_unit'); if(!sel) return; const atual=sel.value;
+  const us=[...new Set(insc.map(unidadeDe).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">Todas as unidades</option>'+us.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  if(us.includes(atual)) sel.value=atual;
+}
+function filtradas(){
+  const q=(document.getElementById('sstap_search')?.value||'').toLowerCase();
+  const st=document.getElementById('sstap_status')?.value||'';
+  const un=document.getElementById('sstap_unit')?.value||'';
+  return insc.filter(r=>{ const c=colabDe(r); const nome=(c&&c.nome)||''; return nome.toLowerCase().includes(q)&&(!st||statusNorm(r.status)===st)&&(!un||unidadeDe(r)===un); });
+}
+function sstap_filterRows(){
+  const body=document.getElementById('sstap_rows'); if(!body) return;
+  const rows=filtradas();
+  body.innerHTML=rows.map(r=>{
+    const c=colabDe(r); const s=statusNorm(r.status);
+    const nome=c?c.nome:'Colaborador não localizado';
+    const prog = s==='Concluído'?'<span class="progress"><i style="width:100%"></i></span>100%' : s==='Pendente'?'<span class="progress"><i style="width:0%"></i></span>0%' : s==='Em andamento'?'Em curso':'—';
+    const nota=r.nota_final!=null?Number(r.nota_final).toLocaleString('pt-BR'):'—';
+    return `<tr><td><b>${esc(nome)}</b><small>Atribuído em ${fmtData(r.data_atribuicao)}</small></td><td>${esc(unidadeDe(r)||'—')}</td><td><span class="pill ${pillClass(s)}">${esc(s)}</span></td><td>${prog}</td><td>${esc(nota)}</td><td>${fmtData(r.data_limite)}</td><td style="white-space:nowrap">${s==='Concluído'||s==='Cancelado'?'—':`<button class="btn ghost" style="padding:5px 9px;font-size:11px" onclick="sstap_enviar('${esc(r.id)}','wa')">📲 WhatsApp</button> <button class="btn ghost" style="padding:5px 9px;font-size:11px" onclick="sstap_enviar('${esc(r.id)}','copiar')">🔗 Copiar</button>`}</td></tr>`;
+  }).join('')||'<tr><td colspan="7" class="empty-note">Nenhuma inscrição encontrada para os filtros selecionados.</td></tr>';
+}
+async function sstap_load(force){
+  if(carregando||(carregado&&!force)){ renderUnidades(); sstap_filterRows(); return; }
+  carregando=true;
+  const body=document.getElementById('sstap_rows');
+  if(body) body.innerHTML='<tr><td colspan="7" class="empty-note">Consultando inscrições...</td></tr>';
+  try{
+    if(typeof supabaseClient==='undefined') throw new Error('Supabase não inicializado');
+    cursos=await epiBuscarTudo('sst_cursos','*');
+    insc=await epiBuscarTudo('sst_inscricoes','*');
+    carregado=true;
+    renderCursos(); renderKpis(); renderUnidades(); sstap_filterRows();
+  }catch(err){
+    console.error('[SST] treinamentos online:',err);
+    const cnt=document.getElementById('sstap_inscriptionCount'); if(cnt) cnt.textContent='Consulta indisponível';
+    if(body) body.innerHTML='<tr><td colspan="7" class="empty-note">Não foi possível carregar. A leitura exige login com perfil admin (política RLS das tabelas sst_cursos e sst_inscricoes).</td></tr>';
+    ['sstap_kpiTotal','sstap_kpiPending','sstap_kpiProgress','sstap_kpiDone','sstap_kpiFailed'].forEach(id=>{const e=document.getElementById(id); if(e) e.textContent='—';});
+  } finally { carregando=false; }
+}
+function sstap_clearFilters(){ ['sstap_search','sstap_status','sstap_unit'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';}); sstap_filterRows(); }
+function sstap_exportCsv(){
+  const rows=filtradas(); if(!rows.length){ sstap_toast('Nada para exportar.'); return; }
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const linhas=[['Colaborador','Unidade','Status','Nota','Atribuído em','Prazo','Conclusão'].map(q).join(';')];
+  rows.forEach(r=>{ const c=colabDe(r); linhas.push([c?c.nome:'',unidadeDe(r),statusNorm(r.status),r.nota_final??'',fmtData(r.data_atribuicao),fmtData(r.data_limite),fmtData(r.data_conclusao)].map(q).join(';')); });
+  const blob=new Blob(['﻿'+linhas.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='treinamentos_online.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+/* ===== Novo curso / editar ===== */
+const $t = id => document.getElementById(id);
+let trnBloq = false;
+function abrir(id){ $t(id).classList.add('open'); } function fechar(id){ $t(id).classList.remove('open'); }
+function qHtml(q, n){
+  const alts = (q.alternativas||[]); const L='ABCD';
+  return `<div class="tq"><div class="tq-h"><span>Pergunta ${n}</span><button type="button" class="btn" style="padding:3px 8px;font-size:11px" onclick="sstap_delQ(this)">Remover</button></div>
+  <label>ENUNCIADO</label><textarea class="q-en">${esc(q.enunciado||'')}</textarea>
+  <label>ALTERNATIVAS (marque a correta)</label>
+  ${[0,1,2,3].map(j=>`<div class="alt"><input type="radio" name="" class="q-ok" value="${L[j]}" ${q.resposta_correta===L[j]?'checked':''}><b>${L[j]}</b><input type="text" class="q-alt" data-id="${L[j]}" value="${esc((alts[j]&&alts[j].texto)||'')}" placeholder="Alternativa ${L[j]}"></div>`).join('')}
+  <label>EXPLICAÇÃO (OPCIONAL)</label><input type="text" class="q-ex" value="${esc(q.explicacao||'')}"></div>`;
+}
+function qRenum(){
+  [...document.querySelectorAll('#cursoTrnPerguntas .tq')].forEach((el,i)=>{ el.querySelector('.tq-h span').textContent='Pergunta '+(i+1); el.querySelectorAll('.q-ok').forEach(r=>r.name='qok'+i); });
+}
+function sstap_addQ(q){ $t('cursoTrnPerguntas').insertAdjacentHTML('beforeend', qHtml(q||{}, 0)); qRenum(); }
+function sstap_delQ(b){ b.closest('.tq').remove(); qRenum(); }
+async function sstap_newCourse(id){
+  $t('cursoTrnId').value=''; ['cursoTrnTit','cursoTrnDesc','cursoTrnSetor','cursoTrnVideo','cursoTrnDur','cursoTrnVal'].forEach(i=>$t(i).value=''); $t('cursoTrnNota').value='70'; $t('cursoTrnAtivo').checked=true;
+  $t('cursoTrnPerguntas').innerHTML=''; trnBloq=false; $t('cursoTrnBloq').style.display='none'; $t('cursoTrnAddQ').style.display='';
+  $t('cursoTrnTitulo').textContent = id ? 'Editar curso' : 'Novo curso';
+  if(id){
+    const c=cursos.find(x=>String(x.id)===String(id)); if(!c) return;
+    $t('cursoTrnId').value=c.id; $t('cursoTrnTit').value=c.titulo||''; $t('cursoTrnDesc').value=c.descricao||''; $t('cursoTrnSetor').value=c.setor||'';
+    $t('cursoTrnVideo').value=c.video_url||''; $t('cursoTrnDur').value=c.duracao_minutos??''; $t('cursoTrnVal').value=c.validade_meses??''; $t('cursoTrnNota').value=c.nota_minima??70; $t('cursoTrnAtivo').checked=c.ativo!==false;
+    try{
+      const { data, error } = await supabaseClient.rpc('sst_admin_curso_perguntas', { p_curso_id: c.id });
+      if(error) throw error;
+      (data.perguntas||[]).forEach(q=>sstap_addQ(q));
+      trnBloq=!!data.bloqueado;
+      if(trnBloq){ $t('cursoTrnBloq').style.display='block'; $t('cursoTrnAddQ').style.display='none'; $t('cursoTrnPerguntas').querySelectorAll('input,textarea,button').forEach(e=>e.disabled=true); }
+    }catch(e){ sstap_toast('Não consegui carregar as perguntas: '+(e.message||e)); return; }
+  }else sstap_addQ();
+  abrir('modalCursoTrn');
+}
+function coletaPerguntas(){
+  const out=[];
+  for(const el of document.querySelectorAll('#cursoTrnPerguntas .tq')){
+    const en=el.querySelector('.q-en').value.trim();
+    const alts=[...el.querySelectorAll('.q-alt')].map(i=>({id:i.dataset.id,texto:i.value.trim()})).filter(a=>a.texto);
+    const ok=el.querySelector('.q-ok:checked');
+    const n=out.length+1;
+    if(!en) throw new Error(`Pergunta ${n}: escreva o enunciado.`);
+    if(alts.length<2) throw new Error(`Pergunta ${n}: preencha pelo menos 2 alternativas.`);
+    if(!ok||!alts.some(a=>a.id===ok.value)) throw new Error(`Pergunta ${n}: marque a alternativa correta (que esteja preenchida).`);
+    out.push({enunciado:en,alternativas:alts,resposta_correta:ok.value,explicacao:el.querySelector('.q-ex').value.trim()});
+  }
+  return out;
+}
+async function sstap_salvarCurso(){
+  try{
+    const tit=$t('cursoTrnTit').value.trim(), vid=$t('cursoTrnVideo').value.trim(), dur=parseInt($t('cursoTrnDur').value,10);
+    if(!tit) throw new Error('Informe o título do curso.');
+    if(!vid) throw new Error('Informe o link do vídeo.');
+    if(!(dur>0)) throw new Error('Informe a duração do vídeo em minutos.');
+    const nota=parseFloat($t('cursoTrnNota').value); if(!(nota>0&&nota<=100)) throw new Error('Nota mínima deve estar entre 1 e 100.');
+    let perg=null; if(!trnBloq){ perg=coletaPerguntas(); if(!perg.length) throw new Error('Cadastre pelo menos 1 pergunta.'); }
+    const curso={ id:$t('cursoTrnId').value||null, titulo:tit, descricao:$t('cursoTrnDesc').value.trim(), setor:$t('cursoTrnSetor').value.trim(), video_url:vid,
+      duracao_minutos:dur, validade_meses:$t('cursoTrnVal').value||null, nota_minima:nota, ativo:$t('cursoTrnAtivo').checked };
+    $t('cursoTrnSalvar').disabled=true;
+    const { data, error } = await supabaseClient.rpc('sst_admin_salvar_curso',{ p_curso:curso, p_perguntas:perg });
+    if(error) throw new Error(error.message);
+    if(typeof auditar==='function') auditar($t('cursoTrnId').value?'alterou':'criou', data.id, 'Treinamento online — '+tit);
+    fechar('modalCursoTrn'); sstap_toast('Curso salvo.'); await sstap_load(true);
+  }catch(e){ alert(e.message||e); }
+  finally{ $t('cursoTrnSalvar').disabled=false; }
+}
+
+/* ===== Atribuir treinamento ===== */
+function atribAtivos(){ return colabs().filter(c=>String(c.status||'').toUpperCase()==='ATIVO'); }
+function atribRender(){
+  const curso=$t('atribCurso').value, loc=$t('atribLocal').value, q=$t('atribBusca').value.toLowerCase().replace(/\D/g,'')||$t('atribBusca').value.toLowerCase();
+  const marcados=new Set([...document.querySelectorAll('#atribLista input:checked')].map(i=>i.value));
+  const lista=atribAtivos().filter(c=>(!loc||(c.local||c.unidade)===loc)&&(!q||String(c.nome||'').toLowerCase().includes(q)||String(c.cpf||'').replace(/\D/g,'').includes(q)));
+  $t('atribLista').innerHTML=lista.map(c=>{
+    const ex=insc.find(r=>String(r.colaborador_id)===String(c.id)&&String(r.curso_id)===String(curso)&&['PENDENTE','EM_ANDAMENTO'].includes(String(r.status).toUpperCase()));
+    return `<label class="${ex?'off':''}"><input type="checkbox" value="${esc(c.id)}" ${ex?'disabled':''} ${marcados.has(String(c.id))?'checked':''}>${esc(c.nome)}<small>${ex?'já inscrito':esc(c.local||c.unidade||'')}</small></label>`;
+  }).join('')||'<div class="empty-note" style="padding:12px">Nenhum colaborador ativo encontrado.</div>';
+  atribConta();
+}
+function atribConta(){ $t('atribContagem').textContent=document.querySelectorAll('#atribLista input:checked').length+' selecionado(s)'; }
+async function sstap_assignTraining(){
+  if(!carregado) await sstap_load(false);
+  const ativos=cursos.filter(c=>c.ativo!==false);
+  if(!ativos.length){ sstap_toast('Cadastre um curso ativo primeiro (botão Novo curso).'); return; }
+  $t('atribCurso').innerHTML=ativos.map(c=>`<option value="${esc(c.id)}">${esc(c.titulo)}</option>`).join('');
+  const locais=[...new Set(atribAtivos().map(c=>c.local||c.unidade).filter(Boolean))].sort();
+  $t('atribLocal').innerHTML='<option value="">Todos os locais</option>'+locais.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  $t('atribBusca').value=''; atribRender(); abrir('modalAtribTrn');
+}
+async function sstap_salvarAtrib(){
+  const ids=[...document.querySelectorAll('#atribLista input:checked')].map(i=>i.value);
+  if(!ids.length){ alert('Marque pelo menos um colaborador.'); return; }
+  const curso=$t('atribCurso').value;
+  if(!confirm(`Atribuir este treinamento a ${ids.length} colaborador(es)?`)) return;
+  $t('atribSalvar').disabled=true;
+  try{
+    const { data, error } = await supabaseClient.rpc('sst_admin_atribuir_treinamento',{ p_curso_id:curso, p_colaboradores:ids });
+    if(error) throw new Error(error.message);
+    const r=Array.isArray(data)?data[0]:data;
+    fechar('modalAtribTrn'); await sstap_load(true);
+    sstap_toast(`${r?.inscricoes_criadas??0} inscrição(ões) criada(s)`+((r?.inscricoes_ja_ativas)?` · ${r.inscricoes_ja_ativas} já estavam ativas`:'')+'. Agora envie os links pela tabela.');
+  }catch(e){ alert('Não foi possível atribuir: '+(e.message||e)); }
+  finally{ $t('atribSalvar').disabled=false; }
+}
+
+/* ===== Enviar link (convite de 72 h) ===== */
+async function trnMsgErro(error){
+  try{ if(error.context && error.context.json){ const j=await error.context.json(); if(j && j.erro) return j.erro; } }catch(e){}
+  return error.message||'Erro desconhecido.';
+}
+async function sstap_enviar(inscId, modo){
+  const r=insc.find(x=>String(x.id)===String(inscId)); if(!r) return;
+  const c=colabDe(r); const cu=cursos.find(x=>String(x.id)===String(r.curso_id));
+  const w = modo==='wa' ? window.open('about:blank','wa_fila') : null;
+  if(modo==='wa' && !w){ sstap_toast('O navegador bloqueou a janela. Permita pop-ups para este site e tente de novo.'); return; }
+  try{
+    const { data, error } = await supabaseClient.functions.invoke('sst-convites',{ body:{ colaborador_id:r.colaborador_id, curso_id:r.curso_id } });
+    if(error) throw new Error(await trnMsgErro(error));
+    if(!data || !data.token) throw new Error((data&&data.erro)||'Convite não gerado.');
+    const u=new URL('treinamento.html', location.href); u.search=''; u.hash=''; u.searchParams.set('t', data.token);
+    const link=u.toString();
+    const primeiro=String((c&&c.nome)||'').trim().split(/\s+/)[0];
+    const msg=`Olá, ${primeiro}! A Segurança do Trabalho liberou o treinamento "${cu?cu.titulo:'online'}". Acesse o link (válido por 72 horas), assista ao vídeo e responda a avaliação:\n${link}\nVocê vai precisar dos 3 últimos dígitos do seu CPF.`;
+    if(modo==='wa'){
+      const { data:n } = await supabaseClient.from('colaborador_whatsapp').select('whatsapp').eq('colaborador_id', r.colaborador_id).maybeSingle();
+      if(n && n.whatsapp){ w.location.href='https://wa.me/'+n.whatsapp+'?text='+encodeURIComponent(msg); sstap_toast('WhatsApp aberto. Toque em enviar lá.'); }
+      else{ try{ w.close(); }catch(e){} await copiaTxt(link); sstap_toast('Este colaborador não tem WhatsApp cadastrado. O link foi copiado.'); }
+    }else{ await copiaTxt(link); sstap_toast('Link copiado (vale 72 horas).'); }
+    if(typeof auditar==='function') auditar('enviar_treinamento', r.colaborador_id, `${c?c.nome:''} — ${cu?cu.titulo:''}`);
+  }catch(e){ if(w){ try{ w.close(); }catch(x){} } alert('Não foi possível gerar o link: '+(e.message||e)); }
+}
+async function copiaTxt(t){ try{ await navigator.clipboard.writeText(t); }catch(e){ prompt('Copie o link:', t); } }
+
+/* ===== Ver convites ===== */
+async function sstap_convites(){
+  $t('convLista').innerHTML='<div class="empty-note">Carregando...</div>'; abrir('modalConvTrn');
+  try{
+    const { data, error } = await supabaseClient.rpc('sst_admin_listar_convites'); if(error) throw new Error(error.message);
+    const agora=Date.now();
+    const st=v=>v.usado_em?['Usado','p-done']:v.revogado_em?['Substituído','p-fail']:(new Date(v.expira_em).getTime()<agora?['Expirado','p-fail']:['Ativo','p-progress']);
+    $t('convLista').innerHTML=(data&&data.length)?`<table class="trn-conv"><thead><tr><th>Colaborador</th><th>Curso</th><th>Criado</th><th>Expira</th><th>Situação</th></tr></thead><tbody>`+data.map(v=>{
+      const c=colabs().find(x=>String(x.id)===String(v.colaborador_id)); const cu=cursos.find(x=>String(x.id)===String(v.curso_id)); const [t,cl]=st(v);
+      const dt=d=>d?new Date(d).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'—';
+      return `<tr><td>${esc(c?c.nome:'—')}</td><td>${esc(cu?cu.titulo:'—')}</td><td>${dt(v.created_at)}</td><td>${dt(v.expira_em)}</td><td><span class="pill ${cl}" style="padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700">${t}</span>${v.tentativas>=5?' 🔒':''}</td></tr>`;
+    }).join('')+'</tbody></table>':'<div class="empty-note">Nenhum convite criado ainda.</div>';
+  }catch(e){ $t('convLista').innerHTML='<div class="empty-note">Não foi possível carregar: '+esc(e.message||e)+'</div>'; }
+}
+function sstap_bind(){
+$t('cursoTrnAddQ').onclick=()=>sstap_addQ(); $t('cursoTrnCancelar').onclick=()=>fechar('modalCursoTrn'); $t('cursoTrnSalvar').onclick=sstap_salvarCurso;
+$t('atribCancelar').onclick=()=>fechar('modalAtribTrn'); $t('atribSalvar').onclick=sstap_salvarAtrib; $t('convFechar').onclick=()=>fechar('modalConvTrn');
+$t('atribCurso').onchange=atribRender; $t('atribLocal').onchange=atribRender; $t('atribBusca').oninput=atribRender;
+$t('atribLista').onchange=atribConta;
+$t('atribTodos').onclick=()=>{ document.querySelectorAll('#atribLista input:not(:disabled)').forEach(i=>i.checked=true); atribConta(); };
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',sstap_bind); else sstap_bind();
+Object.assign(window,{sstap_toast,sstap_filterRows,sstap_clearFilters,sstap_newCourse,sstap_assignTraining,sstap_exportCsv,sstap_load,sstap_addQ,sstap_delQ,sstap_enviar,sstap_convites});
+window.sstTrainingTab=function(tab){
+  const r=document.getElementById('sstTabRegistros'), o=document.getElementById('sstTabOnline');
+  const br=document.getElementById('tabSstRegistros'), bo=document.getElementById('tabSstOnline');
+  if(!r||!o) return;
+  r.style.display=tab==='registros'?'block':'none'; o.style.display=tab==='online'?'block':'none';
+  if(br) br.className=tab==='registros'?'btn primary':'btn secondary';
+  if(bo) bo.className=tab==='online'?'btn primary':'btn secondary';
+  if(tab==='online') sstap_load(false);
+};
+})();</script>
     </section>
 
   </main>
+</div>
+
+<!-- MODAIS TREINAMENTOS ONLINE -->
+<style>
+.tq{border:1px solid #dbe4ea;border-radius:10px;padding:10px 12px;margin:10px 0;background:#fafcfd}
+.tq-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:#0f2b3c}
+.tq .alt{display:flex;gap:8px;align-items:center;margin:5px 0}
+.tq .alt input[type=text]{flex:1}
+.tq .alt input[type=radio],#modalCursoTrn input[type=checkbox],#modalAtribTrn input[type=checkbox]{width:auto;padding:0}
+.tq .alt b{min-width:16px;color:#17617b}
+.tq textarea{min-height:54px;resize:vertical}
+.trn-lista{max-height:260px;overflow-y:auto;border:1px solid #dbe4ea;border-radius:8px;margin-top:8px}
+.trn-lista label{display:flex;gap:8px;align-items:center;margin:0;padding:8px 10px;border-bottom:1px solid #edf1f4;font-size:12px;font-weight:500;color:#1e293b;letter-spacing:0;cursor:pointer}
+.trn-lista label small{margin-left:auto;color:#71808d;font-size:10px}
+.trn-lista label.off{opacity:.5;cursor:not-allowed}
+.trn-aviso{background:#fff8e1;border:1px solid #f0d98a;color:#7a5b00;font-size:12px;padding:8px 10px;border-radius:8px;margin:8px 0}
+.trn-conv{width:100%;border-collapse:collapse;font-size:12px}.trn-conv th,.trn-conv td{padding:7px 6px;border-bottom:1px solid #edf1f4;text-align:left}
+</style>
+<div class="modal-overlay" id="modalCursoTrn">
+  <div class="modal" style="max-width:680px;">
+    <h2 id="cursoTrnTitulo">Novo curso</h2>
+    <input type="hidden" id="cursoTrnId">
+    <label>TÍTULO DO CURSO</label><input type="text" id="cursoTrnTit" placeholder="Ex: NR-06 — Uso correto de EPI">
+    <label>DESCRIÇÃO (OPCIONAL)</label><input type="text" id="cursoTrnDesc">
+    <label>SETOR / ÁREA (OPCIONAL)</label><input type="text" id="cursoTrnSetor" placeholder="Ex: Todos, Limpeza...">
+    <label>LINK DO VÍDEO (YouTube não listado ou arquivo .mp4)</label><input type="text" id="cursoTrnVideo" placeholder="https://www.youtube.com/watch?v=...">
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1"><label>DURAÇÃO DO VÍDEO (MIN)</label><input type="number" id="cursoTrnDur" min="1" placeholder="30"></div>
+      <div style="flex:1"><label>VALIDADE (MESES)</label><input type="number" id="cursoTrnVal" min="0" placeholder="12"></div>
+      <div style="flex:1"><label>NOTA MÍNIMA (%)</label><input type="number" id="cursoTrnNota" min="1" max="100" value="70"></div>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center;"><input type="checkbox" id="cursoTrnAtivo" checked> Curso ativo (aparece para atribuir)</label>
+    <div class="trn-aviso">A duração deve ser a do vídeo: o sistema só libera a prova quando o colaborador assiste pelo menos 90% desse tempo.</div>
+    <h2 style="margin-top:18px;">Perguntas da avaliação</h2>
+    <div class="trn-aviso hide" id="cursoTrnBloq" style="display:none">Este curso já tem provas realizadas, então as perguntas não podem mais ser alteradas (os dados do curso podem).</div>
+    <div id="cursoTrnPerguntas"></div>
+    <button type="button" class="btn" id="cursoTrnAddQ">+ Adicionar pergunta</button>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="cursoTrnCancelar">Cancelar</button>
+      <button type="button" class="btn primary" id="cursoTrnSalvar">Salvar curso</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalAtribTrn">
+  <div class="modal" style="max-width:600px;">
+    <h2>Atribuir treinamento</h2>
+    <label>CURSO</label><select id="atribCurso"></select>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1"><label>LOCAL</label><select id="atribLocal"><option value="">Todos os locais</option></select></div>
+      <div style="flex:1"><label>BUSCAR</label><input type="text" id="atribBusca" placeholder="Nome ou CPF"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;">
+      <button type="button" class="btn" id="atribTodos" style="padding:5px 10px;font-size:11px;">Marcar todos os listados</button>
+      <span id="atribContagem" style="color:#71808d;"></span>
+    </div>
+    <div class="trn-lista" id="atribLista"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="atribCancelar">Cancelar</button>
+      <button type="button" class="btn primary" id="atribSalvar">Atribuir selecionados</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalConvTrn">
+  <div class="modal" style="max-width:720px;">
+    <h2>Convites criados</h2>
+    <p style="font-size:12px;color:#71808d;margin:0 0 8px;">Cada link vale 72 horas e só funciona com os 3 últimos dígitos do CPF. Um link novo cancela o anterior.</p>
+    <div id="convLista" style="max-height:55vh;overflow:auto;"></div>
+    <div class="modal-actions"><button type="button" class="btn" id="convFechar">Fechar</button></div>
+  </div>
 </div>
 
 <!-- MODAL NOVO COLABORADOR -->
@@ -3550,6 +4017,108 @@ function mobRender(){
   else if(mobTela === 'minha') mobRenderMinha(app);
 }
 
+
+/* =========================================================
+   App do líder — menu lateral (☰), Início e Treinamentos (só acompanha)
+   ========================================================= */
+const MOB_TRN = { PENDENTE:['Pendente','w'], EM_ANDAMENTO:['Em andamento','b'], CONCLUIDO:['Concluído','g'], REPROVADO:['Reprovado','r'], CANCELADO:['Cancelado','n'] };
+let mobTrn = { cursos:[], insc:[], ok:false, quando:0, erro:'' }, mobTrnFiltro = 'todos', mobTrnCurso = '';
+async function mobTrnCarregar(forcar){
+  if(!forcar && mobTrn.ok && Date.now() - mobTrn.quando < 60000) return;
+  try{
+    const cursos = await epiBuscarTudo('sst_cursos', '*');
+    const insc = await epiBuscarTudo('sst_inscricoes', '*');
+    mobTrn = { cursos, insc, ok:true, quando:Date.now(), erro:'' };
+  }catch(e){ mobTrn = { cursos:[], insc:[], ok:false, quando:0, erro:(e && e.message) || String(e) }; }
+}
+function mobTrnLinhas(){
+  const ativos = new Map(mobAtivosLocal().map(c => [String(c.id), c]));
+  return mobTrn.insc.filter(r => ativos.has(String(r.colaborador_id)) && String(r.status || '').toUpperCase() !== 'CANCELADO' && (!mobTrnCurso || String(r.curso_id) === String(mobTrnCurso)))
+    .map(r => ({ r, c: ativos.get(String(r.colaborador_id)), st: String(r.status || 'PENDENTE').toUpperCase() }));
+}
+const mobDataBR = (d)=>{ const p = String(d || '').slice(0, 10).split('-'); return p.length === 3 ? p[2] + '/' + p[1] : '—'; };
+function mobTrnCartao(L){
+  const cur = mobTrn.cursos.find(x => String(x.id) === String(mobTrnCurso || (L[0] && L[0].r.curso_id)));
+  const ok = L.filter(x => x.st === 'CONCLUIDO').length, pc = L.length ? Math.round(ok * 100 / L.length) : 0;
+  return `<div class="mb-card" style="cursor:default"><span class="mb-info"><b>${mobE(cur ? cur.titulo : 'Treinamento online')}</b><small>${cur && cur.nota_minima != null ? 'Nota mínima ' + mobE(cur.nota_minima) + '%' : ''}</small>
+    <div class="mb-prog" style="width:100%"><i style="width:${pc}%"></i></div><small><b>${ok}</b> de ${L.length} concluíram (${pc}%)</small></span></div>`;
+}
+function mobTrnLinha(x){
+  const [t, k] = MOB_TRN[x.st] || MOB_TRN.PENDENTE;
+  return `<button class="mb-card" onclick="mobOrigem='trein';mobAbrirFicha('${x.c.id}')"><span class="mb-av">${mobE(iniciais(x.c.nome))}</span>
+    <span class="mb-info"><b>${mobE(x.c.nome)}</b><small>${mobE(x.c.local || '-')}${x.c.funcao ? ' · ' + mobE(x.c.funcao) : ''}</small>
+    <span class="mb-pills"><span class="mb-pill ${k}">${t}</span>${x.r.nota_final != null ? `<span class="mb-pill n">Nota ${mobE(x.r.nota_final)}%</span>` : ''}${x.r.data_limite && x.st !== 'CONCLUIDO' ? `<span class="mb-pill n">Prazo ${mobDataBR(x.r.data_limite)}</span>` : ''}</span></span>${MOB_SVG.seta}</button>`;
+}
+async function mobRenderTrein(app){
+  app.innerHTML = `<div class="mb-top"><div><div class="mb-eyebrow">GESTÃO DE SEGURANÇA DO TRABALHO</div><h1>Treinamentos</h1></div><div class="mb-sub">Acompanhamento do seu time</div>${mobSelLocal()}</div><div class="mb-body"><div class="mb-vazio">Carregando...</div></div>`;
+  mobDecor();
+  await mobTrnCarregar(true);
+  if(mobTela !== 'trein') return;
+  const corpo = app.querySelector('.mb-body'); if(!corpo) return;
+  if(!mobTrn.ok){ corpo.innerHTML = `<div class="mb-aviso">Não foi possível carregar os treinamentos (${mobE(mobTrn.erro)}). Peça ao administrador para conferir a permissão de leitura do líder.</div>`; return; }
+  const cursosCom = [...new Set(mobTrn.insc.map(r => String(r.curso_id)))];
+  if(!mobTrnCurso || !cursosCom.includes(mobTrnCurso)) mobTrnCurso = cursosCom[0] || '';
+  const L = mobTrnLinhas();
+  const n = (s)=> L.filter(x => x.st === s).length;
+  const lista = L.filter(x => mobTrnFiltro === 'todos' || x.st === mobTrnFiltro);
+  corpo.innerHTML = `<div class="mb-aviso">Você <b>acompanha</b> o andamento. Quem atribui o curso e gera o link é o administrador.</div>
+    ${cursosCom.length > 1 ? `<select class="mb-in" onchange="mobTrnCurso=this.value;mobRender()">${cursosCom.map(id => { const c = mobTrn.cursos.find(x => String(x.id) === id); return `<option value="${mobE(id)}"${id === mobTrnCurso ? ' selected' : ''}>${mobE(c ? c.titulo : 'Curso')}</option>`; }).join('')}</select>` : ''}
+    ${L.length ? mobTrnCartao(L) : ''}
+    <div class="mb-chips" style="padding:0">${[['todos', 'Todos', L.length], ['PENDENTE', 'Pendentes', n('PENDENTE')], ['EM_ANDAMENTO', 'Em andamento', n('EM_ANDAMENTO')], ['CONCLUIDO', 'Concluídos', n('CONCLUIDO')], ['REPROVADO', 'Reprovados', n('REPROVADO')]].map(([k, t, c]) => `<button class="mb-chip${mobTrnFiltro === k ? ' on' : ''}" onclick="mobTrnFiltro='${k}';mobRender()">${t} ${c}</button>`).join('')}</div>
+    ${lista.map(mobTrnLinha).join('') || '<div class="mb-vazio">Nenhum colaborador do seu time neste filtro.</div>'}`;
+}
+async function mobRenderInicio(app){
+  const base = mobAtivosLocal(), pend = base.filter(c => mobSituacao(c).pend).length;
+  app.innerHTML = `<div class="mb-top"><div><div class="mb-eyebrow">GESTÃO DE SEGURANÇA DO TRABALHO</div><h1>Início</h1></div><div class="mb-sub">Você acompanha ${mobPl(base.length, 'colaborador', 'colaboradores')}</div>${mobSelLocal()}</div>
+    <div class="mb-body"><div class="mb-kpis"><button class="mb-kpi" onclick="mobIrPend()"><span>Assinaturas pendentes</span><b style="color:#dc2626">${pend}</b></button>
+    <button class="mb-kpi" onclick="mobGo('trein')"><span>Treinamentos a concluir</span><b id="mobKA" style="color:#d97706">…</b></button>
+    <button class="mb-kpi" onclick="mobGo('trein')"><span>Treinamentos concluídos</span><b id="mobKC" style="color:#059669">…</b></button></div>
+    <div id="mobInTr"></div></div>`;
+  mobDecor();
+  await mobTrnCarregar(false);
+  if(mobTela !== 'inicio') return;
+  const ka = document.getElementById('mobKA'), kc = document.getElementById('mobKC'); if(!ka) return;
+  if(!mobTrn.ok){ ka.textContent = '—'; kc.textContent = '—'; return; }
+  mobTrnCurso = '';
+  const L = mobTrnLinhas();
+  ka.textContent = L.filter(x => x.st !== 'CONCLUIDO').length; kc.textContent = L.filter(x => x.st === 'CONCLUIDO').length;
+  document.getElementById('mobInTr').innerHTML = L.length ? '<div class="mb-eyebrow" style="color:#64748b;margin:6px 2px">TREINAMENTO EM DESTAQUE</div>' + mobTrnCartao(L) : '';
+}
+/* ---- painel lateral ---- */
+function mobDrwMontar(){
+  let d = document.getElementById('mobDrw');
+  if(!d){ d = document.createElement('div'); d.id = 'mobDrw'; document.body.appendChild(d); }
+  const nPend = (typeof mobAtivosLocal === 'function' && mobLogado) ? mobAtivosLocal().filter(c => mobSituacao(c).pend).length : 0;
+  const it = (k, ic, t, bd)=> `<button class="${mobTela === k || (k === 'lista' && mobTela === 'ficha') ? 'on' : ''}" onclick="mobGo('${k}')"><span>${ic}</span>${t}${bd != null ? `<span class="bd${bd === 0 ? ' z' : ''}">${bd}</span>` : ''}</button>`;
+  d.innerHTML = `<div class="bk" onclick="mobDrwFechar()"></div><aside class="pn"><div class="dh"><small>Gestão de Segurança do Trabalho</small><h3>App do ${mobPapel() === 'ADMIN' ? 'Administrador' : 'Líder'}</h3>
+    <div class="me"><b>${mobE(epiNomeUsuario())}</b><span>${mobE(mobLocal || 'Todos os seus locais')}</span></div></div>
+    <nav>${it('inicio', '🏠', 'Início')}${it('lista', '👥', 'Colaboradores')}${it('pend', '✍️', 'Pendências de assinatura', nPend)}${it('trein', '🎓', 'Treinamentos')}${it('minha', '🖊️', 'Minha assinatura')}
+    ${ehAdmin() ? `<button onclick="mobDrwFechar();mobVersaoCompleta()"><span>🖥️</span>Versão completa</button>` : ''}</nav>
+    <div class="df"><button class="mb-btn g" style="width:100%" onclick="mobDrwFechar();document.getElementById('btnLogout').click()">Sair</button></div></aside>`;
+}
+function mobDrwAbrir(){ mobDrwMontar(); requestAnimationFrame(() => document.getElementById('mobDrw').classList.add('open')); }
+function mobDrwFechar(){ const d = document.getElementById('mobDrw'); if(d) d.classList.remove('open'); }
+function mobGo(t){
+  mobDrwFechar(); mobOrigem = 'lista';
+  if(t === 'lista') mobSetFiltro('todos'); else if(t === 'pend') mobIrPend(); else if(t === 'minha') mobIrMinha(); else { mobTela = t; mobRender(); }
+}
+function mobDecor(){
+  if(!['lista', 'pend', 'inicio', 'trein'].includes(mobTela)) return;
+  const top = document.querySelector('#mobApp .mb-top'); if(!top || top.querySelector('.mb-ham')) return;
+  const f = top.firstElementChild; if(!f) return;
+  const w = document.createElement('div'); w.className = 'mb-hamrow';
+  const b = document.createElement('button'); b.className = 'mb-ham'; b.setAttribute('aria-label', 'Abrir menu'); b.textContent = '☰'; b.onclick = mobDrwAbrir;
+  top.insertBefore(w, f); w.appendChild(b); f.style.flex = '1'; w.appendChild(f);
+}
+window.mobGo = mobGo; window.mobDrwFechar = mobDrwFechar; window.mobDrwAbrir = mobDrwAbrir;
+const mobRender0 = mobRender;
+mobRender = function(){
+  const app = document.getElementById('mobApp'); if(!app) return;
+  if(mobTela === 'inicio') mobRenderInicio(app);
+  else if(mobTela === 'trein') mobRenderTrein(app);
+  else { mobRender0(); mobDecor(); }
+};
+
 /* ---------- 1. lista ---------- */
 function mobRenderLista(app){
   const base = mobAtivosLocal();
@@ -3578,17 +4147,10 @@ function mobRenderLista(app){
   const inp = document.getElementById('mobBusca');
   inp.addEventListener('input', ()=>{ mobBusca = inp.value; const pos = inp.selectionStart; mobRenderLista(app); const n = document.getElementById('mobBusca'); n.focus(); n.setSelectionRange(pos, pos); });
 }
-function mobNav(ativa){
-  return `<nav class="mb-nav">
-    <button class="${ativa === 'lista' ? 'on' : ''}" onclick="mobSetFiltro('todos')">${MOB_SVG.pessoas}Colaboradores</button>
-    <button class="${ativa === 'pend' ? 'on' : ''}" onclick="mobIrPend()">${MOB_SVG.escudo}Pendências</button>
-    <button class="${ativa === 'minha' ? 'on' : ''}" onclick="mobIrMinha()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Assinatura</button>
-    ${ehAdmin() ? `<button onclick="mobVersaoCompleta()">${MOB_SVG.tela}Versão completa</button>` : ''}
-    <button onclick="document.getElementById('btnLogout').click()">${MOB_SVG.sair}Sair</button></nav>`;
-}
+function mobNav(ativa){ return ''; }  /* o menu agora é o painel lateral (☰) */
 function mobSetFiltro(f){ mobFiltro = f; mobTela = 'lista'; mobRender(); }
 function mobIrPend(){ mobTela = 'pend'; mobRender(); }
-function mobVoltarLista(){ mobFila = []; mobFilaTotal = 0; mobTela = mobOrigem === 'pend' ? 'pend' : 'lista'; mobRender(); }
+function mobVoltarLista(){ mobFila = []; mobFilaTotal = 0; mobTela = mobOrigem === 'pend' ? 'pend' : mobOrigem === 'trein' ? 'trein' : 'lista'; mobRender(); }
 function mobVersaoCompleta(){ if(!ehAdmin()) return; mobForcarCompleto = true; mobAvaliar(); }
 window.mobSetFiltro = mobSetFiltro; window.mobIrPend = mobIrPend; window.mobVoltarLista = mobVoltarLista; window.mobVersaoCompleta = mobVersaoCompleta;
 
@@ -3921,7 +4483,7 @@ async function mobConfirmarAssinatura(){
       const ctx = await epiContexto(true), auth = 'Rubrica + CPF (3 últimos dígitos)';
       for(const id of mobIds){
         const it = mobItens.find(x => x.id === id); if(!it) continue;
-        const dFis = it.legado ? (mobColab.admissao_data || it.data_entrega) : (it.tipo === 'E' ? mobHoje() : it.data_entrega);
+        const dFis = it.legado ? (mobColab.admissao_data || it.data_entrega) : (it.data_entrega || mobHoje());
         const sl = await epiSelar({ colabId: mobColab.id, cpf: mobColab.cpf || ('***' + cpf3), desc: it.descricao, ca: it.ca, qt: it.qtde, tp: it.tipo, leg: it.legado, dFis, iso, ip: ctx.ip, geo: ctx.geo, por, auth });
         const reg = { ...base, data_entrega: dFis, assinado_ip: ctx.ip, assinado_geo: ctx.geo, assinatura_auth: auth, assinatura_hash: sl.hash || null, assinatura_payload: sl.hash ? sl.payload : null };
         const { error } = await supabaseClient.from('epi_entregas').update(reg).eq('id', id).is('assinado_em', null);
@@ -6943,7 +7505,7 @@ document.getElementById('epiAssinOk').addEventListener('click', async ()=>{
     for(const i of epiAssin.alvo){
       const r = f.rows[i], sig = { img, at: agora, por };
       const admI = epiAdmISO(f.adm);
-      if(r.leg && admI) r.d = admI; else if(!r.leg && r.tp === 'E') r.d = epiHoje();
+      if(r.leg && admI) r.d = admI; else if(!r.leg && r.tp === 'E' && !r.d) r.d = epiHoje();
       if(ctx){
         const auth = comCpf ? 'Rubrica + CPF (3 últimos dígitos)' : 'Rubrica';
         const sl = await epiSelar({ colabId:f.colabId, cpf:f.cpf, desc:r.desc, ca:r.ca, qt:r.qt, tp:r.tp, leg:r.leg, dFis:r.d, iso:agora, ip:ctx.ip, geo:ctx.geo, por, auth });
@@ -7169,8 +7731,9 @@ function waRender(){
 
   /* filtros */
   const sel = document.getElementById('waLocal'), atual = sel.value;
-  const locais = [...new Set(todos.map(x => (x.c.local || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  sel.innerHTML = '<option value="">Todos os Locais</option>' + locais.map(l => `<option value="${epiEsc(l)}">${epiEsc(l)}</option>`).join('');
+  const contaLocal = {}; todos.forEach(x => { const l = (x.c.local || '').trim(); if(l) contaLocal[l] = (contaLocal[l] || 0) + 1; });
+  const locais = [...new Set(waAtivos().map(c => (c.local || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  sel.innerHTML = '<option value="">Todos os Locais</option>' + locais.map(l => `<option value="${epiEsc(l)}">${epiEsc(l)} (${contaLocal[l] || 0})</option>`).join('');
   sel.value = locais.includes(atual) ? atual : '';
   const termo = normalizarTexto(document.getElementById('waBusca').value), termoNum = termo.replace(/\D/g, '');
   const base = todos.filter(x => {
